@@ -17,7 +17,7 @@ export default function Home() {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     } else {
-      navigate("/"); // redirect if not logged in
+      navigate("/"); // redirect to login if not logged in
     }
   }, [navigate]);
 
@@ -26,14 +26,18 @@ export default function Home() {
     navigate("/");
   }
 
-  if (!user) return null;
+  if (!user) return null; // optional: loading spinner
 
   return (
     <div className="home-container">
       <div className="home-card">
         <h2>Welcome, {user.username}!</h2>
-        <p><strong>User ID:</strong> {user.id}</p>
-        <p><strong>Email:</strong> {user.email}</p>
+        <p>
+          <strong>User ID:</strong> {user.id}
+        </p>
+        <p>
+          <strong>Email:</strong> {user.email}
+        </p>
         <button onClick={handleLogout}>Logout</button>
       </div>
     </div>

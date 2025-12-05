@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./../styles/Register.css";
 
@@ -12,6 +12,7 @@ export default function Register() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (password !== passwordConfirm) {
       setMsg("Passwords do not match.");
       return;
@@ -23,14 +24,18 @@ export default function Register() {
       const res = await fetch("http://127.0.0.1:5000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, password_confirm: passwordConfirm }),
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          password_confirm: passwordConfirm,
+        }),
       });
 
       const j = await res.json();
       if (res.ok) {
-        localStorage.setItem("user", JSON.stringify(j.user)); // Auto-login after register
         setMsg("Registered successfully.");
-        navigate("/home");
+        navigate("/"); // go to login page
       } else {
         setMsg(j.message || "Registration failed.");
       }

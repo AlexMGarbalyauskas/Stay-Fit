@@ -1,9 +1,9 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./../styles/Login.css";
 
 export default function Login() {
-  const [identifier, setIdentifier] = useState("");
+  const [identifier, setIdentifier] = useState(""); // username or email
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const navigate = useNavigate();
@@ -21,9 +21,10 @@ export default function Login() {
 
       const j = await res.json();
       if (res.ok) {
-        localStorage.setItem("user", JSON.stringify(j.user)); // Save user
+        // ✅ Save user info to localStorage
+        localStorage.setItem("user", JSON.stringify(j.user));
         setMsg("Login successful.");
-        navigate("/home");
+        navigate("/home"); // go to React frontend home page
       } else {
         setMsg(j.message || "Login failed.");
       }
