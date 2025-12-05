@@ -24,6 +24,20 @@ def init_db():
 
 init_db()
 
+# Simple GET route to check server status
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({"message": "API is running!"})
+
+# Optional GET routes for /register and /login to check endpoints in a browser
+@app.route("/register", methods=["GET"])
+def get_register():
+    return jsonify({"message": "Use POST to register a new user."})
+
+@app.route("/login", methods=["GET"])
+def get_login():
+    return jsonify({"message": "Use POST to login."})
+
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json() or {}
@@ -63,7 +77,6 @@ def register():
         "user": {"id": user_id, "username": username, "email": email}
     }), 201
 
-
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
@@ -96,7 +109,6 @@ def login():
         }), 200
     else:
         return jsonify({"message": "Invalid credentials"}), 401
-
 
 if __name__ == "__main__":
     app.run(debug=True)
