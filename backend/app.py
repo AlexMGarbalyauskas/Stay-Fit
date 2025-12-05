@@ -1,13 +1,15 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
 DB = "users.db"
 
-app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"])  # Allow frontend requests
+app = Flask(__name__, static_folder="frontend/dist")  # Point to your React build folder
+CORS(app, origins=["http://localhost:5173"])  # Allow frontend requests during development
 
+# -------------------- Database --------------------
 def init_db():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
@@ -24,12 +26,11 @@ def init_db():
 
 init_db()
 
-# Simple GET route to check server status
+# -------------------- API Routes --------------------
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({"message": "API is running!"})
 
-# Optional GET routes for /register and /login to check endpoints in a browser
 @app.route("/register", methods=["GET"])
 def get_register():
     return jsonify({"message": "Use POST to register a new user."})
@@ -110,5 +111,17 @@ def login():
     else:
         return jsonify({"message": "Invalid credentials"}), 401
 
+# -------------------- Serve React Frontend --------------------
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_frontend(path):
+    build_dir = os.path.join(os.getcwd(), "frontend", "dist")
+    if path != "" and os.path.exists(os.path.join(build_dir, path)):
+        return send_from_directory(build_dir, path)
+    else:
+        # For SPA routing, always serve index.html
+        return send_from_directory(build_dir, "index.html")
+
+# -------------------- Run --------------------
 if __name__ == "__main__":
     app.run(debug=True)
