@@ -1,0 +1,15 @@
+# Node
+/frontend/node_modules
+
+# Python
+/backend/venv
+/backend/__pycache__
+
+# SQLite DB
+/backend/users.db
+
+# VSCode
+.vscode/
+
+# Environment files
+.env
