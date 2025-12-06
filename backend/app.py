@@ -6,8 +6,12 @@ import os
 
 DB = "users.db"
 
-app = Flask(__name__, static_folder="frontend/dist")  # Point to your React build folder
-CORS(app, origins=["http://localhost:5173"])  # Allow frontend requests during development
+# Point to React build folder for serving frontend
+app = Flask(__name__, static_folder="frontend/dist")
+CORS(app, origins=[
+    "http://localhost:5173",              # local dev
+    "https://stay-fit-frontend.onrender.com"  # Render frontend
+])
 
 # -------------------- Database --------------------
 def init_db():
@@ -27,19 +31,11 @@ def init_db():
 init_db()
 
 # -------------------- API Routes --------------------
-@app.route("/", methods=["GET"])
-def index():
+@app.route("/api/health", methods=["GET"])
+def health_check():
     return jsonify({"message": "API is running!"})
 
-@app.route("/register", methods=["GET"])
-def get_register():
-    return jsonify({"message": "Use POST to register a new user."})
-
-@app.route("/login", methods=["GET"])
-def get_login():
-    return jsonify({"message": "Use POST to login."})
-
-@app.route("/register", methods=["POST"])
+@app.route("/api/register", methods=["POST"])
 def register():
     data = request.get_json() or {}
     username = data.get("username", "").strip()
@@ -78,7 +74,7 @@ def register():
         "user": {"id": user_id, "username": username, "email": email}
     }), 201
 
-@app.route("/login", methods=["POST"])
+@app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
     identifier = data.get("identifier", "").strip()  # username or email
