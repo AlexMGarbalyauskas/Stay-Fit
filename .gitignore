@@ -1,0 +1,8 @@
+# Node modules
+node_modules/
+# SQLite database
+backend/data.sqlite
+# Build files
+frontend/build/
+# Env files
+*.env
