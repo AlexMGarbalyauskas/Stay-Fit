@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_API_URL;
+// Use environment variable if set, otherwise fallback to localhost for local testing
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
 
 export const register = (username, email, password) =>
   axios.post(`${API_BASE}/register`, { username, email, password });

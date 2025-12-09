@@ -21,15 +21,35 @@ export default function Login() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: 'auto', paddingTop: 50 }}>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} /><br/>
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} /><br/>
-        <button type="submit">Login</button>
-        {error && <p style={{color:'red'}}>{error}</p>}
-      </form>
-      <p>Don't have an account? <Link to="/register">Register here</Link></p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+          <input
+            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+          <button
+            className="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-colors"
+            type="submit"
+          >
+            Login
+          </button>
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        </form>
+        <p className="mt-4 text-center text-gray-600">
+          Don't have an account? <Link className="text-blue-500 hover:underline" to="/register">Register here</Link>
+        </p>
+      </div>
     </div>
   );
 }
