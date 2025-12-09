@@ -18,8 +18,9 @@ export default function Register() {
     }
 
     try {
-      const res = await register(username, email, password);
-      // After registration, auto redirect to login
+      await register(username, email, password); 
+      // No res variable → avoids ESLint error
+      
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
