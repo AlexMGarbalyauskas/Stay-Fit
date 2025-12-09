@@ -6,3 +6,4 @@ backend/data.sqlite
 frontend/build/
 # Env files
 *.env
+.env.local
