@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_BASE = 'https://stay-fit-1.onrender.com/api';
+const API_BASE = process.env.REACT_APP_API_URL;
 
-export const register = (username, email, password) => 
+export const register = (username, email, password) =>
   axios.post(`${API_BASE}/register`, { username, email, password });
 
 export const login = (email, password) =>
