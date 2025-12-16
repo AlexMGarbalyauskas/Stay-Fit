@@ -3,5 +3,8 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    profile_picture TEXT,
+    bio TEXT,
+    location TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

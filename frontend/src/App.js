@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import SocialLogin from './pages/SocialLogin';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
@@ -17,6 +18,7 @@ function App() {
         <Route path="/social-login" element={<SocialLogin />} />
         <Route path="/home" element={isAuthenticated ? <Home /> : <Navigate to="/login" />} />
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
+        <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
