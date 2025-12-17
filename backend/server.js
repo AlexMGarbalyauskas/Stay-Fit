@@ -13,7 +13,24 @@ const fs = require('fs');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+// ---------- CORS SETUP ----------
+const allowedOrigins = [
+  'http://localhost:3000',             // for local dev
+  'https://stay-fit-2.onrender.com'    // your deployed frontend
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman/curl
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true // allow Authorization header
+}));
 
 // ---------- LOGGING MIDDLEWARE ----------
 app.use((req, res, next) => {

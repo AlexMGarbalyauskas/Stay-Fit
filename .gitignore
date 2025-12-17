@@ -5,5 +5,5 @@ backend/data.sqlite
 # Build files
 frontend/build/
 # Env files
-*.env
+
 .env.local
