@@ -10,47 +10,51 @@ const db = require('./db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const helmet = require('helmet');
 
 const app = express();
 app.use(express.json());
 
-// ---------- CORS SETUP ----------
+// ---------- SECURITY HEADERS ----------
+app.use(helmet());
+app.disable('x-powered-by'); // remove X-Powered-By
+
+// ---------- CORS ----------
 const allowedOrigins = [
-  'http://localhost:3000',             // for local dev
-  'https://stay-fit-2.onrender.com'    // your deployed frontend
+  'http://localhost:3000',
+  'https://stay-fit-2.onrender.com'
 ];
 
 app.use(cors({
   origin: function(origin, callback) {
     if (!origin) return callback(null, true); // allow Postman/curl
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+    if (!allowedOrigins.includes(origin)) {
+      return callback(new Error('CORS not allowed'), false);
     }
     return callback(null, true);
   },
-  credentials: true // allow Authorization header
+  credentials: true
 }));
 
-// ---------- LOGGING MIDDLEWARE ----------
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  next();
-});
-
-// ---------- SESSION & PASSPORT ----------
+// ---------- SESSION ----------
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'session_secret',
     resave: false,
     saveUninitialized: true,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      httpOnly: true,
+      sameSite: 'none' // cross-origin cookies
+    }
   })
 );
+
+// ---------- PASSPORT ----------
 app.use(passport.initialize());
 app.use(passport.session());
 
+// ---------- JWT ----------
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 function signToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
@@ -71,6 +75,14 @@ function authMiddleware(req, res, next) {
     next();
   });
 }
+
+// ---------- LOGGING MIDDLEWARE ----------
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  next();
+});
 
 // ---------- ROUTES ----------
 
@@ -282,7 +294,7 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, `${req.user.id}${path.extname(file.originalname)}`),
+  filename: (req, file, cb) => cb(null, `${req.user.id}${path.extname(file.originalname)}`)
 });
 const upload = multer({ storage });
 
