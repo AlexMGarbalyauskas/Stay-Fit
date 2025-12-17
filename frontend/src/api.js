@@ -1,17 +1,18 @@
 import axios from 'axios';
 
 // Set API base depending on environment
-const API_BASE = process.env.NODE_ENV === 'production'
-  ? process.env.REACT_APP_API_URL  // production URL from env
-  : 'http://localhost:4000/api';   // local development
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
 
 // Helper to attach auth header
-const authHeader = () => ({
-  headers: { 
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
-    'Content-Type': 'application/json',
-  },
-});
+const authHeader = () => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      Authorization: token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json',
+    },
+  };
+};
 
 // ---------- AUTH ----------
 export const register = (username, email, password) =>
