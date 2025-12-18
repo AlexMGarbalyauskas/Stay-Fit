@@ -10,14 +10,22 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+
     if (!token) {
       navigate('/login');
       return;
     }
 
-    getMe(token)
-      .then(res => setUser(res.data.user))
-      .catch(() => navigate('/login'));
+    getMe()
+      .then(res => {
+        setUser(res.data.user);
+      })
+      .catch(() => {
+        // 🔴 VERY IMPORTANT: stop infinite loading
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      });
   }, [navigate]);
 
   const handleLogout = () => {
@@ -26,15 +34,17 @@ export default function Home() {
   };
 
   if (!user) {
-    return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+    return (
+      <p className="text-center mt-20 text-gray-500">
+        Loading user…
+      </p>
+    );
   }
 
   return (
     <>
-      {/* Top Header */}
       <Header onNotificationsClick={() => alert('Notifications clicked')} />
 
-      {/* Main Content */}
       <main className="flex justify-center items-center min-h-screen bg-gray-100 pt-16 pb-16">
         <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md text-center">
           <h2 className="text-2xl font-bold mb-4 text-gray-800">
@@ -53,7 +63,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Bottom Navbar */}
       <Navbar />
     </>
   );
