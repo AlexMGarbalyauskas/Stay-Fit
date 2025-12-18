@@ -12,10 +12,13 @@ export default function Login() {
     e.preventDefault();
     try {
       const res = await login(email, password);
+      console.log('Login response:', res.data); // 🔥 Debug login response
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      console.log('Token saved to localStorage:', localStorage.getItem('token')); // 🔥 Debug token
       navigate('/home');
     } catch (err) {
+      console.error('Login error:', err.response?.data || err);
       setError(err.response?.data?.error || 'Login failed');
     }
   };

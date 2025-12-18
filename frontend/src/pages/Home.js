@@ -10,6 +10,7 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('Home.js token:', token); // 🔥 Check token in console
 
     if (!token) {
       navigate('/login');
@@ -18,10 +19,12 @@ export default function Home() {
 
     getMe()
       .then(res => {
+        console.log('getMe response:', res.data); // 🔥 Debug API response
         setUser(res.data.user);
       })
-      .catch(() => {
-        // 🔴 VERY IMPORTANT: stop infinite loading
+      .catch(err => {
+        console.error('Error fetching user in Home.js:', err.response?.data || err);
+        // 🔴 Stop infinite loading
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/login');
