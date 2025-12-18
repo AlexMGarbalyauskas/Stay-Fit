@@ -1,8 +1,14 @@
 import axios from 'axios';
 
+
+
+
+
 // API base URL
 const API_BASE =
   process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+
+console.log('API_BASE is:', API_BASE);
 
 // Attach JWT automatically
 const authHeader = () => {
