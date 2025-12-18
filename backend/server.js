@@ -16,15 +16,12 @@ const app = express();
 app.use(express.json());
 
 // ---------- SECURITY HEADERS ----------
-
 app.use(
   helmet({
     contentSecurityPolicy: false, // 🔥 REQUIRED
     crossOriginEmbedderPolicy: false,
   })
 );
-
-
 app.disable('x-powered-by'); // remove X-Powered-By
 
 // ---------- CORS ----------
@@ -33,16 +30,20 @@ const allowedOrigins = [
   'https://stay-fit-2.onrender.com'
 ];
 
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman/curl
-    if (!allowedOrigins.includes(origin)) {
-      return callback(new Error('CORS not allowed'), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: function(origin, callback) {
+      if (!origin) return callback(null, true); // allow curl/Postman
+      if (!allowedOrigins.includes(origin)) {
+        return callback(new Error('CORS not allowed'), false);
+      }
+      return callback(null, true);
+    },
+    methods: ['GET','POST','PUT','DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'], // ✅ Important for JWT
+    credentials: true
+  })
+);
 
 // ---------- SESSION ----------
 app.use(
@@ -51,9 +52,9 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: 'none' // cross-origin cookies
+      sameSite: 'none'
     }
   })
 );
@@ -84,7 +85,7 @@ function authMiddleware(req, res, next) {
   });
 }
 
-// ---------- LOGGING MIDDLEWARE ----------
+// ---------- LOGGING ----------
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   console.log('Headers:', req.headers);
@@ -93,7 +94,6 @@ app.use((req, res, next) => {
 });
 
 // ---------- ROUTES ----------
-
 // Google OAuth
 app.use('/api/auth', googleAuthRoutes);
 
