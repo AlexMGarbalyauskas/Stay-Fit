@@ -16,7 +16,15 @@ const app = express();
 app.use(express.json());
 
 // ---------- SECURITY HEADERS ----------
-app.use(helmet());
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // 🔥 REQUIRED
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+
 app.disable('x-powered-by'); // remove X-Powered-By
 
 // ---------- CORS ----------
