@@ -38,14 +38,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-/* ===============================
-   SERVE FRONTEND
-================================ */
-const frontendPath = path.join(__dirname, 'public');
-app.use(express.static(frontendPath));
-app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
+
 
 /* ===============================
    START SERVER
