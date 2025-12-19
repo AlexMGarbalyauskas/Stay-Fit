@@ -1,6 +1,5 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const passport = require('../config/passport');
 const { signToken } = require('../config/jwt');
 const db = require('../db');
 
@@ -42,22 +41,5 @@ router.post('/login', (req, res) => {
   );
 });
 
-router.get('/google', passport.authenticate('google', {
-  scope: ['profile', 'email'],
-}));
-
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  (req, res) => {
-    const token = signToken({ id: req.user.id });
-    const FRONTEND =
-      process.env.NODE_ENV === 'production'
-        ? 'https://stay-fit-2.onrender.com'
-        : 'http://localhost:3000';
-
-    res.redirect(`${FRONTEND}/social-login?token=${token}`);
-  }
-);
 
 module.exports = router;
