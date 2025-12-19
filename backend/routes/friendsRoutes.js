@@ -4,20 +4,20 @@ const db = require('../db');
 
 const router = express.Router();
 
-// Send friend request
+/* ===============================
+   SEND FRIEND REQUEST
+================================ */
 router.post('/request', auth, (req, res) => {
   const { receiverId } = req.body;
-  if (!receiverId)
-    return res.status(400).json({ error: 'Missing receiverId' });
+  if (!receiverId) return res.status(400).json({ error: 'Missing receiverId' });
 
   db.run(
     'INSERT INTO friend_requests (sender_id, receiver_id) VALUES (?, ?)',
     [req.user.id, receiverId],
     function (err) {
       if (err) {
-        if (err.message.includes('UNIQUE')) {
+        if (err.message.includes('UNIQUE'))
           return res.status(400).json({ error: 'Request already sent' });
-        }
         return res.status(500).json({ error: 'DB error' });
       }
       res.json({ message: 'Request sent', id: this.lastID });
@@ -25,7 +25,9 @@ router.post('/request', auth, (req, res) => {
   );
 });
 
-// Get incoming friend requests
+/* ===============================
+   GET INCOMING REQUESTS
+================================ */
 router.get('/requests', auth, (req, res) => {
   db.all(
     `SELECT fr.id, fr.sender_id, u.username
@@ -40,41 +42,37 @@ router.get('/requests', auth, (req, res) => {
   );
 });
 
-// Accept friend request
+/* ===============================
+   ACCEPT FRIEND REQUEST
+================================ */
 router.post('/accept', auth, (req, res) => {
   const { requestId, senderId } = req.body;
-  if (!requestId || !senderId)
-    return res.status(400).json({ error: 'Missing data' });
+  if (!requestId || !senderId) return res.status(400).json({ error: 'Missing data' });
 
-  db.run(
-    'INSERT INTO friends (user_id, friend_id) VALUES (?, ?)',
-    [req.user.id, senderId],
-    (err) => {
-      if (err) return res.status(500).json({ error: 'DB error' });
+  db.run('INSERT INTO friends (user_id, friend_id) VALUES (?, ?)', [req.user.id, senderId], err => {
+    if (err) return res.status(500).json({ error: 'DB error' });
 
-      db.run(
-        'DELETE FROM friend_requests WHERE id = ?',
-        [requestId],
-        () => res.json({ message: 'Friend request accepted' })
-      );
-    }
-  );
+    db.run('DELETE FROM friend_requests WHERE id = ?', [requestId], () =>
+      res.json({ message: 'Friend request accepted' })
+    );
+  });
 });
 
-// Reject friend request
+/* ===============================
+   REJECT FRIEND REQUEST
+================================ */
 router.post('/reject', auth, (req, res) => {
   const { requestId } = req.body;
-  if (!requestId)
-    return res.status(400).json({ error: 'Missing requestId' });
+  if (!requestId) return res.status(400).json({ error: 'Missing requestId' });
 
-  db.run(
-    'DELETE FROM friend_requests WHERE id = ?',
-    [requestId],
-    () => res.json({ message: 'Friend request rejected' })
+  db.run('DELETE FROM friend_requests WHERE id = ?', [requestId], () =>
+    res.json({ message: 'Friend request rejected' })
   );
 });
 
-// Friend status
+/* ===============================
+   FRIEND STATUS
+================================ */
 router.get('/status/:id', auth, (req, res) => {
   const otherId = req.params.id;
 
@@ -99,7 +97,9 @@ router.get('/status/:id', auth, (req, res) => {
   );
 });
 
-// Get friends list
+/* ===============================
+   GET FRIENDS LIST
+================================ */
 router.get('/', auth, (req, res) => {
   db.all(
     `SELECT u.id, u.username, u.profile_picture
@@ -115,11 +115,12 @@ router.get('/', auth, (req, res) => {
   );
 });
 
-// Unfriend
+/* ===============================
+   UNFRIEND
+================================ */
 router.post('/unfriend', auth, (req, res) => {
   const { friendId } = req.body;
-  if (!friendId)
-    return res.status(400).json({ error: 'Missing friendId' });
+  if (!friendId) return res.status(400).json({ error: 'Missing friendId' });
 
   db.run(
     `DELETE FROM friends

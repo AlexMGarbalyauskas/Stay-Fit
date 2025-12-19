@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const passport = require('./config/googleAuth');
 
 const app = express();
 
@@ -12,13 +13,15 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://stay-fit-2.onrender.com', // frontend
+    'https://stay-fit-2.onrender.com',
   ],
   credentials: true,
 }));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Passport
+app.use(passport.initialize());
 
 /* ===============================
    ROUTES
@@ -29,20 +32,18 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/friends', require('./routes/friendsRoutes'));
 
 /* ===============================
-   HEALTH CHECK (VERY IMPORTANT)
+   HEALTH CHECK
 ================================ */
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
 /* ===============================
-   SERVE FRONTEND (RENDER)
+   SERVE FRONTEND
 ================================ */
 const frontendPath = path.join(__dirname, 'public');
-
 app.use(express.static(frontendPath));
-
-app.get('*', (req, res) => {
+app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
@@ -50,7 +51,4 @@ app.get('*', (req, res) => {
    START SERVER
 ================================ */
 const PORT = process.env.PORT || 10000;
-
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

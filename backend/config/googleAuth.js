@@ -1,9 +1,11 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const db = require("../db");
 
-// Google OAuth
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+
 passport.use(
   new GoogleStrategy(
     {
@@ -16,18 +18,18 @@ passport.use(
         const email = profile.emails[0].value;
         const username = profile.displayName;
 
-        db.get("SELECT * FROM users WHERE email = ?", [email], async (err, row) => {
+        db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
           if (err) return done(err);
-          if (row) return done(null, row);
+          if (user) return done(null, user);
 
-          // dummy password hash
+          // Create new user
           const dummyPassword = 'google_' + Date.now();
           const passwordHash = await bcrypt.hash(dummyPassword, 10);
 
           const stmt = db.prepare(
             "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)"
           );
-          stmt.run(username, email, passwordHash, function (err) {
+          stmt.run(username, email, passwordHash, function(err) {
             if (err) return done(err);
             db.get("SELECT * FROM users WHERE id = ?", [this.lastID], (err, newUser) => {
               return done(err, newUser);
@@ -41,10 +43,5 @@ passport.use(
     }
   )
 );
-
-passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser((id, done) => {
-  db.get("SELECT * FROM users WHERE id = ?", [id], (err, user) => done(err, user));
-});
 
 module.exports = passport;

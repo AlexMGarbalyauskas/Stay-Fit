@@ -4,6 +4,9 @@ const db = require('../db');
 
 const router = express.Router();
 
+/* ===============================
+   GET CURRENT USER PROFILE
+================================ */
 router.get('/', auth, (req, res) => {
   db.get(
     'SELECT id, username, email, bio, location, profile_picture FROM users WHERE id = ?',
@@ -15,6 +18,9 @@ router.get('/', auth, (req, res) => {
   );
 });
 
+/* ===============================
+   UPDATE CURRENT USER PROFILE
+================================ */
 router.post('/update', auth, (req, res) => {
   const { bio, location } = req.body;
   db.run(
