@@ -10,21 +10,36 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log('Home.js token:', token); // 🔥 Check token in console
+
+    // 🔥 LOG 1: confirm token exists
+    console.log('Home.js token:', token);
 
     if (!token) {
+      console.log('No token found → redirecting to login');
       navigate('/login');
       return;
     }
 
     getMe()
       .then(res => {
-        console.log('getMe response:', res.data); // 🔥 Debug API response
-        setUser(res.data.user);
+        // 🔥 LOG 2: full Axios response
+        console.log('getMe FULL response:', res);
+
+        // 🔥 LOG 3: backend payload
+        console.log('getMe RESPONSE DATA:', res.data);
+
+        // ✅ FIX: backend returns { user: {...} }
+        // fallback included for safety
+        setUser(res.data.user || res.data);
       })
       .catch(err => {
-        console.error('Error fetching user in Home.js:', err.response?.data || err);
-        // 🔴 Stop infinite loading
+        // 🔥 LOG 4: error details
+        console.error(
+          'Error fetching user in Home.js:',
+          err.response?.data || err
+        );
+
+        // 🔴 stop infinite loading
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/login');
@@ -32,10 +47,12 @@ export default function Home() {
   }, [navigate]);
 
   const handleLogout = () => {
+    console.log('Logging out user');
     localStorage.clear();
     navigate('/login');
   };
 
+  // ⏳ Loading state
   if (!user) {
     return (
       <p className="text-center mt-20 text-gray-500">
@@ -44,6 +61,7 @@ export default function Home() {
     );
   }
 
+  // ✅ Render when user is set
   return (
     <>
       <Header onNotificationsClick={() => alert('Notifications clicked')} />
