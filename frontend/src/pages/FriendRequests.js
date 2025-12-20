@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getFriendRequests, acceptFriendRequest, rejectFriendRequest, getFriends } from '../api';
+import { acceptFriendRequest, rejectFriendRequest, getFriendRequests } from '../api';
 
 export default function FriendRequests({ onFriendUpdate }) {
   const [requests, setRequests] = useState([]);
@@ -11,7 +11,7 @@ export default function FriendRequests({ onFriendUpdate }) {
   const accept = async (id, senderId) => {
     await acceptFriendRequest(id, senderId);
     setRequests(r => r.filter(x => x.id !== id));
-    if (onFriendUpdate) onFriendUpdate(); // Notify parent to update friend count
+    if (onFriendUpdate) onFriendUpdate();
   };
 
   const reject = async (id) => {

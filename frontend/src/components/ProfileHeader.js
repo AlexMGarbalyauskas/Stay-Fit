@@ -18,7 +18,7 @@ export default function ProfileHeader({ onFindFriendsClick, onCalendarClick }) {
           </button>
 
           <button
-            onClick={onFindFriendsClick}
+            onClick={() => navigate('/friends')}
             className="p-2 rounded-full hover:bg-gray-100 transition"
           >
             <Users className="w-6 h-6 text-gray-700" />

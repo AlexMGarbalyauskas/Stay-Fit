@@ -14,114 +14,70 @@ export default function Profile() {
   const [locationInput, setLocationInput] = useState('');
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+  const token = localStorage.getItem('token');
+  const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API_URL}/api/me`, authHeaders);
       setUser(res.data.user);
       setBioInput(res.data.user.bio || '');
       setLocationInput(res.data.user.location || '');
 
-      const friendsRes = await axios.get(`${API_URL}/friends`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const friendsRes = await axios.get(`${API_URL}/api/friends`, authHeaders);
       setFriendsCount(friendsRes.data.friends.length);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch profile:', err);
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const handleFriendUpdate = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const friendsRes = await axios.get(`${API_URL}/friends`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setFriendsCount(friendsRes.data.friends.length);
-    } catch (err) {
-      console.error('Failed to update friends count', err);
-    }
-  };
+  useEffect(() => { fetchProfile(); }, []);
 
   // --- Profile Picture ---
-  const handleProfilePictureChange = e => {
-    if (e.target.files[0]) setSelectedFile(e.target.files[0]);
-  };
-
+  const handleProfilePictureChange = e => setSelectedFile(e.target.files[0]);
   const handleUploadProfilePicture = async () => {
     if (!selectedFile) return alert('Select a file first');
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('profile_picture', selectedFile);
-
     try {
-      const res = await axios.post(`${API_URL}/me/profile-picture`, formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      const res = await axios.post(`${API_URL}/api/me/profile-picture`, formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
-      // prepend API_URL in case backend returns relative path
-      const pictureUrl = res.data.profile_picture.startsWith('http')
-        ? res.data.profile_picture
-        : `${API_URL}${res.data.profile_picture}`;
-      setUser(prev => ({ ...prev, profile_picture: pictureUrl }));
+      setUser(res.data.user); // update full user
       setSelectedFile(null);
       alert('Profile picture updated!');
-    } catch (err) {
-      console.error('Upload error:', err);
-      alert('Upload failed');
-    }
+    } catch (err) { console.error(err); alert('Upload failed'); }
   };
 
   // --- Bio ---
   const handleSaveBio = async () => {
-    const token = localStorage.getItem('token');
     try {
-      await axios.post(`${API_URL}/me/update`, { bio: bioInput }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(prev => ({ ...prev, bio: bioInput }));
+      const res = await axios.post(`${API_URL}/api/me/update`, { bio: bioInput }, authHeaders);
+      setUser(res.data.user);
       setBioEditing(false);
-    } catch (err) {
-      console.error(err);
-      alert('Update failed');
-    }
+    } catch (err) { console.error(err); alert('Update failed'); }
   };
 
   // --- Location ---
   const handleSaveLocation = async () => {
-    const token = localStorage.getItem('token');
     try {
-      await axios.post(`${API_URL}/me/update`, { location: locationInput }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(prev => ({ ...prev, location: locationInput }));
+      const res = await axios.post(`${API_URL}/api/me/update`, { location: locationInput }, authHeaders);
+      setUser(res.data.user);
       setLocationEditing(false);
-    } catch (err) {
-      console.error(err);
-      alert('Update failed');
-    }
+    } catch (err) { console.error(err); alert('Update failed'); }
   };
 
   if (!user) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
 
+  // Dummy video data (replace with actual user videos if available)
   const videos = Array.from({ length: 12 });
 
   return (
     <>
-      <ProfileHeader
-        onFindFriendsClick={() => alert('Find Friends clicked!')}
-        onCalendarClick={() => alert('Calendar clicked!')}
-      />
+      <ProfileHeader />
 
       <div className="pt-20 pb-20 min-h-screen bg-gray-100">
         <div className="max-w-md mx-auto px-4">
-
           {/* Avatar */}
           <div className="flex justify-center mt-6 relative">
             {user.profile_picture ? (
@@ -137,12 +93,10 @@ export default function Profile() {
             )}
             <input type="file" accept="image/*" onChange={handleProfilePictureChange} id="profilePicInput" className="hidden" />
             <button onClick={() => document.getElementById('profilePicInput').click()} className="absolute bottom-0 right-0 bg-blue-500 px-3 py-1 rounded-full text-white text-xs hover:bg-blue-600 transition">Change</button>
-            {selectedFile && (
-              <button onClick={handleUploadProfilePicture} className="absolute bottom-0 left-0 bg-green-500 px-3 py-1 rounded-full text-white text-xs hover:bg-green-600 transition">Upload</button>
-            )}
+            {selectedFile && <button onClick={handleUploadProfilePicture} className="absolute bottom-0 left-0 bg-green-500 px-3 py-1 rounded-full text-white text-xs hover:bg-green-600 transition">Upload</button>}
           </div>
 
-          {/* Username, ID, Friends Count */}
+          {/* Username & Friends */}
           <h2 className="text-center text-xl font-bold mt-4">@{user.username}</h2>
           <p className="text-center text-sm text-gray-500">ID: {user.id}</p>
           <div className="text-center mt-1 flex justify-center items-center gap-1 text-gray-700">
@@ -154,14 +108,7 @@ export default function Profile() {
           <div className="mt-4 flex items-center gap-2">
             {bioEditing ? (
               <>
-                <input
-                  type="text"
-                  value={bioInput}
-                  onChange={e => setBioInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSaveBio()}
-                  className="w-full p-2 border rounded"
-                  autoFocus
-                />
+                <input type="text" value={bioInput} onChange={e => setBioInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveBio()} className="w-full p-2 border rounded" autoFocus />
                 <button onClick={handleSaveBio} className="bg-green-500 px-2 py-1 rounded text-white"><Check size={16} /></button>
               </>
             ) : (
@@ -176,14 +123,7 @@ export default function Profile() {
           <div className="mt-2 flex items-center gap-2">
             {locationEditing ? (
               <>
-                <input
-                  type="text"
-                  value={locationInput}
-                  onChange={e => setLocationInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSaveLocation()}
-                  className="w-full p-2 border rounded"
-                  autoFocus
-                />
+                <input type="text" value={locationInput} onChange={e => setLocationInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveLocation()} className="w-full p-2 border rounded" autoFocus />
                 <button onClick={handleSaveLocation} className="bg-green-500 px-2 py-1 rounded text-white"><Check size={16} /></button>
               </>
             ) : (
@@ -203,9 +143,12 @@ export default function Profile() {
 
           {/* Videos */}
           <div className="border-t my-6 grid grid-cols-3 gap-1">
-            {videos.map((_, i) => <div key={i} className="aspect-square bg-gray-300 flex items-center justify-center"><span className="text-xs text-gray-600">Video</span></div>)}
+            {videos.map((_, i) => (
+              <div key={i} className="aspect-square bg-gray-300 flex items-center justify-center">
+                <span className="text-xs text-gray-600">Video</span>
+              </div>
+            ))}
           </div>
-
         </div>
       </div>
       <Navbar />

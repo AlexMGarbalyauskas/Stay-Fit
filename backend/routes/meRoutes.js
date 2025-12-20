@@ -1,11 +1,29 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const db = require('../db');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const router = express.Router();
 
 /* ===============================
-   GET CURRENT USER PROFILE
+   MULTER CONFIG
+================================ */
+const uploadDir = path.join(__dirname, '..', 'uploads', 'profile_pics');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: uploadDir,
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `user_${req.user.id}_${Date.now()}${ext}`);
+  },
+});
+const upload = multer({ storage });
+
+/* ===============================
+   GET CURRENT USER
 ================================ */
 router.get('/', auth, (req, res) => {
   db.get(
@@ -19,14 +37,66 @@ router.get('/', auth, (req, res) => {
 });
 
 /* ===============================
-   UPDATE CURRENT USER PROFILE
+   UPDATE PROFILE
 ================================ */
 router.post('/update', auth, (req, res) => {
   const { bio, location } = req.body;
+
+  const updates = [];
+  const params = [];
+
+  if (bio !== undefined) {
+    updates.push('bio = ?');
+    params.push(bio);
+  }
+  if (location !== undefined) {
+    updates.push('location = ?');
+    params.push(location);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No fields to update' });
+  }
+
+  params.push(req.user.id);
+  const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+
+  db.run(sql, params, function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+
+    db.get(
+      'SELECT id, username, email, bio, location, profile_picture FROM users WHERE id = ?',
+      [req.user.id],
+      (err, row) => {
+        if (err || !row) return res.status(500).json({ error: 'Failed to fetch updated user' });
+        res.json({ user: row });
+      }
+    );
+  });
+});
+
+/* ===============================
+   UPLOAD PROFILE PICTURE
+================================ */
+router.post('/profile-picture', auth, upload.single('profile_picture'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const imagePath = `/uploads/profile_pics/${req.file.filename}`;
   db.run(
-    'UPDATE users SET bio = ?, location = ? WHERE id = ?',
-    [bio, location, req.user.id],
-    () => res.json({ message: 'Profile updated' })
+    'UPDATE users SET profile_picture = ? WHERE id = ?',
+    [imagePath, req.user.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: 'Failed to save profile picture' });
+
+      db.get(
+        'SELECT id, username, email, bio, location, profile_picture FROM users WHERE id = ?',
+        [req.user.id],
+        (err, row) => {
+          if (err || !row) return res.status(500).json({ error: 'Failed to fetch user' });
+          res.json({ user: row });
+        }
+      );
+    }
   );
 });
 

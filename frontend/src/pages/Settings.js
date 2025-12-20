@@ -11,23 +11,22 @@ export default function Settings() {
   const [timezone, setTimezone] = useState('Europe');
   const navigate = useNavigate();
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+  const token = localStorage.getItem('token');
+  const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+
   useEffect(() => {
-    const token = localStorage.getItem('token');
     if (!token) return;
 
     axios
-      .get(`${process.env.REACT_APP_API_URL}/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then(res => {
-        setUser(res.data.user);
-      })
+      .get(`${API_URL}/api/me`, authHeaders) // ✅ Added /api
+      .then(res => setUser(res.data.user))
       .catch(err => console.error('Error fetching user:', err));
-  }, []);
+  }, [token, API_URL]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = '/login'; // redirect to login page
+    window.location.href = '/login';
   };
 
   const handleShareAccount = () => {
@@ -57,7 +56,7 @@ export default function Settings() {
         <div className="flex items-center gap-4 bg-white p-4 rounded shadow">
           {user.profile_picture ? (
             <img
-              src={user.profile_picture}
+              src={user.profile_picture.startsWith('http') ? user.profile_picture : `${API_URL}${user.profile_picture}`}
               alt="Profile"
               className="w-16 h-16 rounded-full object-cover"
             />
@@ -75,7 +74,6 @@ export default function Settings() {
         {/* Features Section */}
         <div className="mt-6 bg-white p-4 rounded shadow">
           <h3 className="font-semibold text-gray-700 mb-2">Features</h3>
-          {/* Add feature items here if needed */}
         </div>
 
         {/* Settings Section */}
@@ -163,6 +161,7 @@ export default function Settings() {
           </button>
         </div>
       </div>
+      <Navbar />
     </div>
   );
 }
