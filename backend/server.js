@@ -7,19 +7,16 @@ const passport = require('./config/googleAuth');
 const app = express();
 
 /* ===============================
-   TRUST PROXY (IMPORTANT FOR RENDER)
-================================ */
-app.set('trust proxy', 1);
-
-/* ===============================
    CORS
 ================================ */
-app.use(
-  cors({
-    origin: ['http://localhost:3000', 'https://stay-fit-2.onrender.com'],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://stay-fit-2.onrender.com',
+    'https://stay-fit-1.onrender.com',
+  ],
+  credentials: true,
+}));
 
 /* ===============================
    BODY PARSERS
@@ -28,27 +25,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* ===============================
-   PASSPORT
+   AUTH
 ================================ */
 app.use(passport.initialize());
 
 /* ===============================
-   REQUEST LOGGING (SAFE)
+   REQUEST LOGGER (SAFE)
 ================================ */
 app.use((req, res, next) => {
-  const ip =
-    req.headers['x-forwarded-for']?.split(',')[0] ||
-    req.socket.remoteAddress;
-
   const log = {
     time: new Date().toISOString(),
     method: req.method,
     url: req.originalUrl,
-    ip,
+    ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
     userAgent: req.headers['user-agent'],
   };
 
-  // Only log user info if authenticated
+  // Log authenticated users ONLY
   if (req.user) {
     log.user = {
       id: req.user.id,
@@ -67,7 +60,14 @@ app.use((req, res, next) => {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /* ===============================
-   ROUTES
+   ROOT ROUTE (IMPORTANT)
+================================ */
+app.get('/', (req, res) => {
+  res.send('✅ Stay-Fit API is running');
+});
+
+/* ===============================
+   API ROUTES
 ================================ */
 app.use('/api/auth', require('./routes/googleAuth'));
 app.use('/api/me', require('./routes/meRoutes'));
@@ -78,23 +78,15 @@ app.use('/api/friends', require('./routes/friendsRoutes'));
    HEALTH CHECK
 ================================ */
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
+  res.json({ status: 'ok', uptime: process.uptime() });
 });
 
 /* ===============================
-   404 HANDLER (VERY USEFUL)
+   404 HANDLER
 ================================ */
 app.use((req, res) => {
-  console.warn('❌ 404 Not Found:', req.method, req.originalUrl);
+  console.warn(`❌ 404 Not Found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ error: 'Route not found' });
-});
-
-/* ===============================
-   GLOBAL ERROR HANDLER
-================================ */
-app.use((err, req, res, next) => {
-  console.error('🔥 Server Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
 });
 
 /* ===============================
