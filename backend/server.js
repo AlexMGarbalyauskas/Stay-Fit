@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('./config/cors');
 const http = require('http');
@@ -7,20 +6,16 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const db = require('./db');
 
+require('dotenv').config();
 const app = express();
 
-// ===============================
-// MIDDLEWARE
-// ===============================
-const corsMiddleware = cors();
-app.use(corsMiddleware);          // Handles CORS for all requests
+// ===== Middleware =====
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ===============================
-// ROUTES
-// ===============================
+// ===== Routes =====
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/auth/google', require('./routes/googleAuth'));
 app.use('/api/me', require('./routes/meRoutes'));
@@ -29,32 +24,24 @@ app.use('/api/friends', require('./routes/friendsRoutes'));
 app.use('/api/messages', require('./routes/messagesRoutes'));
 
 // Health check
-app.get('/', (req, res) => res.send('✅ Stay-Fit API is running'));
-app.get('/api/health', (req, res) =>
-  res.json({ status: 'ok', uptime: process.uptime() })
-);
+app.get('/', (req, res) => res.send('✅ Stay-Fit API running'));
 
-// ===============================
-// SOCKET.IO
-// ===============================
+// ===== Socket.IO =====
 const server = http.createServer(app);
+const FRONTEND_URLS = [
+  'http://localhost:3000',
+  'https://stay-fit-1.onrender.com',
+  'https://stay-fit-2.onrender.com',
+];
+
 const io = new Server(server, {
-  cors: {
-    origin: [
-      'http://localhost:3000',
-      'https://stay-fit-1.onrender.com',
-      'https://stay-fit-2.onrender.com',
-    ],
-    credentials: true,
-  },
+  cors: { origin: FRONTEND_URLS, credentials: true },
 });
 
-// Socket authentication
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('No token provided'));
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
     socket.user = decoded;
     next();
@@ -63,7 +50,6 @@ io.use((socket, next) => {
   }
 });
 
-// Socket events
 io.on('connection', (socket) => {
   const userId = socket.user.id;
   console.log(`🟢 User connected: ${userId}`);
@@ -73,21 +59,12 @@ io.on('connection', (socket) => {
     if (!content?.trim()) return;
 
     const createdAt = new Date().toISOString();
-
     db.run(
       'INSERT INTO messages (sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?)',
       [userId, receiverId, content, createdAt],
       function (err) {
-        if (err) return console.error('DB error saving message', err);
-
-        const message = {
-          id: this.lastID,
-          sender_id: userId,
-          receiver_id: receiverId,
-          content,
-          created_at: createdAt,
-        };
-
+        if (err) return console.error(err);
+        const message = { id: this.lastID, sender_id: userId, receiver_id: receiverId, content, created_at: createdAt };
         io.to(`user:${receiverId}`).emit('receive_message', message);
         socket.emit('receive_message', message);
       }
@@ -97,10 +74,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log(`🔴 User disconnected: ${userId}`));
 });
 
-// ===============================
-// START SERVER
-// ===============================
+// ===== Start server =====
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () =>
-  console.log(`✅ Server + Socket.IO running on port ${PORT}`)
-);
+server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
