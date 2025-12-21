@@ -13,22 +13,10 @@ const app = express();
 // MIDDLEWARE
 // ===============================
 const corsMiddleware = cors();
-app.use(corsMiddleware);
+app.use(corsMiddleware);          // Handles CORS for all requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// ===============================
-// Handle preflight requests safely
-// ===============================
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    return corsMiddleware(req, res, next);
-  }
-  next();
-});
 
 // ===============================
 // ROUTES
@@ -54,8 +42,8 @@ const io = new Server(server, {
   cors: {
     origin: [
       'http://localhost:3000',
-      'https://stay-fit-2.onrender.com',
       'https://stay-fit-1.onrender.com',
+      'https://stay-fit-2.onrender.com',
     ],
     credentials: true,
   },
@@ -81,13 +69,11 @@ io.on('connection', (socket) => {
   console.log(`🟢 User connected: ${userId}`);
   socket.join(`user:${userId}`);
 
-  // Handle sending message
   socket.on('send_message', ({ receiverId, content }) => {
     if (!content?.trim()) return;
 
     const createdAt = new Date().toISOString();
 
-    // Save message to DB
     db.run(
       'INSERT INTO messages (sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?)',
       [userId, receiverId, content, createdAt],
@@ -102,9 +88,7 @@ io.on('connection', (socket) => {
           created_at: createdAt,
         };
 
-        // Emit to receiver
         io.to(`user:${receiverId}`).emit('receive_message', message);
-        // Echo back to sender
         socket.emit('receive_message', message);
       }
     );
