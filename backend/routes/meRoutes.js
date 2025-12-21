@@ -7,9 +7,7 @@ const fs = require('fs');
 
 const router = express.Router();
 
-/* ===============================
-   MULTER CONFIG
-================================ */
+// Multer setup for profile pictures
 const uploadDir = path.join(__dirname, '..', 'uploads', 'profile_pics');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -22,26 +20,22 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-/* ===============================
-   GET CURRENT USER
-================================ */
+// GET current user
 router.get('/', auth, (req, res) => {
   db.get(
     'SELECT id, username, email, bio, location, profile_picture FROM users WHERE id = ?',
     [req.user.id],
     (err, row) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
       if (!row) return res.status(404).json({ error: 'User not found' });
       res.json({ user: row });
     }
   );
 });
 
-/* ===============================
-   UPDATE PROFILE
-================================ */
+// UPDATE bio & location
 router.post('/update', auth, (req, res) => {
   const { bio, location } = req.body;
-
   const updates = [];
   const params = [];
 
@@ -54,15 +48,13 @@ router.post('/update', auth, (req, res) => {
     params.push(location);
   }
 
-  if (updates.length === 0) {
-    return res.status(400).json({ error: 'No fields to update' });
-  }
+  if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
 
   params.push(req.user.id);
   const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
 
   db.run(sql, params, function (err) {
-    if (err) return res.status(500).json({ error: err.message });
+    if (err) return res.status(500).json({ error: 'DB error' });
 
     db.get(
       'SELECT id, username, email, bio, location, profile_picture FROM users WHERE id = ?',
@@ -75,9 +67,7 @@ router.post('/update', auth, (req, res) => {
   });
 });
 
-/* ===============================
-   UPLOAD PROFILE PICTURE
-================================ */
+// UPLOAD profile picture
 router.post('/profile-picture', auth, upload.single('profile_picture'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 

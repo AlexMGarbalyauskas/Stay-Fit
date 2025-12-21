@@ -3,7 +3,7 @@ import { login } from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // username or email
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -11,11 +11,9 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await login(email, password);
-      console.log('Login response:', res.data); // 🔥 Debug login response
+      const res = await login(identifier, password); // API should accept username or email
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      console.log('Token saved to localStorage:', localStorage.getItem('token')); // 🔥 Debug token
       navigate('/home');
     } catch (err) {
       console.error('Login error:', err.response?.data || err);
@@ -30,19 +28,19 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Username or Email"
+            value={identifier}
+            onChange={e => setIdentifier(e.target.value)}
           />
 
           <input
-            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
             placeholder="Password"
             value={password}
@@ -50,7 +48,7 @@ export default function Login() {
           />
 
           <button
-            className="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-colors"
+            className="w-full bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition-colors"
             type="submit"
           >
             Login
@@ -62,7 +60,7 @@ export default function Login() {
         <div className="mt-6">
           <button
             onClick={handleGoogleLogin}
-            className="w-full border border-gray-300 p-3 rounded flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className="w-full border border-gray-300 p-3 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
             <img
               src="https://www.svgrepo.com/show/475656/google-color.svg"

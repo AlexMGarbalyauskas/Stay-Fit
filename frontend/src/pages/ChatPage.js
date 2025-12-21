@@ -16,9 +16,7 @@ export default function ChatPage() {
   const [text, setText] = useState('');
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   useEffect(scrollToBottom, [messages]);
 
   // Load friends
@@ -39,10 +37,7 @@ export default function ChatPage() {
   // Real-time messages
   useEffect(() => {
     const handler = (msg) => {
-      if (
-        activeFriend &&
-        (msg.sender_id === activeFriend.id || msg.receiver_id === activeFriend.id)
-      ) {
+      if (activeFriend && (msg.sender_id === activeFriend.id || msg.receiver_id === activeFriend.id)) {
         setMessages(prev => [...prev, msg]);
       }
     };
@@ -52,36 +47,25 @@ export default function ChatPage() {
 
   const sendMessage = () => {
     if (!text.trim() || !activeFriend) return;
-
-    socket.emit('send_message', {
-      receiverId: activeFriend.id,
-      content: text,
-    });
-
+    socket.emit('send_message', { receiverId: activeFriend.id, content: text });
     setText('');
   };
 
   return (
     <>
       <div className="flex h-[calc(100vh-56px)] pt-2 bg-gray-50">
-        {/* FRIENDS LIST */}
+        {/* Friends List */}
         <div className="w-1/3 border-r overflow-y-auto bg-white">
-          {friends.length === 0 && (
-            <p className="p-4 text-gray-400 text-center">No friends yet</p>
-          )}
+          {friends.length === 0 && <p className="p-4 text-gray-400 text-center">No friends yet</p>}
           {friends.map(friend => (
             <button
               key={friend.id}
               onClick={() => setActiveFriend(friend)}
-              className={`w-full text-left px-4 py-3 border-b hover:bg-gray-100 flex items-center gap-3 ${
-                activeFriend?.id === friend.id ? 'bg-gray-100' : ''
-              }`}
+              className={`w-full text-left px-4 py-3 border-b hover:bg-gray-100 flex items-center gap-3 ${activeFriend?.id === friend.id ? 'bg-gray-100' : ''}`}
             >
               {friend.profile_picture ? (
                 <img
-                  src={friend.profile_picture.startsWith('http')
-                    ? friend.profile_picture
-                    : `${API_BASE}${friend.profile_picture}`}
+                  src={friend.profile_picture.startsWith('http') ? friend.profile_picture : `${API_BASE}${friend.profile_picture}`}
                   alt={friend.username}
                   className="w-10 h-10 rounded-full object-cover"
                 />
@@ -95,7 +79,7 @@ export default function ChatPage() {
           ))}
         </div>
 
-        {/* CHAT WINDOW */}
+        {/* Chat Window */}
         <div className="flex-1 flex flex-col">
           {!activeFriend ? (
             <div className="flex items-center justify-center h-full text-gray-400">
@@ -103,24 +87,16 @@ export default function ChatPage() {
             </div>
           ) : (
             <>
-              {/* HEADER */}
-              <div className="p-4 border-b bg-white font-semibold text-lg">
-                {activeFriend.username}
-              </div>
+              {/* Header */}
+              <div className="p-4 border-b bg-white font-semibold text-lg">{activeFriend.username}</div>
 
-              {/* MESSAGES */}
+              {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {messages.map(msg => {
                   const isMine = msg.sender_id !== activeFriend.id;
                   return (
-                    <div
-                      key={msg.id}
-                      className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`px-4 py-2 rounded-lg max-w-xs break-words shadow
-                          ${isMine ? 'bg-blue-600 text-white' : 'bg-green-500 text-white'}`}
-                      >
+                    <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`px-4 py-2 rounded-lg max-w-xs break-words shadow ${isMine ? 'bg-blue-600 text-white' : 'bg-green-500 text-white'}`}>
                         <p>{msg.content}</p>
                         <span className="text-xs text-gray-100 mt-1 block text-right">
                           {dayjs(msg.created_at).format('HH:mm, DD MMM')}
@@ -132,7 +108,7 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* INPUT */}
+              {/* Input */}
               <div className="p-3 border-t bg-white flex gap-2">
                 <input
                   value={text}

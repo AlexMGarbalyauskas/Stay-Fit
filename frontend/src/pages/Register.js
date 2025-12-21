@@ -16,7 +16,6 @@ export default function Register() {
       setError('Passwords do not match');
       return;
     }
-
     try {
       await register(username, email, password);
       navigate('/login');
@@ -32,26 +31,26 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
         <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Username"
             value={username}
             onChange={e => setUsername(e.target.value)}
           />
 
           <input
-            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Email"
             value={email}
             onChange={e => setEmail(e.target.value)}
           />
 
           <input
-            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
             placeholder="Password"
             value={password}
@@ -59,7 +58,7 @@ export default function Register() {
           />
 
           <input
-            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
             placeholder="Confirm Password"
             value={passwordConfirm}
@@ -67,7 +66,7 @@ export default function Register() {
           />
 
           <button
-            className="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-colors"
+            className="w-full bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition-colors"
             type="submit"
           >
             Register
@@ -79,7 +78,7 @@ export default function Register() {
         <div className="mt-6">
           <button
             onClick={handleGoogleRegister}
-            className="w-full border border-gray-300 p-3 rounded flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className="w-full border border-gray-300 p-3 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
             <img
               src="https://www.svgrepo.com/show/475656/google-color.svg"

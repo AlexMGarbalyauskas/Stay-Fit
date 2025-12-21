@@ -3,9 +3,10 @@ const cors = require('cors');
 const allowedOrigins = [
   'http://localhost:3000',
   'https://stay-fit-2.onrender.com',
+  'https://stay-fit-1.onrender.com',
 ];
 
-module.exports = cors({
+const corsOptions = {
   origin(origin, callback) {
     if (!origin) return callback(null, true);
     if (!allowedOrigins.includes(origin)) {
@@ -16,4 +17,6 @@ module.exports = cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-});
+};
+
+module.exports = () => cors(corsOptions); // ✅ export function

@@ -1,10 +1,7 @@
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const db = require("../db");
-
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const bcrypt = require('bcrypt');
+const db = require('../db');
 
 passport.use(
   new GoogleStrategy(
@@ -18,27 +15,26 @@ passport.use(
         const email = profile.emails[0].value;
         const username = profile.displayName;
 
-        db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
+        db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
           if (err) return done(err);
           if (user) return done(null, user);
 
-          // Create new user
           const dummyPassword = 'google_' + Date.now();
           const passwordHash = await bcrypt.hash(dummyPassword, 10);
 
-          const stmt = db.prepare(
-            "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)"
+          db.run(
+            'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+            [username, email, passwordHash],
+            function (err) {
+              if (err) return done(err);
+              db.get('SELECT * FROM users WHERE id = ?', [this.lastID], (err, newUser) => {
+                return done(err, newUser);
+              });
+            }
           );
-          stmt.run(username, email, passwordHash, function(err) {
-            if (err) return done(err);
-            db.get("SELECT * FROM users WHERE id = ?", [this.lastID], (err, newUser) => {
-              return done(err, newUser);
-            });
-          });
-          stmt.finalize();
         });
       } catch (err) {
-        return done(err);
+        done(err);
       }
     }
   )
