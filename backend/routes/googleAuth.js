@@ -5,8 +5,10 @@ const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
+// Start Google OAuth
 router.get('/', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
+// Google OAuth callback
 router.get(
   '/callback',
   passport.authenticate('google', { session: false, failureRedirect: '/' }),
@@ -18,9 +20,15 @@ router.get(
       { expiresIn: '7d' }
     );
 
-    // Redirect dynamically to the same host as frontend
-    const frontendUrl =
-      process.env.CLIENT_URL || req.headers.origin || 'http://localhost:3000';
+    // Use CLIENT_URL from environment variables only (set this in Render)
+    const frontendUrl = process.env.CLIENT_URL;
+
+    if (!frontendUrl) {
+      console.error('CLIENT_URL not set in environment variables!');
+      return res.status(500).send('Frontend URL not configured.');
+    }
+
+    // Redirect to frontend with token
     res.redirect(`${frontendUrl}/?token=${token}`);
   }
 );
