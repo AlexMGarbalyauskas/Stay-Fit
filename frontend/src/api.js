@@ -32,7 +32,8 @@ export const getFriendStatus = userId => api.get(`/api/friends/status/${userId}`
 export const getFriends = () => api.get('/api/friends');
 export const unfriend = friendId => api.post('/api/friends/unfriend', { friendId });
 export const getFriendRequests = () => api.get('/api/friends/requests');
-export const acceptFriendRequest = (requestId, senderId) => api.post('/api/friends/accept', { requestId, senderId });
+export const acceptFriendRequest = (requestId, senderId) =>
+  api.post('/api/friends/accept', { requestId, senderId });
 export const rejectFriendRequest = requestId => api.post('/api/friends/reject', { requestId });
 
 // MESSAGES

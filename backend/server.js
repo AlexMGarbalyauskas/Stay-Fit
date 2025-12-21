@@ -12,10 +12,23 @@ const app = express();
 // ===============================
 // MIDDLEWARE
 // ===============================
-app.use(cors());
+const corsMiddleware = cors();
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ===============================
+// Handle preflight requests safely
+// ===============================
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return corsMiddleware(req, res, next);
+  }
+  next();
+});
 
 // ===============================
 // ROUTES
@@ -48,11 +61,12 @@ const io = new Server(server, {
   },
 });
 
-// Socket auth
+// Socket authentication
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('No token provided'));
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
     socket.user = decoded;
     next();
@@ -61,18 +75,19 @@ io.use((socket, next) => {
   }
 });
 
-// Handle messages
+// Socket events
 io.on('connection', (socket) => {
   const userId = socket.user.id;
   console.log(`🟢 User connected: ${userId}`);
   socket.join(`user:${userId}`);
 
+  // Handle sending message
   socket.on('send_message', ({ receiverId, content }) => {
     if (!content?.trim()) return;
 
     const createdAt = new Date().toISOString();
 
-    // Save to DB
+    // Save message to DB
     db.run(
       'INSERT INTO messages (sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?)',
       [userId, receiverId, content, createdAt],
@@ -87,7 +102,9 @@ io.on('connection', (socket) => {
           created_at: createdAt,
         };
 
+        // Emit to receiver
         io.to(`user:${receiverId}`).emit('receive_message', message);
+        // Echo back to sender
         socket.emit('receive_message', message);
       }
     );

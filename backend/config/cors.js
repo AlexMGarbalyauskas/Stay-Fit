@@ -1,22 +1,24 @@
 const cors = require('cors');
 
 const allowedOrigins = [
-  'http://localhost:3000',
-  'https://stay-fit-2.onrender.com',
-  'https://stay-fit-1.onrender.com',
+  'http://localhost:3000', // local frontend
+  process.env.FRONTEND_URL || 'https://stay-fit-frontend.onrender.com', // Render frontend
 ];
 
 const corsOptions = {
-  origin(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (!allowedOrigins.includes(origin)) {
-      return callback(new Error('CORS not allowed'), false);
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow server-to-server requests
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
     }
-    callback(null, true);
   },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 };
 
-module.exports = () => cors(corsOptions); // ✅ export function
+module.exports = () => cors(corsOptions);
