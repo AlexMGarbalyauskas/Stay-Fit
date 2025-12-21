@@ -1,19 +1,33 @@
-import { useState } from 'react';
-import { login } from '../api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { login, API_BASE } from '../api';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
-export default function Login() {
-  const [identifier, setIdentifier] = useState(''); // username or email
+export default function Login({ onLogin }) {
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    const userParam = params.get('user');
+    if (token) {
+      localStorage.setItem('token', token);
+      if (userParam) localStorage.setItem('user', userParam);
+      if (onLogin) onLogin();
+      navigate('/home');
+    }
+  }, [location.search, navigate, onLogin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await login(identifier, password); // API should accept username or email
+      const res = await login(identifier, password);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      if (onLogin) onLogin();
       navigate('/home');
     } catch (err) {
       console.error('Login error:', err.response?.data || err);
@@ -22,8 +36,7 @@ export default function Login() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href =
-      `${process.env.REACT_APP_API_URL.replace('/api','')}/api/auth/google`;
+    window.location.href = `${API_BASE}/api/auth/google`;
   };
 
   return (
@@ -38,7 +51,6 @@ export default function Login() {
             value={identifier}
             onChange={e => setIdentifier(e.target.value)}
           />
-
           <input
             className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
@@ -46,14 +58,12 @@ export default function Login() {
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
-
           <button
             className="w-full bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition-colors"
             type="submit"
           >
             Login
           </button>
-
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </form>
 

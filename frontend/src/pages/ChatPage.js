@@ -5,28 +5,46 @@ import Navbar from '../components/Navbar';
 import dayjs from 'dayjs';
 import { User } from 'lucide-react';
 
-const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:4000', {
-  auth: { token: localStorage.getItem('token') },
-});
-
 export default function ChatPage() {
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem('user'));
+  } catch {}
+  const token = localStorage.getItem('token');
+
   const [friends, setFriends] = useState([]);
   const [activeFriend, setActiveFriend] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  useEffect(scrollToBottom, [messages]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  // Load friends
+  useEffect(() => {
+    if (!token) return;
+    socketRef.current = io(API_BASE.replace('/api',''), { auth: { token } });
+    const s = socketRef.current;
+
+    s.on('connect_error', (err) => console.error('Socket connect error:', err));
+
+    s.on('receive_message', (msg) => {
+      if (activeFriend && (msg.sender_id === activeFriend.id || msg.receiver_id === activeFriend.id)) {
+        setMessages(prev => [...prev, msg]);
+      }
+    });
+
+    return () => s.disconnect();
+  }, [token, activeFriend]);
+
   useEffect(() => {
     api.get('/api/friends')
       .then(res => setFriends(res.data.friends || []))
       .catch(err => console.error('Friends load error', err));
   }, []);
 
-  // Load messages for active friend
   useEffect(() => {
     if (!activeFriend) return;
     api.get(`/api/messages/${activeFriend.id}`)
@@ -34,29 +52,24 @@ export default function ChatPage() {
       .catch(err => console.error('Messages load error', err));
   }, [activeFriend]);
 
-  // Real-time messages
-  useEffect(() => {
-    const handler = (msg) => {
-      if (activeFriend && (msg.sender_id === activeFriend.id || msg.receiver_id === activeFriend.id)) {
-        setMessages(prev => [...prev, msg]);
-      }
-    };
-    socket.on('receive_message', handler);
-    return () => socket.off('receive_message', handler);
-  }, [activeFriend]);
-
   const sendMessage = () => {
-    if (!text.trim() || !activeFriend) return;
-    socket.emit('send_message', { receiverId: activeFriend.id, content: text });
+    if (!text.trim() || !activeFriend || !socketRef.current) return;
+    socketRef.current.emit('send_message', { receiverId: activeFriend.id, content: text });
     setText('');
   };
+
+  if (!currentUser || !token) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500 text-lg">Please log in to access chat.</p>
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="flex h-[calc(100vh-56px)] pt-2 bg-gray-50">
-        {/* Friends List */}
         <div className="w-1/3 border-r overflow-y-auto bg-white">
-          {friends.length === 0 && <p className="p-4 text-gray-400 text-center">No friends yet</p>}
           {friends.map(friend => (
             <button
               key={friend.id}
@@ -79,7 +92,6 @@ export default function ChatPage() {
           ))}
         </div>
 
-        {/* Chat Window */}
         <div className="flex-1 flex flex-col">
           {!activeFriend ? (
             <div className="flex items-center justify-center h-full text-gray-400">
@@ -87,15 +99,12 @@ export default function ChatPage() {
             </div>
           ) : (
             <>
-              {/* Header */}
               <div className="p-4 border-b bg-white font-semibold text-lg">{activeFriend.username}</div>
-
-              {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {messages.map(msg => {
-                  const isMine = msg.sender_id !== activeFriend.id;
+                {messages.map((msg, idx) => {
+                  const isMine = Number(msg.sender_id) === Number(currentUser.id);
                   return (
-                    <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <div key={msg.id + '-' + idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                       <div className={`px-4 py-2 rounded-lg max-w-xs break-words shadow ${isMine ? 'bg-blue-600 text-white' : 'bg-green-500 text-white'}`}>
                         <p>{msg.content}</p>
                         <span className="text-xs text-gray-100 mt-1 block text-right">
@@ -108,7 +117,6 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
               <div className="p-3 border-t bg-white flex gap-2">
                 <input
                   value={text}
@@ -117,10 +125,7 @@ export default function ChatPage() {
                   placeholder="Type a message..."
                   className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
                 />
-                <button
-                  onClick={sendMessage}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                >
+                <button onClick={sendMessage} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
                   Send
                 </button>
               </div>

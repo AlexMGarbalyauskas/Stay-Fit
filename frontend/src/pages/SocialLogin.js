@@ -1,23 +1,26 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function SocialLogin() {
+export default function SocialLogin({ onLogin }) {
   const navigate = useNavigate();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
+    const userParam = params.get('user');
 
     if (token) {
-      // Save token and optionally fetch user info
+      // Save token and optionally save user info
       localStorage.setItem('token', token);
+      if (userParam) localStorage.setItem('user', userParam);
+      if (onLogin) onLogin();
       // Redirect to home or dashboard
       navigate('/home');
     } else {
       // If no token, redirect to login
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, onLogin]);
 
   return <p className="text-center mt-20 text-gray-500">Logging you in...</p>;
-}
+} 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { register } from '../api';
+import { register, API_BASE } from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Register() {
@@ -25,8 +25,7 @@ export default function Register() {
   };
 
   const handleGoogleRegister = () => {
-    window.location.href =
-      `${process.env.REACT_APP_API_URL.replace('/api','')}/api/auth/google`;
+    window.location.href = `${API_BASE}/api/auth/google`;
   };
 
   return (
