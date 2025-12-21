@@ -12,6 +12,7 @@ import FriendRequests from './pages/FriendRequests';
 import UserProfile from './pages/UserProfile';
 import Notifications from './pages/Notifications';
 import Friends from './pages/Friends';
+import ChatPage from './pages/ChatPage';
 
 function App() {
   const [refreshFriends, setRefreshFriends] = useState(0);
@@ -30,6 +31,7 @@ function App() {
         <Route path="/home" element={isAuthenticated ? <Home /> : <Navigate to="/login" />} />
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
+        <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
 
         <Route
           path="/find"

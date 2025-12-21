@@ -1,49 +1,77 @@
 import axios from 'axios';
 
-// Base URL WITHOUT /api to prevent doubling
-export const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+/*
+  Base URL WITHOUT /api
+  Prevents /api/api bugs
+*/
+export const API_BASE =
+  process.env.REACT_APP_API_URL || 'http://localhost:4000';
 
-// Auth header
-const authHeader = () => {
+/*
+  Axios instance
+*/
+const api = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+/*
+  Attach JWT automatically
+*/
+api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
-  return {
-    headers: {
-      Authorization: token ? `Bearer ${token}` : '',
-      'Content-Type': 'application/json',
-    },
-  };
-};
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-// ---------- AUTH ----------
+/* ===============================
+   AUTH
+================================ */
 export const register = (username, email, password) =>
-  axios.post(`${API_BASE}/api/register`, { username, email, password });
+  api.post('/api/auth/register', { username, email, password });
 
 export const login = (email, password) =>
-  axios.post(`${API_BASE}/api/login`, { email, password });
+  api.post('/api/auth/login', { email, password });
 
-// ---------- USERS ----------
-export const getUsers = () => axios.get(`${API_BASE}/api/users`, authHeader());
-export const getUser = (id) => axios.get(`${API_BASE}/api/users/${id}`, authHeader());
-export const getMe = () => axios.get(`${API_BASE}/api/me`, authHeader());
+/* ===============================
+   USERS
+================================ */
+export const getUsers = () => api.get('/api/users');
+export const getUser = id => api.get(`/api/users/${id}`);
+export const getMe = () => api.get('/api/me');
 
-// ---------- FRIEND REQUESTS ----------
-export const sendFriendRequest = (receiverId) =>
-  axios.post(`${API_BASE}/api/friends/request`, { receiverId }, authHeader());
+/* ===============================
+   FRIEND REQUESTS
+================================ */
+export const sendFriendRequest = receiverId =>
+  api.post('/api/friends/request', { receiverId });
 
-export const getFriendStatus = (userId) =>
-  axios.get(`${API_BASE}/api/friends/status/${userId}`, authHeader());
+export const getFriendStatus = userId =>
+  api.get(`/api/friends/status/${userId}`);
 
 export const getFriends = () =>
-  axios.get(`${API_BASE}/api/friends`, authHeader());
+  api.get('/api/friends');
 
-export const unfriend = (friendId) =>
-  axios.post(`${API_BASE}/api/friends/unfriend`, { friendId }, authHeader());
+export const unfriend = friendId =>
+  api.post('/api/friends/unfriend', { friendId });
 
 export const getFriendRequests = () =>
-  axios.get(`${API_BASE}/api/friends/requests`, authHeader());
+  api.get('/api/friends/requests');
 
 export const acceptFriendRequest = (requestId, senderId) =>
-  axios.post(`${API_BASE}/api/friends/accept`, { requestId, senderId }, authHeader());
+  api.post('/api/friends/accept', { requestId, senderId });
 
-export const rejectFriendRequest = (requestId) =>
-  axios.post(`${API_BASE}/api/friends/reject`, { requestId }, authHeader());
+export const rejectFriendRequest = requestId =>
+  api.post('/api/friends/reject', { requestId });
+
+/* ===============================
+   MESSAGES
+================================ */
+export const getMessages = userId =>
+  api.get(`/api/messages/${userId}`);
+
+export default api;
