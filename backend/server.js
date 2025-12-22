@@ -22,6 +22,8 @@ app.use('/api/me', require('./routes/meRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/friends', require('./routes/friendsRoutes'));
 app.use('/api/messages', require('./routes/messagesRoutes'));
+app.use('/api/notifications', require('./routes/notificationsRoutes'));
+
 
 // Health check
 app.get('/', (req, res) => res.send('✅ Stay-Fit API running'));
@@ -70,6 +72,13 @@ io.on('connection', (socket) => {
         const message = { id: this.lastID, sender_id: userId, receiver_id: receiverId, content, created_at: createdAt };
         io.to(`user:${receiverId}`).emit('receive_message', message);
         socket.emit('receive_message', message);
+
+        // Create a notification for the receiver
+        db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: content.slice(0, 200) })], (err) => {
+          if (err) console.error('Failed to create message notification', err);
+          // include preview content in the socket event for toast
+          io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: content.slice(0,200) });
+        });
       }
     );
   });

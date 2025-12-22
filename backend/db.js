@@ -62,6 +62,15 @@ CREATE TABLE IF NOT EXISTS message_reactions (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(message_id, user_id, emoji)
 );
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  data TEXT,
+  read INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 `;
 
 db.exec(initSql, (err) => {

@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
+import { useParams } from 'react-router-dom';
+import { getUser } from '../api';
 import { io } from 'socket.io-client';
 import api, { API_BASE, toggleMessageReaction, deleteMessage as apiDeleteMessage } from '../api';
 import Navbar from '../components/Navbar';
@@ -63,6 +65,21 @@ export default function ChatPage() {
       .then(res => setFriends(res.data.friends || []))
       .catch(err => console.error('Friends load error', err));
   }, []);
+
+  const params = useParams();
+
+  useEffect(() => {
+    // If route param present, fetch and set active friend
+    const userIdFromParams = params?.id;
+    if (userIdFromParams) {
+      // try to find in friends list first
+      const found = friends.find(f => Number(f.id) === Number(userIdFromParams));
+      if (found) setActiveFriend(found);
+      else {
+        getUser(userIdFromParams).then(r => setActiveFriend(r.data.user)).catch(() => {});
+      }
+    }
+  }, [params?.id, friends]);
 
   useEffect(() => {
     if (!activeFriend) return;

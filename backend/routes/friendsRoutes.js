@@ -21,7 +21,20 @@ router.post('/request', auth, (req, res) => {
         if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'Request already sent' });
         return res.status(500).json({ error: 'DB error' });
       }
-      res.json({ message: 'Request sent', id: this.lastID });
+      const requestId = this.lastID;
+
+      // Create a notification for receiver
+      db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'friend_request', JSON.stringify({ fromUserId: req.user.id, requestId })], (err2) => {
+        if (err2) console.error('Failed to create notification', err2);
+
+        // Emit socket notification if io available
+        try {
+          const io = req.app.get('io');
+          io && io.to(`user:${receiverId}`).emit('notification:new', { type: 'friend_request', fromUserId: req.user.id, requestId });
+        } catch (e) { }
+
+        res.json({ message: 'Request sent', id: requestId });
+      });
     }
   );
 });
@@ -52,9 +65,12 @@ router.post('/accept', auth, (req, res) => {
     err => {
       if (err) return res.status(500).json({ error: 'DB error' });
 
-      db.run('DELETE FROM friend_requests WHERE id = ?', [requestId], () =>
-        res.json({ message: 'Friend request accepted' })
-      );
+      db.run('DELETE FROM friend_requests WHERE id = ?', [requestId], () => {
+        // remove related notification if any
+        db.run("DELETE FROM notifications WHERE user_id = ? AND type = 'friend_request' AND data LIKE ?", [req.user.id, `%\"requestId\":${requestId}%`], () => {
+          res.json({ message: 'Friend request accepted' });
+        });
+      });
     }
   );
 });
@@ -64,9 +80,12 @@ router.post('/reject', auth, (req, res) => {
   const { requestId } = req.body;
   if (!requestId) return res.status(400).json({ error: 'Missing requestId' });
 
-  db.run('DELETE FROM friend_requests WHERE id = ?', [requestId], () =>
-    res.json({ message: 'Friend request rejected' })
-  );
+  db.run('DELETE FROM friend_requests WHERE id = ?', [requestId], () => {
+    // remove related notification(s)
+    db.run("DELETE FROM notifications WHERE user_id = ? AND type = 'friend_request' AND data LIKE ?", [req.user.id, `%\"requestId\":${requestId}%`], () => {
+      res.json({ message: 'Friend request rejected' });
+    });
+  });
 });
 
 // Get friends list
@@ -106,7 +125,19 @@ router.post('/unfriend', auth, (req, res) => {
   db.run(
     'DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)',
     [req.user.id, friendId, friendId, req.user.id],
-    () => res.json({ message: 'Unfriended successfully' })
+    (err) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
+
+      // notify the other user that they have been unfriended
+      db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [friendId, 'unfriended', JSON.stringify({ byUserId: req.user.id })], (err2) => {
+        if (err2) console.error('Failed to create unfriended notification', err2);
+        try {
+          const io = req.app.get('io');
+          io && io.to(`user:${friendId}`).emit('notification:new', { type: 'unfriended', byUserId: req.user.id });
+        } catch (e) {}
+        res.json({ message: 'Unfriended successfully' });
+      });
+    }
   );
 });
 
