@@ -23,7 +23,7 @@ const upload = multer({ storage });
 // GET current user
 router.get('/', auth, (req, res) => {
   db.get(
-    'SELECT id, username, email, bio, location, profile_picture FROM users WHERE id = ?',
+    'SELECT id, username, email, bio, location, profile_picture, nickname FROM users WHERE id = ?',
     [req.user.id],
     (err, row) => {
       if (err) return res.status(500).json({ error: 'DB error' });
@@ -35,7 +35,7 @@ router.get('/', auth, (req, res) => {
 
 // UPDATE bio & location
 router.post('/update', auth, (req, res) => {
-  const { bio, location } = req.body;
+  const { bio, location, nickname } = req.body;
   const updates = [];
   const params = [];
 
@@ -47,6 +47,10 @@ router.post('/update', auth, (req, res) => {
     updates.push('location = ?');
     params.push(location);
   }
+  if (nickname !== undefined) {
+    updates.push('nickname = ?');
+    params.push(nickname);
+  }
 
   if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
 
@@ -57,7 +61,7 @@ router.post('/update', auth, (req, res) => {
     if (err) return res.status(500).json({ error: 'DB error' });
 
     db.get(
-      'SELECT id, username, email, bio, location, profile_picture FROM users WHERE id = ?',
+      'SELECT id, username, email, bio, location, profile_picture, nickname FROM users WHERE id = ?',
       [req.user.id],
       (err, row) => {
         if (err || !row) return res.status(500).json({ error: 'Failed to fetch updated user' });

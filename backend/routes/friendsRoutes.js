@@ -29,7 +29,7 @@ router.post('/request', auth, (req, res) => {
 // Get incoming requests
 router.get('/requests', auth, (req, res) => {
   db.all(
-    `SELECT fr.id, fr.sender_id, u.username
+    `SELECT fr.id, fr.sender_id, u.username, u.nickname
      FROM friend_requests fr
      JOIN users u ON u.id = fr.sender_id
      WHERE fr.receiver_id = ?`,
@@ -72,7 +72,7 @@ router.post('/reject', auth, (req, res) => {
 // Get friends list
 router.get('/', auth, (req, res) => {
   db.all(
-    `SELECT u.id, u.username, u.profile_picture
+    `SELECT u.id, u.username, u.profile_picture, u.nickname
      FROM friends f
      JOIN users u ON u.id = f.friend_id
      WHERE f.user_id = ?`,

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   profile_picture TEXT,
   bio TEXT,
   location TEXT,
+  nickname TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

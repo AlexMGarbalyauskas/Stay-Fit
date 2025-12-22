@@ -56,6 +56,7 @@ export default function UserProfile() {
         {user.profile_picture ? <img src={user.profile_picture} alt={user.username} className="w-full h-full object-cover" /> : <User className="w-14 h-14 text-gray-500" />}
       </div>
       <h2 className="text-xl font-bold mt-4">@{user.username}</h2>
+      {user.nickname && <p className="text-sm text-gray-500">{user.nickname}</p>}
       <p className="text-sm text-gray-500">ID: {user.id}</p>
       <div className="mt-1 flex items-center gap-1 text-gray-700"><UsersIcon className="w-4 h-4" /><span>{friendsCount} Friends</span></div>
       <p className="mt-4 text-center text-gray-700">{user.bio || 'No bio yet.'}</p>

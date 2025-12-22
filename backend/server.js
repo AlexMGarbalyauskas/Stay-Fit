@@ -50,6 +50,9 @@ io.use((socket, next) => {
   }
 });
 
+// Make io available to routes
+app.set('io', io);
+
 io.on('connection', (socket) => {
   const userId = socket.user.id;
   console.log(`🟢 User connected: ${userId}`);

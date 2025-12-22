@@ -7,7 +7,7 @@ const router = express.Router();
 // GET all users (exclude self)
 router.get('/', auth, (req, res) => {
   db.all(
-    'SELECT id, username, profile_picture FROM users WHERE id != ?',
+    'SELECT id, username, profile_picture, nickname FROM users WHERE id != ?',
     [req.user.id],
     (err, rows) => {
       if (err) return res.status(500).json({ error: 'DB error' });
@@ -19,7 +19,7 @@ router.get('/', auth, (req, res) => {
 // GET single user by ID
 router.get('/:id', auth, (req, res) => {
   db.get(
-    'SELECT id, username, bio, profile_picture FROM users WHERE id = ?',
+    'SELECT id, username, bio, profile_picture, nickname FROM users WHERE id = ?',
     [req.params.id],
     (err, row) => {
       if (err) return res.status(500).json({ error: 'DB error' });

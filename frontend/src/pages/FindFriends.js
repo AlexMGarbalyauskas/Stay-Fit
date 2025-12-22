@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { User, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
-import { getUsers, getFriendStatus, sendFriendRequest, unfriend } from '../api';
+import ConfirmModal from '../components/ConfirmModal';
+import { getUsers, getFriendStatus, sendFriendRequest, unfriend, getMe } from '../api';
 
 export default function FindFriends({ onFriendUpdate }) {
   const [users, setUsers] = useState([]);
@@ -11,8 +12,10 @@ export default function FindFriends({ onFriendUpdate }) {
   const [search, setSearch] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statuses, setStatuses] = useState({});
+  const [me, setMe] = useState(null);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+  const navigate = useNavigate();
 
   // Fetch users
   const fetchUsers = () => {
@@ -30,12 +33,6 @@ export default function FindFriends({ onFriendUpdate }) {
         }));
         setUsers(updatedUsers);
         setFilteredUsers(updatedUsers);
-
-        allUsers.forEach(user => {
-          getFriendStatus(user.id).then(r =>
-            setStatuses(prev => ({ ...prev, [user.id]: r.data.status }))
-          );
-        });
       })
       .catch(console.error);
   };
@@ -44,12 +41,38 @@ export default function FindFriends({ onFriendUpdate }) {
     fetchUsers();
   }, []);
 
+  // Fetch current user (me)
+  useEffect(() => {
+    getMe()
+      .then(res => {
+        const user = res.data.user || res.data;
+        const normalized = {
+          ...user,
+          profile_picture: user.profile_picture
+            ? user.profile_picture.startsWith('http')
+              ? user.profile_picture
+              : `${API_URL}${user.profile_picture}`
+            : null
+        };
+        setMe(normalized);
+      })
+      .catch(() => setMe(null));
+  }, []);
+
+  // When users or me change, fetch friend statuses for other users
+  useEffect(() => {
+    users.forEach(u => {
+      if (me && u.id === me.id) return;
+      getFriendStatus(u.id).then(r =>
+        setStatuses(prev => ({ ...prev, [u.id]: r.data.status }))
+      ).catch(() => {});
+    });
+  }, [users, me]);
+
   // Re-filter when search term changes
   useEffect(() => {
     if (!searchTerm) return setFilteredUsers(users);
-    setFilteredUsers(users.filter(u =>
-      u.username.toLowerCase().includes(searchTerm.toLowerCase())
-    ));
+    setFilteredUsers(users.filter(u => u.username.includes(searchTerm)));
   }, [searchTerm, users]);
 
   const handleAddFriend = id =>
@@ -59,13 +82,34 @@ export default function FindFriends({ onFriendUpdate }) {
         if (onFriendUpdate) onFriendUpdate();
       });
 
-  const handleUnfriendClick = id =>
+  // Modal state for unfriend confirmation
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
+
+  const openUnfriendModal = (id, username) => {
+    setConfirmTarget({ id, username });
+    setConfirmOpen(true);
+  };
+
+  const closeUnfriendModal = () => {
+    setConfirmOpen(false);
+    setConfirmTarget(null);
+  };
+
+  const confirmUnfriend = () => {
+    if (!confirmTarget) return;
+    const id = confirmTarget.id;
     unfriend(id)
       .then(() => {
         setStatuses(prev => ({ ...prev, [id]: 'none' }));
         if (onFriendUpdate) onFriendUpdate();
+        closeUnfriendModal();
       })
-      .catch(() => alert('Failed to unfriend'));
+      .catch(() => {
+        alert('Failed to unfriend');
+        closeUnfriendModal();
+      });
+  };
 
   return (
     <div className="min-h-screen pt-20 pb-20 bg-gray-100">
@@ -78,54 +122,104 @@ export default function FindFriends({ onFriendUpdate }) {
             placeholder="Enter username..."
             value={search}
             onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') setSearchTerm(search.trim().replace(/^@/, '')); }}
             className="flex-1 p-2 border rounded focus:outline-none focus:ring"
           />
           <button
-            onClick={() => setSearchTerm(search)}
+            onClick={() => setSearchTerm(search.trim().replace(/^@/, ''))}
             className="px-4 py-2 bg-blue-500 text-white rounded"
           >
             Search
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {filteredUsers.map(user => (
-            <Link to={`/users/${user.id}`} key={user.id}>
-              <div className="flex flex-col items-center bg-white p-4 rounded shadow hover:shadow-md transition">
-                {user.profile_picture ? (
-                  <img src={user.profile_picture} alt={user.username} className="w-20 h-20 rounded-full mb-2" />
+        {/* Current user at top */}
+        {me && (
+          <div className="block">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate('/profile')}
+              onKeyDown={e => { if (e.key === 'Enter') navigate('/profile'); }}
+              className="flex items-center justify-between bg-white p-3 rounded shadow mb-2 cursor-pointer hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-3">
+                {me.profile_picture ? (
+                  <img src={me.profile_picture} alt={me.username} className="w-12 h-12 rounded-full" />
                 ) : (
-                  <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-2">
-                    <User className="w-10 h-10 text-gray-500" />
+                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                    <User className="w-6 h-6 text-gray-500" />
                   </div>
                 )}
-                <p className="text-gray-700 font-medium">@{user.username}</p>
-                {statuses[user.id] === 'none' && (
-                  <button
-                    onClick={e => { e.preventDefault(); handleAddFriend(user.id); }}
-                    className="mt-2 px-4 py-1 bg-blue-500 text-white rounded"
-                  >
-                    Add Friend
-                  </button>
-                )}
-                {statuses[user.id] === 'sent' && (
-                  <button disabled className="mt-2 px-4 py-1 bg-gray-400 text-white rounded">
-                    Request Sent
-                  </button>
-                )}
-                {statuses[user.id] === 'friends' && (
-                  <button
-                    onClick={e => { e.preventDefault(); handleUnfriendClick(user.id); }}
-                    className="mt-2 px-4 py-1 bg-red-500 text-white rounded"
-                  >
-                    Unfriend
-                  </button>
-                )}
+                <div>
+                  <p className="text-gray-800 font-medium">@{me.username}</p>
+                  <p className="text-xs text-gray-500">{me.nickname ? me.nickname : 'You'}</p>
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-500">View Profile</div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2 mt-3">
+          {filteredUsers.filter(u => u.id !== me?.id).map(user => (
+            <Link to={`/users/${user.id}`} key={user.id} className="block">
+              <div className="flex items-center justify-between bg-white p-3 rounded shadow hover:shadow-md transition">
+                <div className="flex items-center gap-3">
+                  {user.profile_picture ? (
+                    <img src={user.profile_picture} alt={user.username} className="w-12 h-12 rounded-full" />
+                  ) : (
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                      <User className="w-6 h-6 text-gray-500" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-gray-800 font-medium">@{user.username}</p>
+                    {user.nickname && <p className="text-xs text-gray-500">{user.nickname}</p>}
+                  </div>
+                </div>
+
+                <div className="ml-4 flex items-center gap-2">
+                  {statuses[user.id] === 'none' && (
+                    <button
+                      onClick={e => { e.preventDefault(); handleAddFriend(user.id); }}
+                      className="px-3 py-1 bg-blue-500 text-white rounded"
+                    >
+                      Add
+                    </button>
+                  )}
+                  {statuses[user.id] === 'sent' && (
+                    <button disabled className="px-3 py-1 bg-gray-400 text-white rounded">
+                      Sent
+                    </button>
+                  )}
+                  {statuses[user.id] === 'friends' && (
+                    <button
+                      onClick={e => { e.preventDefault(); openUnfriendModal(user.id, user.username); }}
+                      className="px-2 py-1 bg-red-500 text-white rounded-full"
+                      aria-label="Unfriend"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </Link>
           ))}
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Remove Friend"
+        message={`Are you sure you want to remove <strong>@${confirmTarget?.username}</strong> from your friends?`}
+        onConfirm={confirmUnfriend}
+        onCancel={closeUnfriendModal}
+        confirmText="Yes"
+        cancelText="No"
+      />
+
       <Navbar />
     </div>
   );

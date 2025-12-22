@@ -3,6 +3,7 @@ import { Users, UserX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getFriends, unfriend, API_BASE } from '../api';
 import Navbar from '../components/Navbar';
+import ConfirmModal from '../components/ConfirmModal';
 
 
 
@@ -25,10 +26,19 @@ export default function Friends({ refreshTrigger }) {
 
   useEffect(() => { fetchFriends(); }, [refreshTrigger]);
 
-  const handleUnfriend = async (friendId) => {
-    if (!window.confirm('Remove this friend?')) return;
-    await unfriend(friendId);
-    setFriends(prev => prev.filter(f => f.id !== friendId));
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
+
+  const openUnfriendModal = (friend) => {
+    setConfirmTarget(friend);
+    setConfirmOpen(true);
+  };
+  const closeUnfriendModal = () => { setConfirmOpen(false); setConfirmTarget(null); };
+  const handleUnfriend = async () => {
+    if (!confirmTarget) return;
+    await unfriend(confirmTarget.id);
+    setFriends(prev => prev.filter(f => f.id !== confirmTarget.id));
+    closeUnfriendModal();
   };
 
   if (loading) return <p className="mt-20 text-center text-gray-500">Loading friends...</p>;
@@ -63,10 +73,13 @@ export default function Friends({ refreshTrigger }) {
                         <Users className="w-5 h-5 text-gray-500" />
                       </div>
                     )}
-                    <span className="font-medium">@{friend.username}</span>
+                    <div>
+                      <span className="font-medium">@{friend.username}</span>
+                      {friend.nickname && <div className="text-xs text-gray-500">{friend.nickname}</div>}
+                    </div>
                   </div>
 
-                  <button onClick={() => handleUnfriend(friend.id)} className="text-red-500 hover:text-red-700" title="Unfriend">
+                  <button onClick={() => openUnfriendModal(friend)} className="text-red-500 hover:text-red-700" title="Unfriend">
                     <UserX size={18} />
                   </button>
                 </li>
@@ -75,6 +88,17 @@ export default function Friends({ refreshTrigger }) {
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Remove Friend"
+        message={`Are you sure you want to remove <strong>@${confirmTarget?.username}</strong> from your friends?`}
+        onConfirm={handleUnfriend}
+        onCancel={closeUnfriendModal}
+        confirmText="Yes"
+        cancelText="No"
+      />
+
       <Navbar />
     </>
   );

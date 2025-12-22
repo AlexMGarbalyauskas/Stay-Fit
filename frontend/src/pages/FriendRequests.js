@@ -23,7 +23,10 @@ export default function FriendRequests({ onFriendUpdate }) {
     <div className="p-4">
       {requests.map(r => (
         <div key={r.id} className="flex justify-between items-center mb-3">
-          <p>@{r.username}</p>
+          <div>
+            <p>@{r.username}</p>
+            {r.nickname && <p className="text-xs text-gray-500">{r.nickname}</p>}
+          </div>
           <div className="flex gap-2">
             <button onClick={() => accept(r.id, r.sender_id)} className="px-2 py-1 bg-green-500 text-white rounded">Accept</button>
             <button onClick={() => reject(r.id)} className="px-2 py-1 bg-red-500 text-white rounded">Reject</button>

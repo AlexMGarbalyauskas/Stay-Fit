@@ -10,8 +10,10 @@ export default function Profile() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [bioEditing, setBioEditing] = useState(false);
   const [locationEditing, setLocationEditing] = useState(false);
+  const [nicknameEditing, setNicknameEditing] = useState(false);
   const [bioInput, setBioInput] = useState('');
   const [locationInput, setLocationInput] = useState('');
+  const [nicknameInput, setNicknameInput] = useState('');
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
@@ -23,6 +25,7 @@ export default function Profile() {
       setUser(res.data.user);
       setBioInput(res.data.user.bio || '');
       setLocationInput(res.data.user.location || '');
+      setNicknameInput(res.data.user.nickname || '');
 
       const friendsRes = await axios.get(`${API_URL}/api/friends`, authHeaders);
       setFriendsCount(friendsRes.data.friends.length);
@@ -67,6 +70,14 @@ export default function Profile() {
     } catch (err) { console.error(err); alert('Update failed'); }
   };
 
+  const handleSaveNickname = async () => {
+    try {
+      const res = await axios.post(`${API_URL}/api/me/update`, { nickname: nicknameInput }, authHeaders);
+      setUser(res.data.user);
+      setNicknameEditing(false);
+    } catch (err) { console.error(err); alert('Update failed'); }
+  };
+
   if (!user) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
 
   // Dummy video data (replace with actual user videos if available)
@@ -98,6 +109,22 @@ export default function Profile() {
 
           {/* Username & Friends */}
           <h2 className="text-center text-xl font-bold mt-4">@{user.username}</h2>
+          <div className="text-center mt-1">
+            {nicknameEditing ? (
+              <div className="flex items-center justify-center gap-2">
+                <input type="text" value={nicknameInput} onChange={e => setNicknameInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveNickname()} className="p-1 border rounded" autoFocus />
+                <button onClick={handleSaveNickname} className="bg-green-500 px-2 py-1 rounded text-white"><Check size={14} /></button>
+                <button onClick={() => { setNicknameEditing(false); setNicknameInput(user.nickname || ''); }} className="px-2 py-1 bg-gray-200 rounded">Cancel</button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                {/* Styled like username but slightly smaller */}
+                <span className="text-lg font-semibold">{user.nickname || 'No display name'}</span>
+                <button onClick={() => setNicknameEditing(true)} className="text-blue-500 hover:underline text-xs">Edit</button>
+              </div>
+            )}
+          </div>
+
           <p className="text-center text-sm text-gray-500">ID: {user.id}</p>
           <div className="text-center mt-1 flex justify-center items-center gap-1 text-gray-700">
             <UsersIcon className="w-4 h-4" />

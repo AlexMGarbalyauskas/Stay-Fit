@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
   profile_picture TEXT,
   bio TEXT,
   location TEXT,
+  nickname TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -52,10 +53,31 @@ CREATE TABLE IF NOT EXISTS messages (
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS message_reactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  message_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(message_id, user_id, emoji)
+);
 `;
 
 db.exec(initSql, (err) => {
   if (err) console.error('DB init error', err);
+
+  // Ensure 'nickname' column exists (safe for upgrades)
+  db.all("PRAGMA table_info('users')", (err2, cols) => {
+    if (err2) return console.error('Failed to check users table info', err2);
+    const hasNickname = cols && cols.some(c => c.name === 'nickname');
+    if (!hasNickname) {
+      db.run("ALTER TABLE users ADD COLUMN nickname TEXT", err3 => {
+        if (err3) console.error('Failed to add nickname column', err3);
+        else console.log('✅ Added nickname column to users');
+      });
+    }
+  });
 });
 
 module.exports = db;
