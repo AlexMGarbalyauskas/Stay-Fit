@@ -71,6 +71,42 @@ CREATE TABLE IF NOT EXISTS notifications (
   read INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Posts table for videos and other media posts
+CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  title TEXT,
+  caption TEXT,
+  media_path TEXT NOT NULL,
+  media_type TEXT NOT NULL,
+  duration_seconds INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS likes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(post_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS saves (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(post_id, user_id)
+);
 `;
 
 db.exec(initSql, (err) => {
@@ -84,6 +120,18 @@ db.exec(initSql, (err) => {
       db.run("ALTER TABLE users ADD COLUMN nickname TEXT", err3 => {
         if (err3) console.error('Failed to add nickname column', err3);
         else console.log('✅ Added nickname column to users');
+      });
+    }
+  });
+
+  // Ensure 'title' column exists in posts (safe for upgrades)
+  db.all("PRAGMA table_info('posts')", (err4, cols2) => {
+    if (err4) return console.error('Failed to check posts table info', err4);
+    const hasTitle = cols2 && cols2.some(c => c.name === 'title');
+    if (!hasTitle) {
+      db.run("ALTER TABLE posts ADD COLUMN title TEXT", err5 => {
+        if (err5) console.error('Failed to add title column to posts', err5);
+        else console.log('✅ Added title column to posts');
       });
     }
   });

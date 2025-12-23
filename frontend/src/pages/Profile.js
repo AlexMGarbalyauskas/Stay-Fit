@@ -1,24 +1,32 @@
 import { useEffect, useState } from 'react';
-import { User, Share2, Edit2, Check, Users as UsersIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Heart, Bookmark, Edit2, Check, Share2, UsersIcon } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import ProfileHeader from '../components/ProfileHeader';
 import axios from 'axios';
+import { getMyPosts, getSavedPosts, toggleLike, toggleSave, updatePost } from '../api';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [friendsCount, setFriendsCount] = useState(0);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [showSaved, setShowSaved] = useState(false);
+
+  // Profile editing states
   const [bioEditing, setBioEditing] = useState(false);
-  const [locationEditing, setLocationEditing] = useState(false);
-  const [nicknameEditing, setNicknameEditing] = useState(false);
   const [bioInput, setBioInput] = useState('');
+  const [locationEditing, setLocationEditing] = useState(false);
   const [locationInput, setLocationInput] = useState('');
+  const [nicknameEditing, setNicknameEditing] = useState(false);
   const [nicknameInput, setNicknameInput] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
+  // Fetch profile info
   const fetchProfile = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/me`, authHeaders);
@@ -26,155 +34,437 @@ export default function Profile() {
       setBioInput(res.data.user.bio || '');
       setLocationInput(res.data.user.location || '');
       setNicknameInput(res.data.user.nickname || '');
-
       const friendsRes = await axios.get(`${API_URL}/api/friends`, authHeaders);
       setFriendsCount(friendsRes.data.friends.length);
     } catch (err) {
-      console.error('Failed to fetch profile:', err);
+      console.error(err);
     }
   };
 
-  useEffect(() => { fetchProfile(); }, []);
-
-  // --- Profile Picture ---
-  const handleProfilePictureChange = e => setSelectedFile(e.target.files[0]);
-  const handleUploadProfilePicture = async () => {
-    if (!selectedFile) return alert('Select a file first');
-    const formData = new FormData();
-    formData.append('profile_picture', selectedFile);
+  // Fetch user's posts
+  const fetchMyPosts = async () => {
     try {
-      const res = await axios.post(`${API_URL}/api/me/profile-picture`, formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-      });
-      setUser(res.data.user); // update full user
-      setSelectedFile(null);
-      alert('Profile picture updated!');
-    } catch (err) { console.error(err); alert('Upload failed'); }
+      const res = await getMyPosts();
+      setPosts(res.data.posts || []);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  // --- Bio ---
+  // Fetch saved posts
+  const fetchSaved = async () => {
+    try {
+      const res = await getSavedPosts();
+      setSavedPosts(res.data.posts || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Save bio
   const handleSaveBio = async () => {
     try {
-      const res = await axios.post(`${API_URL}/api/me/update`, { bio: bioInput }, authHeaders);
-      setUser(res.data.user);
+      await axios.put(`${API_URL}/api/me`, { bio: bioInput }, authHeaders);
+      setUser(prev => ({ ...prev, bio: bioInput }));
       setBioEditing(false);
-    } catch (err) { console.error(err); alert('Update failed'); }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save bio');
+    }
   };
 
-  // --- Location ---
+  // Save location
   const handleSaveLocation = async () => {
     try {
-      const res = await axios.post(`${API_URL}/api/me/update`, { location: locationInput }, authHeaders);
-      setUser(res.data.user);
+      await axios.put(`${API_URL}/api/me`, { location: locationInput }, authHeaders);
+      setUser(prev => ({ ...prev, location: locationInput }));
       setLocationEditing(false);
-    } catch (err) { console.error(err); alert('Update failed'); }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save location');
+    }
   };
 
+  // Save nickname
   const handleSaveNickname = async () => {
     try {
-      const res = await axios.post(`${API_URL}/api/me/update`, { nickname: nicknameInput }, authHeaders);
-      setUser(res.data.user);
+      await axios.put(`${API_URL}/api/me`, { nickname: nicknameInput }, authHeaders);
+      setUser(prev => ({ ...prev, nickname: nicknameInput }));
       setNicknameEditing(false);
-    } catch (err) { console.error(err); alert('Update failed'); }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save nickname');
+    }
   };
 
-  if (!user) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+  // Handle profile picture upload
+  const handleProfilePictureChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
 
-  // Dummy video data (replace with actual user videos if available)
-  const videos = Array.from({ length: 12 });
+  // Upload profile picture
+  const handleUploadProfilePicture = async () => {
+    if (!selectedFile) return;
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const res = await axios.post(`${API_URL}/api/me/profile-picture`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(prev => ({ ...prev, profile_picture: res.data.profile_picture }));
+      setSelectedFile(null);
+      alert('Profile picture updated');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload profile picture');
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+    fetchMyPosts();
+    fetchSaved();
+  }, []);
+
+  const navigate = useNavigate();
+
+  if (!user) {
+    return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+  }
+
+  const displayPosts = showSaved ? savedPosts : posts;
 
   return (
     <>
       <ProfileHeader />
-
-      <div className="pt-20 pb-20 min-h-screen bg-gray-100">
-        <div className="max-w-md mx-auto px-4">
-          {/* Avatar */}
-          <div className="flex justify-center mt-6 relative">
-            {user.profile_picture ? (
-              <img
-                src={user.profile_picture.startsWith('http') ? user.profile_picture : `${API_URL}${user.profile_picture}`}
-                alt="Profile"
-                className="w-28 h-28 rounded-full object-cover"
+      <div className="pt-20 pb-20 min-h-screen bg-white">
+        <div className="max-w-2xl mx-auto px-4">
+          {/* Profile Header Section */}
+          <div className="flex gap-8 py-8 border-b">
+            {/* Profile Picture */}
+            <div className="flex justify-center relative">
+              {user.profile_picture ? (
+                <img
+                  src={user.profile_picture.startsWith('http') ? user.profile_picture : `${API_URL}${user.profile_picture}`}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center">
+                  <User className="w-16 h-16 text-gray-500" />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureChange}
+                id="profilePicInput"
+                className="hidden"
               />
-            ) : (
-              <div className="w-28 h-28 bg-gray-200 rounded-full flex items-center justify-center">
-                <User className="w-14 h-14 text-gray-500" />
+              <button
+                onClick={() => document.getElementById('profilePicInput').click()}
+                className="absolute bottom-0 right-0 bg-blue-500 px-3 py-1 rounded-full text-white text-xs hover:bg-blue-600 transition"
+              >
+                Change
+              </button>
+              {selectedFile && (
+                <button
+                  onClick={handleUploadProfilePicture}
+                  className="absolute top-0 left-0 bg-green-500 px-2 py-1 rounded text-white text-xs hover:bg-green-600 transition"
+                >
+                  Upload
+                </button>
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1">
+              {/* Username & Nickname */}
+              <div className="flex items-center gap-4 mb-4">
+                <h1 className="text-2xl font-light">@{user.username}</h1>
+                {nicknameEditing ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={nicknameInput}
+                      onChange={(e) => setNicknameInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSaveNickname()}
+                      className="p-1 border rounded text-sm"
+                      autoFocus
+                    />
+                    <button onClick={handleSaveNickname} className="bg-green-500 px-2 py-1 rounded text-white text-xs">
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNicknameEditing(false);
+                        setNicknameInput(user.nickname || '');
+                      }}
+                      className="text-gray-500 text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setNicknameEditing(true)}
+                    className="text-blue-500 text-sm hover:underline"
+                  >
+                    {nicknameEditing ? 'Editing...' : 'Edit Nickname'}
+                  </button>
+                )}
               </div>
-            )}
-            <input type="file" accept="image/*" onChange={handleProfilePictureChange} id="profilePicInput" className="hidden" />
-            <button onClick={() => document.getElementById('profilePicInput').click()} className="absolute bottom-0 right-0 bg-blue-500 px-3 py-1 rounded-full text-white text-xs hover:bg-blue-600 transition">Change</button>
-            {selectedFile && <button onClick={handleUploadProfilePicture} className="absolute bottom-0 left-0 bg-green-500 px-3 py-1 rounded-full text-white text-xs hover:bg-green-600 transition">Upload</button>}
-          </div>
 
-          {/* Username & Friends */}
-          <h2 className="text-center text-xl font-bold mt-4">@{user.username}</h2>
-          <div className="text-center mt-1">
-            {nicknameEditing ? (
-              <div className="flex items-center justify-center gap-2">
-                <input type="text" value={nicknameInput} onChange={e => setNicknameInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveNickname()} className="p-1 border rounded" autoFocus />
-                <button onClick={handleSaveNickname} className="bg-green-500 px-2 py-1 rounded text-white"><Check size={14} /></button>
-                <button onClick={() => { setNicknameEditing(false); setNicknameInput(user.nickname || ''); }} className="px-2 py-1 bg-gray-200 rounded">Cancel</button>
+              {/* Bio */}
+              <div className="mb-3">
+                {bioEditing ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={bioInput}
+                      onChange={(e) => setBioInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSaveBio()}
+                      className="w-full p-2 border rounded text-sm"
+                      autoFocus
+                      placeholder="Add bio"
+                    />
+                    <button onClick={handleSaveBio} className="bg-green-500 px-2 py-1 rounded text-white text-xs">
+                      <Check size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-700">{user.bio || 'No bio'}</p>
+                    <button onClick={() => setBioEditing(true)} className="text-gray-400 hover:text-gray-600 text-xs">
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2">
-                {/* Styled like username but slightly smaller */}
-                <span className="text-lg font-semibold">{user.nickname || 'No display name'}</span>
-                <button onClick={() => setNicknameEditing(true)} className="text-blue-500 hover:underline text-xs">Edit</button>
+
+              {/* Location */}
+              <div className="mb-4">
+                {locationEditing ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSaveLocation()}
+                      className="w-full p-2 border rounded text-sm"
+                      autoFocus
+                      placeholder="Add location"
+                    />
+                    <button onClick={handleSaveLocation} className="bg-green-500 px-2 py-1 rounded text-white text-xs">
+                      <Check size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-700">{user.location || 'No location'}</p>
+                    <button onClick={() => setLocationEditing(true)} className="text-gray-400 hover:text-gray-600 text-xs">
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          <p className="text-center text-sm text-gray-500">ID: {user.id}</p>
-          <div className="text-center mt-1 flex justify-center items-center gap-1 text-gray-700">
-            <UsersIcon className="w-4 h-4" />
-            <span>{friendsCount} Friends</span>
-          </div>
-
-          {/* Bio */}
-          <div className="mt-4 flex items-center gap-2">
-            {bioEditing ? (
-              <>
-                <input type="text" value={bioInput} onChange={e => setBioInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveBio()} className="w-full p-2 border rounded" autoFocus />
-                <button onClick={handleSaveBio} className="bg-green-500 px-2 py-1 rounded text-white"><Check size={16} /></button>
-              </>
-            ) : (
-              <>
-                <p className="flex-1">{user.bio || 'No bio yet.'}</p>
-                <button onClick={() => setBioEditing(true)} className="text-blue-500 hover:underline"><Edit2 size={16} /></button>
-              </>
-            )}
-          </div>
-
-          {/* Location */}
-          <div className="mt-2 flex items-center gap-2">
-            {locationEditing ? (
-              <>
-                <input type="text" value={locationInput} onChange={e => setLocationInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveLocation()} className="w-full p-2 border rounded" autoFocus />
-                <button onClick={handleSaveLocation} className="bg-green-500 px-2 py-1 rounded text-white"><Check size={16} /></button>
-              </>
-            ) : (
-              <>
-                <p className="flex-1">{user.location || 'No location yet.'}</p>
-                <button onClick={() => setLocationEditing(true)} className="text-blue-500 hover:underline"><Edit2 size={16} /></button>
-              </>
-            )}
-          </div>
-
-          {/* Share */}
-          <div className="flex justify-center mt-4">
-            <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-medium hover:bg-gray-50 transition">
-              <Share2 className="w-4 h-4" /> Share Profile
-            </button>
-          </div>
-
-          {/* Videos */}
-          <div className="border-t my-6 grid grid-cols-3 gap-1">
-            {videos.map((_, i) => (
-              <div key={i} className="aspect-square bg-gray-300 flex items-center justify-center">
-                <span className="text-xs text-gray-600">Video</span>
+              {/* Stats */}
+              <div className="flex gap-6 mb-4 text-sm">
+                <div>
+                  <span className="font-semibold">{posts.length}</span>
+                  <span className="text-gray-500"> posts</span>
+                </div>
+                <div>
+                  <span className="font-semibold">{friendsCount}</span>
+                  <span className="text-gray-500"> friends</span>
+                </div>
               </div>
-            ))}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Profile link copied!');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-100 rounded font-semibold text-sm hover:bg-gray-200 transition flex items-center justify-center gap-2"
+                >
+                  <Share2 className="w-4 h-4" /> Share
+                </button>
+                <button
+                  onClick={() => navigate('/saved-posts')}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded font-semibold text-sm hover:bg-blue-600 transition flex items-center justify-center gap-2"
+                >
+                  <Bookmark className="w-4 h-4" /> Saved
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Posts Section */}
+          <div className="mt-8">
+            <div className="flex justify-between items-center border-t py-4">
+              <h2 className="font-semibold text-sm uppercase tracking-wider">
+                {showSaved ? 'Saved Posts' : 'Posts'}
+              </h2>
+              <button
+                onClick={() => setShowSaved(!showSaved)}
+                className="text-blue-500 text-sm font-semibold hover:text-blue-600"
+              >
+                {showSaved ? 'View Posts' : 'View Saved'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 mt-4">
+              {displayPosts.length === 0 ? (
+                <div className="col-span-3 text-center text-gray-500 py-8">
+                  {showSaved ? 'No saved posts yet.' : 'No posts yet.'}
+                </div>
+              ) : (
+                displayPosts.map((p) => (
+                  <div
+                    key={p.id}
+                    className="aspect-square bg-gray-200 relative overflow-hidden rounded group cursor-pointer"
+                  >
+                    {p.media_type && p.media_type.startsWith('image/') ? (
+                      <img
+                        src={`${API_URL}${p.media_path}`}
+                        className="w-full h-full object-cover"
+                        alt="post"
+                      />
+                    ) : (
+                      <video
+                        src={`${API_URL}${p.media_path}`}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100">
+                      {/* Edit Button */}
+                      {!showSaved && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newTitle = prompt('Edit title', p.title || '');
+                            if (newTitle === null) return;
+                            const newCaption = prompt('Edit caption', p.caption || '');
+                            if (newCaption === null) return;
+
+                            updatePost(p.id, { title: newTitle, caption: newCaption })
+                              .then((res) => {
+                                setPosts((prev) =>
+                                  prev.map((x) => (x.id === p.id ? res.data.post : x))
+                                );
+                                alert('Post updated');
+                              })
+                              .catch((err) => {
+                                console.error(err);
+                                alert(err?.response?.data?.error || 'Update failed');
+                              });
+                          }}
+                          className="text-white hover:text-gray-300"
+                          title="Edit"
+                        >
+                          <Edit2 size={20} />
+                        </button>
+                      )}
+
+                      {/* Comments Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/posts/${p.id}/comments`);
+                        }}
+                        className="text-white hover:text-gray-300 flex items-center gap-2"
+                        title="Comments"
+                      >
+                        <span className="text-sm font-semibold">{p.comments_count || 0}</span>
+                      </button>
+
+                      {/* Like Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(p.id)
+                            .then((res) => {
+                              setPosts((prev) =>
+                                prev.map((x) =>
+                                  x.id === p.id
+                                    ? { ...x, liked: res.data.liked, likes_count: res.data.count }
+                                    : x
+                                )
+                              );
+                            })
+                            .catch((err) => {
+                              console.error(err);
+                              if (err?.response?.status === 404) {
+                                setPosts((prev) => prev.filter((x) => x.id !== p.id));
+                              }
+                            });
+                        }}
+                        className={`text-white hover:text-gray-300 flex items-center gap-2`}
+                        title="Like"
+                      >
+                        <Heart
+                          size={20}
+                          fill={p.liked ? 'currentColor' : 'none'}
+                          className={p.liked ? 'text-red-500' : ''}
+                        />
+                        <span className="text-sm font-semibold">{p.likes_count || 0}</span>
+                      </button>
+
+                      {/* Save Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSave(p.id)
+                            .then((res) => {
+                              if (showSaved) {
+                                setSavedPosts((prev) => prev.filter((x) => x.id !== p.id));
+                              } else {
+                                setPosts((prev) =>
+                                  prev.map((x) =>
+                                    x.id === p.id
+                                      ? { ...x, saved: res.data.saved, saves_count: res.data.count }
+                                      : x
+                                  )
+                                );
+                              }
+                            })
+                            .catch((err) => {
+                              console.error(err);
+                            });
+                        }}
+                        className={`text-white hover:text-gray-300 flex items-center gap-2`}
+                        title="Save"
+                      >
+                        <Bookmark
+                          size={20}
+                          fill={p.saved ? 'currentColor' : 'none'}
+                          className={p.saved ? 'text-blue-400' : ''}
+                        />
+                        <span className="text-sm font-semibold">{p.saves_count || 0}</span>
+                      </button>
+                    </div>
+
+                    {/* Title overlay */}
+                    {p.title && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
+                        <p className="text-white text-xs truncate">{p.title}</p>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -182,3 +472,4 @@ export default function Profile() {
     </>
   );
 }
+

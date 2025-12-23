@@ -47,4 +47,23 @@ export const getNotifications = (type) => api.get(`/api/notifications${type ? `?
 export const markNotificationRead = (id) => api.post('/api/notifications/mark-read', { id });
 export const markAllNotificationsRead = () => api.post('/api/notifications/mark-all-read');
 
+// POSTS
+export const getPosts = () => api.get('/api/posts');
+export const getMyPosts = () => api.get('/api/posts/me');
+export const getUserPosts = (userId) => api.get(`/api/posts/user/${userId}`);
+export const createPost = (formData) => api.post('/api/posts', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updatePost = (postId, data) => api.put(`/api/posts/${postId}`, data);
+
+// LIKES & SAVES
+export const getPostLikes = (postId) => api.get(`/api/posts/${postId}/likes`);
+export const toggleLike = (postId) => api.post(`/api/posts/${postId}/like`);
+export const getPostSaves = (postId) => api.get(`/api/posts/${postId}/saves`);
+export const toggleSave = (postId) => api.post(`/api/posts/${postId}/save`);
+
+// COMMENTS
+export const getComments = (postId) => api.get(`/api/posts/${postId}/comments`);
+export const createComment = (postId, content) => api.post(`/api/posts/${postId}/comments`, { content });
+export const getPost = (postId) => api.get(`/api/posts/${postId}`);
+export const getSavedPosts = () => api.get('/api/posts/saved');
+
 export default api;

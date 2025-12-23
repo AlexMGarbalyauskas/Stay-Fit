@@ -1,0 +1,22 @@
+-- Migration: add likes and saves tables
+CREATE TABLE
+IF NOT EXISTS likes
+(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE
+(post_id, user_id)
+);
+
+CREATE TABLE
+IF NOT EXISTS saves
+(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE
+(post_id, user_id)
+);

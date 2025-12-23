@@ -6,8 +6,11 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import SocialLogin from './pages/SocialLogin';
 import Profile from './pages/Profile';
+import SavedPosts from './pages/SavedPosts';
 import Settings from './pages/Settings';
 import FindFriends from './pages/FindFriends';
+import Post from './pages/Post';
+import PostComments from './pages/PostComments';
 import FriendRequests from './pages/FriendRequests';
 import UserProfile from './pages/UserProfile';
 import Notifications from './pages/Notifications';
@@ -56,6 +59,9 @@ function App() {
 
         <Route path="/home" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
+        <Route path="/saved-posts" element={isAuthenticated ? <SavedPosts /> : <Navigate to="/login" />} />
+        <Route path="/post" element={isAuthenticated ? <Post /> : <Navigate to="/login" />} />
+        <Route path="/posts/:id/comments" element={isAuthenticated ? <PostComments /> : <Navigate to="/login" />} />
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
         <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
@@ -94,6 +100,20 @@ function App() {
         setToast({ data });
         // auto-hide
         setTimeout(() => setToast(null), 5000);
+        // If it's a post notification, trigger a feed refresh
+        try {
+          if (data?.type === 'post') {
+            window.dispatchEvent(new CustomEvent('feed:refresh', { detail: { fromUserId: data.fromUserId, postId: data.postId } }));
+          }
+        } catch (e) {}
+      });
+      // forward post comments updates to pages
+      socket.on('post:commentsUpdated', (data) => {
+        try { window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: data })); } catch (e) {}
+      });
+      // Listen for explicit post:new to refresh feed
+      socket.on('post:new', (data) => {
+        try { window.dispatchEvent(new CustomEvent('feed:refresh', { detail: data })); } catch (e) {}
       });
       return () => socket.disconnect();
     }, []);

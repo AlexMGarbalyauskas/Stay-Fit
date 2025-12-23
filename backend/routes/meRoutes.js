@@ -33,7 +33,45 @@ router.get('/', auth, (req, res) => {
   );
 });
 
-// UPDATE bio & location
+// UPDATE bio & location & nickname (PUT endpoint)
+router.put('/', auth, (req, res) => {
+  const { bio, location, nickname } = req.body;
+  const updates = [];
+  const params = [];
+
+  if (bio !== undefined) {
+    updates.push('bio = ?');
+    params.push(bio);
+  }
+  if (location !== undefined) {
+    updates.push('location = ?');
+    params.push(location);
+  }
+  if (nickname !== undefined) {
+    updates.push('nickname = ?');
+    params.push(nickname);
+  }
+
+  if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
+
+  params.push(req.user.id);
+  const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+
+  db.run(sql, params, function (err) {
+    if (err) return res.status(500).json({ error: 'DB error' });
+
+    db.get(
+      'SELECT id, username, email, bio, location, profile_picture, nickname FROM users WHERE id = ?',
+      [req.user.id],
+      (err, row) => {
+        if (err || !row) return res.status(500).json({ error: 'Failed to fetch updated user' });
+        res.json({ user: row });
+      }
+    );
+  });
+});
+
+// UPDATE bio & location (legacy POST endpoint for backward compatibility)
 router.post('/update', auth, (req, res) => {
   const { bio, location, nickname } = req.body;
   const updates = [];
@@ -72,7 +110,7 @@ router.post('/update', auth, (req, res) => {
 });
 
 // UPLOAD profile picture
-router.post('/profile-picture', auth, upload.single('profile_picture'), (req, res) => {
+router.post('/profile-picture', auth, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   const imagePath = `/uploads/profile_pics/${req.file.filename}`;
@@ -83,11 +121,11 @@ router.post('/profile-picture', auth, upload.single('profile_picture'), (req, re
       if (err) return res.status(500).json({ error: 'Failed to save profile picture' });
 
       db.get(
-        'SELECT id, username, email, bio, location, profile_picture FROM users WHERE id = ?',
+        'SELECT id, username, email, bio, location, profile_picture, nickname FROM users WHERE id = ?',
         [req.user.id],
         (err, row) => {
           if (err || !row) return res.status(500).json({ error: 'Failed to fetch user' });
-          res.json({ user: row });
+          res.json({ profile_picture: row.profile_picture, user: row });
         }
       );
     }

@@ -23,6 +23,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/friends', require('./routes/friendsRoutes'));
 app.use('/api/messages', require('./routes/messagesRoutes'));
 app.use('/api/notifications', require('./routes/notificationsRoutes'));
+app.use('/api/posts', require('./routes/postsRoutes'));
 
 
 // Health check
