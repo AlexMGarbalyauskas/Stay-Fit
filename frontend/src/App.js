@@ -17,6 +17,7 @@ import UserProfile from './pages/UserProfile';
 import Notifications from './pages/Notifications';
 import Friends from './pages/Friends';
 import ChatPage from './pages/ChatPage';
+import CalendarPage from './pages/Calendar';
 import { io } from 'socket.io-client';
 import { API_BASE } from './api';
 
@@ -73,6 +74,7 @@ function App() {
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
         <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
+        <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
 
         <Route
           path="/find"

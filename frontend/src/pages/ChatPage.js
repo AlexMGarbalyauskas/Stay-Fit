@@ -6,7 +6,7 @@ import api, { API_BASE, toggleMessageReaction, deleteMessage as apiDeleteMessage
 import Navbar from '../components/Navbar';
 import EmojiPickerModal from '../components/EmojiPickerModal';
 import dayjs from 'dayjs';
-import { User } from 'lucide-react';
+import { User, Image as ImageIcon, Search, ChevronDown } from 'lucide-react';
 
 export default function ChatPage() {
   let currentUser = null;
@@ -19,7 +19,14 @@ export default function ChatPage() {
   const [activeFriend, setActiveFriend] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
+  const [gifQuery, setGifQuery] = useState('');
+  const [gifResults, setGifResults] = useState([]);
+  const [gifLoading, setGifLoading] = useState(false);
+  const [selectedGifId, setSelectedGifId] = useState(null);
+  const [lastGifQuery, setLastGifQuery] = useState('');
+  const [gifPanelOpen, setGifPanelOpen] = useState(false);
   const [reactionsMap, setReactionsMap] = useState({}); // { messageId: [{emoji,count,reacted_by_me}] }
+  const gifSearchTimeoutRef = useRef(null);
   const [pickerOpenFor, setPickerOpenFor] = useState(null);
   const [pickerContextIsMine, setPickerContextIsMine] = useState(false);
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, messageId: null, isMine: false });
@@ -98,9 +105,71 @@ export default function ChatPage() {
   }, [activeFriend]);
 
   const sendMessage = () => {
-    if (!text.trim() || !activeFriend || !socketRef.current) return;
-    socketRef.current.emit('send_message', { receiverId: activeFriend.id, content: text });
+    const hasText = text.trim().length > 0;
+    if (!activeFriend || !socketRef.current || !hasText) return;
+    socketRef.current.emit('send_message', {
+      receiverId: activeFriend.id,
+      content: text.trim(),
+      messageType: 'text',
+      mediaUrl: null,
+    });
     setText('');
+  };
+
+  const sendGif = (url, gifId) => {
+    if (!activeFriend || !socketRef.current || !url) return;
+    socketRef.current.emit('send_message', {
+      receiverId: activeFriend.id,
+      content: '',
+      messageType: 'gif',
+      mediaUrl: url,
+    });
+    // Register share with Tenor (optional but recommended)
+    if (gifId) {
+      const tenorKey = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
+      const clientKey = 'stayfit-web';
+      console.log('Using Tenor key:', tenorKey); // verify env key is used
+      fetch(`https://tenor.googleapis.com/v2/registershare?id=${gifId}&key=${tenorKey}&client_key=${clientKey}&q=${encodeURIComponent(lastGifQuery)}`)
+        .catch(e => console.error('Failed to register Tenor share', e));
+    }
+    // Close GIF panel after send
+    setGifPanelOpen(false);
+    setGifQuery('');
+    setGifResults([]);
+  };
+
+  const searchGifs = async (query) => {
+    const q = (query || gifQuery).trim();
+    if (!q) {
+      setGifResults([]);
+      return;
+    }
+    setGifLoading(true);
+    try {
+      const tenorKey = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
+      const clientKey = 'stayfit-web';
+      const resp = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${tenorKey}&client_key=${clientKey}&limit=12&contentfilter=medium`);
+      const data = await resp.json();
+      const urls = (data.results || []).map(item => ({ url: item.media_formats?.tinygif?.url, id: item.id })).filter(item => item.url);
+      setGifResults(urls);
+      setLastGifQuery(q);
+    } catch (e) {
+      console.error('GIF search failed', e);
+      setGifResults([]);
+    } finally {
+      setGifLoading(false);
+    }
+  };
+
+  const handleGifQueryChange = (e) => {
+    const val = e.target.value;
+    setGifQuery(val);
+    clearTimeout(gifSearchTimeoutRef.current);
+    if (val.trim()) {
+      gifSearchTimeoutRef.current = setTimeout(() => searchGifs(val), 300);
+    } else {
+      setGifResults([]);
+    }
   };
 
   if (!currentUser || !token) {
@@ -148,7 +217,14 @@ export default function ChatPage() {
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {messages.map((msg, idx) => {
                   const isMine = Number(msg.sender_id) === Number(currentUser.id);
+                  const isGif = msg.message_type === 'gif' || msg.media_url;
                   const reactions = reactionsMap[msg.id] || [];
+                  const bubbleBase = 'max-w-xs break-words rounded-lg shadow';
+                  const bubbleStyle = isGif
+                    ? 'bg-white text-gray-800 border border-gray-200 p-2'
+                    : `${isMine ? 'bg-blue-600 text-white' : 'bg-green-500 text-white'} px-4 py-2`;
+                  const timeColor = isGif ? 'text-gray-500' : 'text-gray-100';
+
                   return (
                     <div key={msg.id + '-' + idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                       <div
@@ -156,10 +232,23 @@ export default function ChatPage() {
                           e.preventDefault();
                           setContextMenu({ open: true, x: e.clientX, y: e.clientY, messageId: msg.id, isMine: Number(msg.sender_id) === Number(currentUser.id) });
                         }}
-                        className={`px-4 py-2 rounded-lg max-w-xs break-words shadow ${isMine ? 'bg-blue-600 text-white' : 'bg-green-500 text-white'}`}
+                        className={`${bubbleBase} ${bubbleStyle}`}
                       >
-                        <p>{msg.content}</p>
-                        <span className="text-xs text-gray-100 mt-1 block text-right">
+                        {isGif ? (
+                          <div className="space-y-2">
+                            {msg.content && msg.content !== '[gif]' && <p>{msg.content}</p>}
+                            {msg.media_url && (
+                              <img
+                                src={msg.media_url}
+                                alt="GIF"
+                                className="max-h-72 rounded-lg object-contain"
+                              />
+                            )}
+                          </div>
+                        ) : (
+                          <p>{msg.content}</p>
+                        )}
+                        <span className={`text-xs mt-1 block text-right ${timeColor}`}>
                           {dayjs(msg.created_at).format('HH:mm, DD MMM')}
                         </span>
 
@@ -196,6 +285,61 @@ export default function ChatPage() {
                   Send
                 </button>
               </div>
+
+              {/* GIF Toggle Button */}
+              <div className="p-2 border-t bg-white flex items-center justify-between">
+                <button
+                  onClick={() => setGifPanelOpen(!gifPanelOpen)}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 transition text-gray-700"
+                  title="Toggle GIF search"
+                >
+                  <ImageIcon className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-medium">GIFs</span>
+                </button>
+              </div>
+
+              {/* GIF Search Panel */}
+              {gifPanelOpen && (
+                <div className="p-3 border-t bg-gray-50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <input
+                      value={gifQuery}
+                      onChange={handleGifQueryChange}
+                      placeholder="Search GIFs..."
+                      autoFocus
+                      className="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-blue-300"
+                    />
+                    <button
+                      onClick={() => {
+                        setGifPanelOpen(false);
+                        setGifQuery('');
+                        setGifResults([]);
+                      }}
+                      className="p-2 hover:bg-gray-200 rounded transition text-gray-700"
+                      title="Close GIF search"
+                    >
+                      <ChevronDown className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {gifLoading && <p className="text-sm text-gray-500">Searching...</p>}
+                  {!gifLoading && gifResults.length > 0 && (
+                    <div className="max-h-72 overflow-y-auto pr-1">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                        {gifResults.map((item, idx) => (
+                          <button key={idx} onClick={() => { setSelectedGifId(item.id); sendGif(item.url, item.id); }} className="relative group">
+                            <img src={item.url} alt="GIF" className="w-full h-28 object-cover rounded" />
+                            <span className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition text-white text-xs flex items-center justify-center">Send</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {!gifLoading && gifResults.length === 0 && gifQuery && (
+                    <p className="text-xs text-gray-500 mt-1">No GIFs found.</p>
+                  )}
+                </div>
+              )}
 
               {/* Emoji picker modal for reactions */}
               {pickerOpenFor && (

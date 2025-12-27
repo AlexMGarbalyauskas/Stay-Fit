@@ -51,6 +51,8 @@ CREATE TABLE IF NOT EXISTS messages (
   sender_id INTEGER NOT NULL,
   receiver_id INTEGER NOT NULL,
   content TEXT NOT NULL,
+  message_type TEXT DEFAULT 'text',
+  media_url TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -132,6 +134,25 @@ db.exec(initSql, (err) => {
       db.run("ALTER TABLE posts ADD COLUMN title TEXT", err5 => {
         if (err5) console.error('Failed to add title column to posts', err5);
         else console.log('✅ Added title column to posts');
+      });
+    }
+  });
+
+  // Ensure message_type and media_url exist in messages (safe upgrade)
+  db.all("PRAGMA table_info('messages')", (err6, cols3) => {
+    if (err6) return console.error('Failed to check messages table info', err6);
+    const hasType = cols3 && cols3.some(c => c.name === 'message_type');
+    if (!hasType) {
+      db.run("ALTER TABLE messages ADD COLUMN message_type TEXT DEFAULT 'text'", err7 => {
+        if (err7) console.error('Failed to add message_type column to messages', err7);
+        else console.log('✅ Added message_type column to messages');
+      });
+    }
+    const hasMedia = cols3 && cols3.some(c => c.name === 'media_url');
+    if (!hasMedia) {
+      db.run("ALTER TABLE messages ADD COLUMN media_url TEXT", err8 => {
+        if (err8) console.error('Failed to add media_url column to messages', err8);
+        else console.log('✅ Added media_url column to messages');
       });
     }
   });

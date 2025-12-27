@@ -61,24 +61,29 @@ io.on('connection', (socket) => {
   console.log(`🟢 User connected: ${userId}`);
   socket.join(`user:${userId}`);
 
-  socket.on('send_message', ({ receiverId, content }) => {
-    if (!content?.trim()) return;
+  socket.on('send_message', ({ receiverId, content, messageType, mediaUrl }) => {
+    const type = messageType || (mediaUrl ? 'gif' : 'text');
+    const cleanedContent = (content || '').trim();
+    if (!cleanedContent && !mediaUrl) return; // need something to send
 
     const createdAt = new Date().toISOString();
+    const finalContent = cleanedContent || (mediaUrl ? '[gif]' : '');
+
     db.run(
-      'INSERT INTO messages (sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?)',
-      [userId, receiverId, content, createdAt],
+      'INSERT INTO messages (sender_id, receiver_id, content, message_type, media_url, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, receiverId, finalContent, type, mediaUrl || null, createdAt],
       function (err) {
         if (err) return console.error(err);
-        const message = { id: this.lastID, sender_id: userId, receiver_id: receiverId, content, created_at: createdAt };
+        const message = { id: this.lastID, sender_id: userId, receiver_id: receiverId, content: finalContent, message_type: type, media_url: mediaUrl || null, created_at: createdAt };
         io.to(`user:${receiverId}`).emit('receive_message', message);
         socket.emit('receive_message', message);
 
         // Create a notification for the receiver
-        db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: content.slice(0, 200) })], (err) => {
+        const preview = mediaUrl ? '[GIF]' : finalContent.slice(0, 200);
+        db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: preview })], (err) => {
           if (err) console.error('Failed to create message notification', err);
           // include preview content in the socket event for toast
-          io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: content.slice(0,200) });
+          io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
         });
       }
     );

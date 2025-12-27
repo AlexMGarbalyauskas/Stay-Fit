@@ -10,7 +10,10 @@ router.get('/:userId', auth, (req, res) => {
   const other = req.params.userId;
 
   db.all(
-    `SELECT id, sender_id, receiver_id, content, created_at
+    `SELECT id, sender_id, receiver_id, content,
+            IFNULL(message_type,'text') as message_type,
+            media_url,
+            created_at
      FROM messages
      WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
      ORDER BY created_at ASC`,
