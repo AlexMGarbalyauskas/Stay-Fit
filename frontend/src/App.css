@@ -28,6 +28,58 @@
   color: #61dafb;
 }
 
+/* Startup loader overlay */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 9999;
+}
+
+.loader-swirl {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  animation: loader-rotate 1.4s linear infinite;
+}
+
+.loader-swirl .dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translate(-50%, -50%);
+  animation: loader-pulse 1.2s ease-in-out infinite;
+}
+
+.loader-swirl .dot-a { transform: translate(-50%, -50%) translate(32px, 0); background: #2563eb; animation-delay: 0s; }
+.loader-swirl .dot-b { transform: translate(-50%, -50%) translate(-16px, 28px); background: #f97316; animation-delay: 0.15s; }
+.loader-swirl .dot-c { transform: translate(-50%, -50%) translate(-16px, -28px); background: #10b981; animation-delay: 0.3s; }
+
+.loader-text {
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+@keyframes loader-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loader-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.85; }
+  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

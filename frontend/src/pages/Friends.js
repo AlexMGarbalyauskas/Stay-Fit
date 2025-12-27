@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, UserX } from 'lucide-react';
+import { Users, UserX, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getFriends, unfriend, API_BASE } from '../api';
 import Navbar from '../components/Navbar';
@@ -47,6 +47,12 @@ export default function Friends({ refreshTrigger }) {
     <>
       <div className="pt-20 pb-24 min-h-screen bg-gray-100">
         <div className="max-w-md mx-auto px-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-800"
+          >
+            <ArrowLeft size={16} /> Go Back
+          </button>
           <h1 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Users className="w-5 h-5" /> Friends
           </h1>

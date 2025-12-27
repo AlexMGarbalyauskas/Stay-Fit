@@ -1,8 +1,40 @@
+import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getNotifications, API_BASE } from '../api';
+import { io } from 'socket.io-client';
 
 export default function Header() {
   const navigate = useNavigate();
+  const [hasUnread, setHasUnread] = useState(false);
+  const socketRef = useRef(null);
+
+  const refreshUnread = async () => {
+    try {
+      const res = await getNotifications();
+      const anyUnread = (res.data.notifications || []).some(n => n.read === 0);
+      setHasUnread(anyUnread);
+    } catch (err) {
+      // non-blocking: keep prior state
+      console.error('Failed to fetch notifications', err);
+    }
+  };
+
+  useEffect(() => {
+    refreshUnread();
+    const interval = setInterval(refreshUnread, 10000);
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      socketRef.current = io(API_BASE.replace('/api', ''), { auth: { token } });
+      socketRef.current.on('notification:new', () => refreshUnread());
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, []);
 
   const handleNotificationsClick = () => {
     navigate('/notifications'); // Navigate to Notifications page
@@ -25,7 +57,7 @@ export default function Header() {
           <Bell className="w-6 h-6 text-gray-700" />
 
           {/* Optional notification dot */}
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
+          {hasUnread && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />}
         </button>
 
       </div>

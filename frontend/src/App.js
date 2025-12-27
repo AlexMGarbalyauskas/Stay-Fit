@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import './App.css';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -28,6 +29,7 @@ function App() {
       return false;
     }
   });
+  const [booting, setBooting] = useState(true);
 
   const triggerFriendRefresh = () => setRefreshFriends(prev => prev + 1);
 
@@ -49,8 +51,14 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => setBooting(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <Router>
+      {booting && <SplashLoader />}
       <Routes>
         <Route path="/" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
         <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
@@ -136,6 +144,19 @@ function App() {
       <div onClick={onClick} className="fixed right-4 top-4 z-50 bg-white shadow-lg rounded p-3 cursor-pointer">
         <div className="font-medium">You got a new {type === 'message' ? 'message' : type}</div>
         {type === 'message' && payload?.content && <div className="text-sm text-gray-600 mt-1 truncate" style={{maxWidth: 220}}>{payload.content}</div>}
+      </div>
+    );
+  }
+
+  function SplashLoader() {
+    return (
+      <div className="loader-overlay">
+        <div className="loader-swirl">
+          <span className="dot dot-a" />
+          <span className="dot dot-b" />
+          <span className="dot dot-c" />
+        </div>
+        <div className="loader-text">Loading Stay Fit…</div>
       </div>
     );
   }
