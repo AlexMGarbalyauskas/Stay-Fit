@@ -80,7 +80,10 @@ export default function PostComments() {
               )}
             </div>
             <div>
-              <div className="font-medium">{post.username}</div>
+              <div className="flex items-center gap-2">
+                <div className="font-medium">{post.nickname || post.username}</div>
+                {post.nickname && <span className="text-xs text-gray-500">@{post.username}</span>}
+              </div>
               <div className="text-xs text-gray-500">{new Date(post.created_at).toLocaleString()}</div>
             </div>
           </div>
@@ -122,7 +125,10 @@ export default function PostComments() {
                     )}
                   </div>
                   <div>
-                    <div className="text-sm font-medium">{c.username}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium">{c.nickname || c.username}</div>
+                      {c.nickname && <span className="text-xs text-gray-400">@{c.username}</span>}
+                    </div>
                     <div className="text-sm text-gray-700">{c.content}</div>
                     <div className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString()}</div>
                   </div>

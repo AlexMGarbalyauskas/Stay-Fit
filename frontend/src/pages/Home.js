@@ -97,7 +97,7 @@ export default function Home({ onLogout }) {
                 )}
               </div>
               <div>
-                <h2 className="font-semibold text-lg">Welcome, {user.username}</h2>
+                <h2 className="font-semibold text-lg">Welcome, {user.nickname || user.username}</h2>
                 <p className="text-sm text-gray-600">Share a 30-60s video with your friends</p>
               </div>
             </div>
@@ -122,8 +122,8 @@ export default function Home({ onLogout }) {
                     )}
                   </div>
                   <div>
-                    <div className="font-medium">{post.username}</div>
-                    <div className="text-xs text-gray-500">{new Date(post.created_at).toLocaleString()}</div>
+                    <div className="font-medium">{post.nickname || post.username}</div>
+                    <div className="text-xs text-gray-500">@{post.username} · {new Date(post.created_at).toLocaleString()}</div>
                   </div>
                 </div>
 

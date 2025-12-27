@@ -60,9 +60,12 @@ export default function Post() {
         recorderRef.current = mr;
         mr.ondataavailable = (e) => { if (e.data && e.data.size) recordedChunksRef.current.push(e.data); };
         mr.onstop = () => {
-          const blob = new Blob(recordedChunksRef.current, { type: recordedChunksRef.current[0]?.type || 'video/webm' });
-          const url = URL.createObjectURL(blob);
-          setLocal({ file: blob, url, duration: null });
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          console.log('Camera blob type:', blob.type);
+          const file = new File([blob], `recording_${Date.now()}.webm`, { type: 'video/webm' });
+          console.log('Camera file type:', file.type);
+          const url = URL.createObjectURL(file);
+          setLocal({ file, url, duration: null });
           // stop stream
           stopStream();
         };
@@ -121,6 +124,8 @@ export default function Post() {
 
   const handleUpload = async () => {
     if (!local || !local.file) return setError('No media selected');
+    console.log('Uploading file:', local.file.name, 'Type:', local.file.type, 'Size:', local.file.size);
+    
     if (mediaKind === 'video') {
       // try to get duration if possible
       if (!local.duration) {
@@ -132,14 +137,19 @@ export default function Post() {
           await new Promise((resolve, reject) => {
             tempVideo.onloadedmetadata = () => resolve();
             tempVideo.onerror = () => reject(new Error('Failed to read video metadata'));
+            setTimeout(() => reject(new Error('Timeout reading video')), 5000);
           });
           const d = Math.round(tempVideo.duration);
+          console.log('Video duration:', d);
           setLocal(prev => ({ ...prev, duration: d }));
           if (d < 5 || d > 60) return setError('Video duration must be between 5 and 60 seconds');
         } catch (e) {
           console.error('Failed to read video duration', e);
           return setError('Failed to read video duration; try re-recording or uploading a different file');
         }
+      } else {
+        console.log('Duration already set:', local.duration);
+        if (local.duration < 5 || local.duration > 60) return setError('Video duration must be between 5 and 60 seconds');
       }
     }
 
@@ -149,12 +159,21 @@ export default function Post() {
     formData.append('title', title);
     formData.append('caption', caption);
 
+    console.log('FormData file object:', {
+      name: local.file.name,
+      type: local.file.type,
+      size: local.file.size,
+      lastModified: local.file.lastModified
+    });
+
     try {
       const res = await createPost(formData);
+      console.log('Upload success:', res.data);
       setUploading(false);
       navigate('/home');
     } catch (err) {
-      console.error(err);
+      console.error('Upload error:', err);
+      console.error('Error response:', err?.response?.data);
       setError(err?.response?.data?.error || 'Upload failed');
       setUploading(false);
     }

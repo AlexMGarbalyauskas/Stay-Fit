@@ -185,9 +185,13 @@ export default function Profile() {
 
             {/* Profile Info */}
             <div className="flex-1">
-              {/* Username & Nickname */}
-              <div className="flex items-center gap-4 mb-4">
-                <h1 className="text-2xl font-light">@{user.username}</h1>
+              {/* Username (not editable) */}
+              <div className="mb-1">
+                <h1 className="text-2xl font-light text-gray-900">@{user.username}</h1>
+              </div>
+
+              {/* Nickname (editable) */}
+              <div className="mb-4">
                 {nicknameEditing ? (
                   <div className="flex items-center gap-2">
                     <input
@@ -197,6 +201,7 @@ export default function Profile() {
                       onKeyDown={(e) => e.key === 'Enter' && handleSaveNickname()}
                       className="p-1 border rounded text-sm"
                       autoFocus
+                      placeholder="Enter nickname"
                     />
                     <button onClick={handleSaveNickname} className="bg-green-500 px-2 py-1 rounded text-white text-xs">
                       <Check size={14} />
@@ -212,12 +217,15 @@ export default function Profile() {
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setNicknameEditing(true)}
-                    className="text-blue-500 text-sm hover:underline"
-                  >
-                    {nicknameEditing ? 'Editing...' : 'Edit Nickname'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xl font-light text-gray-700">{user.nickname || 'No nickname'}</p>
+                    <button
+                      onClick={() => setNicknameEditing(true)}
+                      className="text-gray-400 hover:text-gray-600 text-xs"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
                 )}
               </div>
 

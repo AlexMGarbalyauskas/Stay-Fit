@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { register, API_BASE } from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -8,12 +8,24 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState('');
+  const [agree, setAgree] = useState(false);
+  const [tosRead, setTosRead] = useState(() => !!localStorage.getItem('tosAccepted'));
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = () => setTosRead(!!localStorage.getItem('tosAccepted'));
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== passwordConfirm) {
       setError('Passwords do not match');
+      return;
+    }
+    if (!tosRead || !agree) {
+      setError('Please read and accept the Terms of Service before registering.');
       return;
     }
     try {
@@ -30,7 +42,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -64,9 +76,20 @@ export default function Register() {
             onChange={e => setPasswordConfirm(e.target.value)}
           />
 
+          {/* Terms of Service gate */}
+          <div className="text-sm text-gray-700 bg-gray-50 border rounded-xl p-3">
+            <p className="mb-2">You must read and accept our <Link className="text-blue-600 underline" to="/terms">Terms of Service</Link> before creating an account.</p>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
+              <span>I have read and accept the Terms of Service</span>
+              <span className={`ml-auto text-xs ${tosRead ? 'text-green-600' : 'text-red-500'}`}>{tosRead ? 'Terms read' : 'Please read terms'}</span>
+            </div>
+          </div>
+
           <button
-            className="w-full bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition-colors"
+            className={`w-full p-3 rounded-xl transition-colors ${agree && tosRead ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
             type="submit"
+            disabled={!agree || !tosRead}
           >
             Register
           </button>
@@ -76,7 +99,11 @@ export default function Register() {
 
         <div className="mt-6">
           <button
-            onClick={handleGoogleRegister}
+            onClick={() => {
+              if (!tosRead) { alert('Please read the Terms of Service first.'); return; }
+              if (!agree) { alert('Please accept the Terms of Service.'); return; }
+              handleGoogleRegister();
+            }}
             className="w-full border border-gray-300 p-3 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
             <img

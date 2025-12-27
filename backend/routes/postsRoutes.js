@@ -24,7 +24,11 @@ const upload = multer({
   storage,
   limits: { fileSize: 150 * 1024 * 1024 }, // 150 MB
   fileFilter: (req, file, cb) => {
-    if (!(file.mimetype.startsWith('video/') || file.mimetype.startsWith('image/'))) return cb(new Error('Only video or image files allowed'));
+    console.log('Multer fileFilter - mimetype:', file.mimetype, 'originalname:', file.originalname);
+    if (!(file.mimetype.startsWith('video/') || file.mimetype.startsWith('image/'))) {
+      console.log('Rejecting file - mimetype does not start with video/ or image/');
+      return cb(new Error('Only video or image files allowed'));
+    }
     cb(null, true);
   },
 });
@@ -36,6 +40,13 @@ router.post('/', auth, upload.single('media'), async (req, res) => {
 
     const { caption, title } = req.body;
     const filePath = path.join(uploadDir, req.file.filename);
+    
+    console.log('Processing upload:', {
+      filename: req.file.filename,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      originalname: req.file.originalname
+    });
 
     const mediaType = req.file.mimetype;
     let duration = null;
@@ -43,13 +54,17 @@ router.post('/', auth, upload.single('media'), async (req, res) => {
     if (mediaType.startsWith('video/')) {
       // Check duration (server-side): must be between 5 and 60 seconds
       try {
+        console.log('Reading video duration for:', filePath);
         duration = await getVideoDurationInSeconds(filePath);
+        console.log('Video duration:', duration);
       } catch (err) {
+        console.error('Failed to read video duration:', err.message);
         try { fs.unlinkSync(filePath); } catch (e) {}
         return res.status(400).json({ error: 'Failed to read video duration. Try a different encoding or ensure file is a valid video.' });
       }
 
       if (duration < 5 || duration > 60) {
+        console.log('Video duration out of range:', duration);
         try { fs.unlinkSync(filePath); } catch (e) {}
         return res.status(400).json({ error: 'Video must be between 5 and 60 seconds' });
       }
@@ -136,7 +151,7 @@ router.put('/:id', auth, (req, res) => {
 
     db.run('UPDATE posts SET title = ?, caption = ? WHERE id = ?', [title || null, caption || null, postId], function (err2) {
       if (err2) return res.status(500).json({ error: 'Failed to update post' });
-      db.get('SELECT p.*, u.username, u.profile_picture FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?', [postId], (err3, updated) => {
+      db.get('SELECT p.*, u.username, u.nickname, u.profile_picture FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?', [postId], (err3, updated) => {
         if (err3) return res.status(500).json({ error: 'Failed to fetch updated post' });
         res.json({ post: updated });
       });
@@ -160,7 +175,7 @@ router.get('/', auth, (req, res) => {
 
       const placeholders = ids.map(() => '?').join(',');
       // include counts and whether current user liked/saved
-      const sql = `SELECT p.*, u.username, u.profile_picture,
+      const sql = `SELECT p.*, u.username, u.nickname, u.profile_picture,
         (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count,
         (SELECT COUNT(*) FROM saves s WHERE s.post_id = p.id) as saves_count,
@@ -185,7 +200,7 @@ router.get('/user/:id', auth, (req, res) => {
   const requester = req.user.id;
 
   const buildAndSend = (paramsForLikedSaved) => {
-    const sql = `SELECT p.*, u.username, u.profile_picture,
+    const sql = `SELECT p.*, u.username, u.nickname, u.profile_picture,
       (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count,
       (SELECT COUNT(*) FROM saves s WHERE s.post_id = p.id) as saves_count,
@@ -216,7 +231,7 @@ router.get('/user/:id', auth, (req, res) => {
 // Get posts for current user
 router.get('/me', auth, (req, res) => {
   const requester = req.user.id;
-  const sql = `SELECT p.*, u.username, u.profile_picture,
+  const sql = `SELECT p.*, u.username, u.nickname, u.profile_picture,
     (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
     (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count,
     (SELECT COUNT(*) FROM saves s WHERE s.post_id = p.id) as saves_count,
@@ -234,7 +249,7 @@ router.get('/me', auth, (req, res) => {
 // Get posts saved by current user
 router.get('/saved', auth, (req, res) => {
   const requester = req.user.id;
-  const sql = `SELECT p.*, u.username, u.profile_picture,
+  const sql = `SELECT p.*, u.username, u.nickname, u.profile_picture,
     (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
     (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count,
     (SELECT COUNT(*) FROM saves s WHERE s.post_id = p.id) as saves_count,
@@ -268,13 +283,13 @@ router.get('/:id/comments', auth, (req, res) => {
         if (err2) return res.status(500).json({ error: 'DB error' });
         if (!row) return res.status(403).json({ error: 'Not authorized to view comments' });
 
-        db.all('SELECT c.*, u.username, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at ASC', [postId], (err3, rows) => {
+        db.all('SELECT c.*, u.username, u.nickname, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at ASC', [postId], (err3, rows) => {
           if (err3) return res.status(500).json({ error: 'Failed to fetch comments' });
           res.json({ comments: rows });
         });
       });
     } else {
-      db.all('SELECT c.*, u.username, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at ASC', [postId], (err3, rows) => {
+      db.all('SELECT c.*, u.username, u.nickname, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at ASC', [postId], (err3, rows) => {
         if (err3) return res.status(500).json({ error: 'Failed to fetch comments' });
         res.json({ comments: rows });
       });
@@ -311,7 +326,7 @@ router.post('/:id/comments', auth, (req, res) => {
         if (err3) return res.status(500).json({ error: 'Failed to create comment' });
 
         const commentId = this.lastID;
-        db.get('SELECT c.*, u.username, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?', [commentId], (err4, row) => {
+        db.get('SELECT c.*, u.username, u.nickname, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?', [commentId], (err4, row) => {
           if (err4) return res.status(500).json({ error: 'Failed to fetch created comment' });
 
           // create a notification for post owner (if not commenting on own post)
@@ -352,7 +367,7 @@ router.get('/:id', auth, (req, res) => {
     const owner = post.user_id;
 
     function proceed() {
-      const sql = `SELECT p.*, u.username, u.profile_picture,
+      const sql = `SELECT p.*, u.username, u.nickname, u.profile_picture,
         (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count,
         (SELECT COUNT(*) FROM saves s WHERE s.post_id = p.id) as saves_count,

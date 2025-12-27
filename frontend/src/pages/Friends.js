@@ -80,8 +80,8 @@ export default function Friends({ refreshTrigger }) {
                       </div>
                     )}
                     <div>
-                      <span className="font-medium">@{friend.username}</span>
-                      {friend.nickname && <div className="text-xs text-gray-500">{friend.nickname}</div>}
+                      <span className="font-medium">{friend.nickname || friend.username}</span>
+                      {friend.nickname && <div className="text-xs text-gray-500">@{friend.username}</div>}
                     </div>
                   </div>
 

@@ -201,7 +201,10 @@ export default function ChatPage() {
                   <User className="w-5 h-5 text-gray-500" />
                 </div>
               )}
-              <span className="font-medium">{friend.username}</span>
+              <div>
+                <span className="font-medium">{friend.nickname || friend.username}</span>
+                {friend.nickname && <span className="text-xs text-gray-500 block">@{friend.username}</span>}
+              </div>
             </button>
           ))}
         </div>
@@ -213,7 +216,10 @@ export default function ChatPage() {
             </div>
           ) : (
             <>
-              <div className="p-4 border-b bg-white font-semibold text-lg">{activeFriend.username}</div>
+              <div className="p-4 border-b bg-white">
+                <div className="font-semibold text-lg">{activeFriend.nickname || activeFriend.username}</div>
+                {activeFriend.nickname && <div className="text-xs text-gray-500">@{activeFriend.username}</div>}
+              </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {messages.map((msg, idx) => {
                   const isMine = Number(msg.sender_id) === Number(currentUser.id);

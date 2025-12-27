@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, FileText } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ export default function Settings() {
   const [privacy, setPrivacy] = useState('Public');
   const [timezone, setTimezone] = useState('Europe');
   const navigate = useNavigate();
+  const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
@@ -132,6 +133,18 @@ export default function Settings() {
             <span className="text-gray-700">Other</span>
             <span className="text-gray-400">Coming soon</span>
           </div>
+
+          {/* Terms of Service */}
+          <button
+            onClick={() => navigate('/terms')}
+            className="flex items-center justify-between w-full py-2 hover:bg-gray-50 rounded mt-2"
+          >
+            <div className="flex items-center gap-2">
+              <FileText size={20} />
+              <span className="text-gray-700">Terms of Service</span>
+            </div>
+            <span className="text-xs text-gray-500">{tosAcceptedAt ? `Agreed: ${new Date(tosAcceptedAt).toLocaleDateString()}` : 'Not accepted'}</span>
+          </button>
         </div>
 
         {/* About Section */}
