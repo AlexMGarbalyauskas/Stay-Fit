@@ -159,6 +159,32 @@ router.put('/:id', auth, (req, res) => {
   });
 });
 
+// Delete a post (owner only)
+router.delete('/:id', auth, (req, res) => {
+  const postId = Number(req.params.id);
+
+  db.get('SELECT * FROM posts WHERE id = ?', [postId], (err, post) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (post.user_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
+
+    const mediaFullPath = path.join(__dirname, '..', post.media_path.replace(/^\//, ''));
+
+    db.serialize(() => {
+      db.run('DELETE FROM likes WHERE post_id = ?', [postId]);
+      db.run('DELETE FROM saves WHERE post_id = ?', [postId]);
+      db.run('DELETE FROM comments WHERE post_id = ?', [postId]);
+      db.run('DELETE FROM posts WHERE id = ?', [postId], function (err2) {
+        if (err2) return res.status(500).json({ error: 'Failed to delete post' });
+
+        // best-effort file delete; do not block response
+        fs.unlink(mediaFullPath, () => {});
+        return res.json({ success: true });
+      });
+    });
+  });
+});
+
 // Get recent posts (feed) — only friends and yourself
 router.get('/', auth, (req, res) => {
   // Get friend ids for current user (bidirectional: both user_id and friend_id)

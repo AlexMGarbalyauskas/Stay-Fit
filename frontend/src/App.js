@@ -35,6 +35,16 @@ function App() {
 
   const triggerFriendRefresh = () => setRefreshFriends(prev => prev + 1);
 
+  // Initialize theme on app load
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   // Listen to storage changes (multi-tab logout/login)
   useEffect(() => {
     const handleStorage = () => {

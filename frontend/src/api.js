@@ -53,6 +53,7 @@ export const getMyPosts = () => api.get('/api/posts/me');
 export const getUserPosts = (userId) => api.get(`/api/posts/user/${userId}`);
 export const createPost = (formData) => api.post('/api/posts', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const updatePost = (postId, data) => api.put(`/api/posts/${postId}`, data);
+export const deletePost = (postId) => api.delete(`/api/posts/${postId}`);
 
 // LIKES & SAVES
 export const getPostLikes = (postId) => api.get(`/api/posts/${postId}/likes`);

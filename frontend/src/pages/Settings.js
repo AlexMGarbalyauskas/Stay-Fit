@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, FileText } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, FileText, Moon, Sun } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ export default function Settings() {
   const [notifications, setNotifications] = useState(true);
   const [privacy, setPrivacy] = useState('Public');
   const [timezone, setTimezone] = useState('Europe');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const navigate = useNavigate();
   const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
 
@@ -24,6 +25,17 @@ export default function Settings() {
       .then(res => setUser(res.data.user))
       .catch(err => console.error('Error fetching user:', err));
   }, [token, API_URL]);
+
+  const handleThemeToggle = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -75,6 +87,21 @@ export default function Settings() {
         {/* Features Section */}
         <div className="mt-6 bg-white p-4 rounded shadow">
           <h3 className="font-semibold text-gray-700 mb-2">Features</h3>
+          
+          {/* Theme Toggle */}
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
+              <span className="text-gray-700">{theme === 'light' ? 'Light' : 'Dark'} Mode</span>
+            </div>
+            <button
+              onClick={handleThemeToggle}
+              className="bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+          </div>
         </div>
 
         {/* Settings Section */}

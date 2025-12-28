@@ -1,3 +1,218 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Dark mode styles */
+:root.dark {
+  color-scheme: dark;
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --border-color: #444;
+}
+
+:root.dark {
+  @apply bg-gray-900 text-white;
+}
+
+:root.dark * {
+  @apply border-gray-700;
+}
+
+/* Container styles */
+:root.dark .bg-white {
+  background-color: #1f2937;
+  color: white;
+}
+
+:root.dark .bg-gray-50 {
+  background-color: #1f2937;
+}
+
+:root.dark .bg-gray-100 {
+  background-color: #1f2937;
+}
+
+:root.dark .bg-gray-200 {
+  background-color: #374151;
+}
+
+:root.dark .bg-gray-300 {
+  background-color: #4b5563;
+}
+
+:root.dark .bg-gray-400 {
+  background-color: #6b7280;
+}
+
+/* Text colors */
+:root.dark .text-gray-400 {
+  color: #9ca3af;
+}
+
+:root.dark .text-gray-500 {
+  color: #9ca3af;
+}
+
+:root.dark .text-gray-600 {
+  color: #d1d5db;
+}
+
+:root.dark .text-gray-700 {
+  color: #d1d5db;
+}
+
+:root.dark .text-gray-800 {
+  color: #e5e7eb;
+}
+
+:root.dark .text-gray-900 {
+  color: #f3f4f6;
+}
+
+/* Border colors */
+:root.dark .border-gray-100 {
+  border-color: #1f2937;
+}
+
+:root.dark .border-gray-200 {
+  border-color: #374151;
+}
+
+:root.dark .border-gray-300 {
+  border-color: #4b5563;
+}
+
+/* Input and form elements */
+:root.dark input,
+:root.dark textarea,
+:root.dark select {
+  background-color: #1f2937;
+  color: white;
+  border-color: #4b5563;
+}
+
+:root.dark input::placeholder {
+  color: #6b7280;
+}
+
+:root.dark textarea::placeholder {
+  color: #6b7280;
+}
+
+/* Hover states */
+:root.dark .hover\:bg-gray-50:hover {
+  background-color: #1f2937;
+}
+
+:root.dark .hover\:bg-gray-100:hover {
+  background-color: #374151;
+}
+
+:root.dark .hover\:bg-gray-200:hover {
+  background-color: #374151;
+}
+
+:root.dark .hover\:text-gray-600:hover {
+  color: #d1d5db;
+}
+
+:root.dark .hover\:text-gray-700:hover {
+  color: #e5e7eb;
+}
+
+:root.dark .hover\:text-gray-900:hover {
+  color: #f3f4f6;
+}
+
+:root.dark .hover\:border-gray-300:hover {
+  border-color: #4b5563;
+}
+
+/* Dividers and lines */
+:root.dark .divide-gray-100 {
+  border-color: #1f2937;
+}
+
+:root.dark .divide-gray-200 {
+  border-color: #374151;
+}
+
+/* Shadows - make them less pronounced in dark mode */
+:root.dark .shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark .shadow-lg {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.4);
+}
+
+:root.dark .shadow-xl {
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Comments and messages */
+:root.dark .bg-blue-50 {
+  background-color: #1e3a8a;
+}
+
+:root.dark .bg-green-50 {
+  background-color: #14532d;
+}
+
+:root.dark .bg-red-50 {
+  background-color: #7f1d1d;
+}
+
+:root.dark .bg-yellow-50 {
+  background-color: #78350f;
+}
+
+:root.dark .bg-blue-100 {
+  background-color: #1e40af;
+}
+
+:root.dark .bg-green-100 {
+  background-color: #15803d;
+}
+
+:root.dark .bg-red-100 {
+  background-color: #991b1b;
+}
+
+:root.dark .bg-yellow-100 {
+  background-color: #92400e;
+}
+
+/* Modals and overlays */
+:root.dark .bg-black {
+  background-color: black;
+}
+
+:root.dark .bg-opacity-50 {
+  opacity: 0.5;
+}
+
+/* Links and highlights */
+:root.dark .bg-blue-500 {
+  background-color: #3b82f6;
+}
+
+:root.dark .hover\:bg-blue-600:hover {
+  background-color: #2563eb;
+}
+
+/* Specific component fixes */
+:root.dark .prose {
+  color: #d1d5db;
+}
+
+:root.dark code {
+  background-color: #1f2937;
+  color: #d1d5db;
+}
+
+:root.dark pre {
+  background-color: #1f2937;
+}

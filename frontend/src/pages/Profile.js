@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Heart, Bookmark, Edit2, Check, Share2, UsersIcon } from 'lucide-react';
+import { User, Heart, Bookmark, Edit2, Check, Share2, UsersIcon, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import ProfileHeader from '../components/ProfileHeader';
 import axios from 'axios';
-import { getMyPosts, getSavedPosts, toggleLike, toggleSave, updatePost } from '../api';
+import { getMyPosts, getSavedPosts, toggleLike, toggleSave, updatePost, deletePost } from '../api';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -12,6 +12,8 @@ export default function Profile() {
   const [posts, setPosts] = useState([]);
   const [savedPosts, setSavedPosts] = useState([]);
   const [showSaved, setShowSaved] = useState(false);
+  const [contextMenu, setContextMenu] = useState(null); // { id, x, y }
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   // Profile editing states
   const [bioEditing, setBioEditing] = useState(false);
@@ -340,6 +342,13 @@ export default function Profile() {
                   <div
                     key={p.id}
                     className="aspect-square bg-gray-200 relative overflow-hidden rounded group cursor-pointer"
+                    onClick={() => setContextMenu(null)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      // Only allow delete menu for owner posts
+                      if (p.user_id !== user.id) return;
+                      setContextMenu({ id: p.id, x: e.clientX, y: e.clientY });
+                    }}
                   >
                     {p.media_type && p.media_type.startsWith('image/') ? (
                       <img
@@ -382,6 +391,20 @@ export default function Profile() {
                           title="Edit"
                         >
                           <Edit2 size={20} />
+                        </button>
+                      )}
+
+                      {/* Delete Button (owner only) */}
+                      {p.user_id === user.id && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteId(p.id);
+                          }}
+                          className="text-white hover:text-red-200"
+                          title="Delete"
+                        >
+                          <Trash2 size={20} />
                         </button>
                       )}
 
@@ -476,6 +499,62 @@ export default function Profile() {
           </div>
         </div>
       </div>
+      {/* Context menu overlay */}
+      {contextMenu && (
+        <div
+          className="fixed inset-0 z-30"
+          onClick={() => setContextMenu(null)}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <div
+            className="absolute bg-white shadow-lg rounded-md border border-gray-200 py-2 px-3 text-sm font-medium text-red-600 hover:bg-red-50 cursor-pointer"
+            style={{ top: contextMenu.y, left: contextMenu.x, minWidth: '140px' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const targetId = contextMenu.id;
+              setContextMenu(null);
+              setConfirmDeleteId(targetId);
+            }}
+          >
+            Delete post
+          </div>
+        </div>
+      )}
+      {/* Confirm delete modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 px-4" onClick={() => setConfirmDeleteId(null)}>
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete post?</h3>
+            <p className="text-sm text-gray-600 mb-4">This cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 rounded border border-gray-200 text-gray-700 text-sm hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const targetId = confirmDeleteId;
+                  setConfirmDeleteId(null);
+                  deletePost(targetId)
+                    .then(() => {
+                      setPosts((prev) => prev.filter((x) => x.id !== targetId));
+                      setSavedPosts((prev) => prev.filter((x) => x.id !== targetId));
+                    })
+                    .catch((err) => {
+                      console.error(err);
+                      alert(err?.response?.data?.error || 'Delete failed');
+                    });
+                }}
+                className="px-4 py-2 rounded bg-red-500 text-white text-sm hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Navbar />
     </>
   );
