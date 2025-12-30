@@ -109,6 +109,14 @@ CREATE TABLE IF NOT EXISTS saves (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(post_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS comment_likes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  comment_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(comment_id, user_id)
+);
 `;
 
 db.exec(initSql, (err) => {

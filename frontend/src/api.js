@@ -64,6 +64,8 @@ export const toggleSave = (postId) => api.post(`/api/posts/${postId}/save`);
 // COMMENTS
 export const getComments = (postId) => api.get(`/api/posts/${postId}/comments`);
 export const createComment = (postId, content) => api.post(`/api/posts/${postId}/comments`, { content });
+export const deleteComment = (postId, commentId) => api.delete(`/api/posts/${postId}/comments/${commentId}`);
+export const toggleCommentLike = (postId, commentId) => api.post(`/api/posts/${postId}/comments/${commentId}/like`);
 export const getPost = (postId) => api.get(`/api/posts/${postId}`);
 export const getSavedPosts = () => api.get('/api/posts/saved');
 

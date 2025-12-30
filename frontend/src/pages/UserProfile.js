@@ -53,18 +53,19 @@ export default function UserProfile() {
 
   return (
     <div className="pt-20 pb-20 min-h-screen bg-gray-50 px-4">
-      {/* Back Button */}
-      <button 
-        onClick={() => navigate(-1)}
-        className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 transition text-gray-700"
-        title="Go back"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span className="text-sm font-medium">Go back</span>
-      </button>
+      <div className="max-w-md mx-auto">
+        {/* Back Button */}
+        <button 
+          onClick={() => navigate(-1)}
+          className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 transition text-gray-700"
+          title="Go back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm font-medium">Go back</span>
+        </button>
 
-      {/* Profile Container */}
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
+        {/* Profile Container */}
+        <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-start gap-4 mb-4">
           {/* Profile Picture */}
           <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
@@ -77,10 +78,8 @@ export default function UserProfile() {
 
           {/* User Info */}
           <div className="flex-1">
-            <h2 className="text-2xl font-semibold text-gray-900">@{user.username}</h2>
-            {user.nickname && (
-              <p className="text-xl font-light text-gray-700 mt-1">{user.nickname}</p>
-            )}
+            <h2 className="text-2xl font-semibold text-gray-900">{user.nickname || user.username}</h2>
+            <p className="text-sm text-gray-500 mt-1">@{user.username}</p>
           </div>
         </div>
 
@@ -130,6 +129,7 @@ export default function UserProfile() {
             </button>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

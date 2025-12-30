@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPost, getComments, createComment, toggleLike, toggleSave } from '../api';
+import { getPost, getComments, createComment, toggleLike, toggleSave, deleteComment, toggleCommentLike } from '../api';
 import { Heart, Bookmark, ArrowLeft, User as UserIcon } from 'lucide-react';
 import { API_BASE } from '../api';
 
@@ -12,6 +12,16 @@ export default function PostComments() {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, commentId: null });
+
+  useEffect(() => {
+    // Get current user
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      setCurrentUser(user);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -46,7 +56,7 @@ export default function PostComments() {
       // backend now returns comments_count
       const created = res.data.comment;
       const commentsCount = res.data.comments_count;
-      setComments(prev => [...prev, created]);
+      setComments(prev => [...prev, { ...created, likes_count: 0, liked_by_me: false }]);
       setNewComment('');
       setPost(prev => ({ ...prev, comments_count: commentsCount }));
       // notify other pages
@@ -54,6 +64,33 @@ export default function PostComments() {
     } catch (err) {
       console.error(err);
       alert(err?.response?.data?.error || 'Failed to create comment');
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Delete this comment?')) return;
+    try {
+      const res = await deleteComment(postId, commentId);
+      setComments(prev => prev.filter(c => c.id !== commentId));
+      setPost(prev => ({ ...prev, comments_count: res.data.comments_count }));
+      window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: { postId, commentsCount: res.data.comments_count } }));
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.error || 'Failed to delete comment');
+    }
+  };
+
+  const handleLikeComment = async (commentId) => {
+    try {
+      const res = await toggleCommentLike(postId, commentId);
+      setComments(prev => prev.map(c => 
+        c.id === commentId 
+          ? { ...c, liked_by_me: res.data.liked, likes_count: res.data.likes_count }
+          : c
+      ));
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.error || 'Failed to like comment');
     }
   };
 
@@ -116,25 +153,62 @@ export default function PostComments() {
 
             <div className="space-y-3">
               {comments.map(c => (
-                <div key={c.id} className="flex gap-3 items-start">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+                <div 
+                  key={c.id} 
+                  className="flex gap-3 items-start bg-gray-50 p-3 rounded"
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (currentUser?.id === c.user_id) {
+                      setContextMenu({ open: true, x: e.clientX, y: e.clientY, commentId: c.id });
+                    }
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center flex-shrink-0">
                     {c.profile_picture ? (
                       <img src={`${c.profile_picture.startsWith('http') ? '' : API_BASE}${c.profile_picture}`} alt="u" className="w-full h-full object-cover" />
                     ) : (
                       <UserIcon className="w-4 h-4 text-gray-500" />
                     )}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-medium">{c.nickname || c.username}</div>
                       {c.nickname && <span className="text-xs text-gray-400">@{c.username}</span>}
                     </div>
-                    <div className="text-sm text-gray-700">{c.content}</div>
-                    <div className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString()}</div>
+                    <div className="text-sm text-gray-700 mt-1">{c.content}</div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => handleLikeComment(c.id)}
+                        className={`flex items-center gap-1 text-xs ${c.liked_by_me ? 'text-red-500' : 'text-gray-400'}`}
+                      >
+                        <Heart className="w-3 h-3" />
+                        <span>{c.likes_count || 0}</span>
+                      </button>
+                      <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* Context Menu for Comments */}
+            {contextMenu.open && (
+              <div
+                className="fixed bg-white border rounded shadow-lg z-50"
+                style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+                onMouseLeave={() => setContextMenu({ ...contextMenu, open: false })}
+              >
+                <button
+                  onClick={() => {
+                    handleDeleteComment(contextMenu.commentId);
+                    setContextMenu({ ...contextMenu, open: false });
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
               <input value={newComment} onChange={e => setNewComment(e.target.value)} className="flex-1 p-2 border rounded" placeholder="Write a comment..." />

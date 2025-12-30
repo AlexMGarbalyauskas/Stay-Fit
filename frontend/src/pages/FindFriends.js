@@ -11,6 +11,7 @@ export default function FindFriends({ onFriendUpdate }) {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
   const [statuses, setStatuses] = useState({});
   const [me, setMe] = useState(null);
 
@@ -69,11 +70,22 @@ export default function FindFriends({ onFriendUpdate }) {
     });
   }, [users, me]);
 
-  // Re-filter when search term changes
+  // Re-filter when search term or location changes
   useEffect(() => {
-    if (!searchTerm) return setFilteredUsers(users);
-    setFilteredUsers(users.filter(u => u.username.includes(searchTerm)));
-  }, [searchTerm, users]);
+    let result = users;
+    
+    // Filter by username search
+    if (searchTerm) {
+      result = result.filter(u => u.username.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    
+    // Filter by location
+    if (locationFilter.trim()) {
+      result = result.filter(u => u.location && u.location.toLowerCase().includes(locationFilter.toLowerCase()));
+    }
+    
+    setFilteredUsers(result);
+  }, [searchTerm, locationFilter, users]);
 
   const handleAddFriend = id =>
     sendFriendRequest(id)
@@ -115,8 +127,10 @@ export default function FindFriends({ onFriendUpdate }) {
     <div className="min-h-screen pt-20 pb-20 bg-gray-100">
       <Header title="Find Friends" showBack />
       <div className="max-w-md mx-auto px-4 mt-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Find Friends</h2>
-        <div className="flex gap-2 mb-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-3">Find Friends</h2>
+        
+        {/* Username Search */}
+        <div className="flex gap-2 mb-3">
           <input
             type="text"
             placeholder="Enter username..."
@@ -131,6 +145,20 @@ export default function FindFriends({ onFriendUpdate }) {
           >
             Search
           </button>
+        </div>
+
+        {/* Location Filter */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Filter by location (e.g., New York)..."
+            value={locationFilter}
+            onChange={e => setLocationFilter(e.target.value)}
+            className="w-full p-2 border rounded focus:outline-none focus:ring text-sm"
+          />
+          {me?.location && (
+            <p className="text-xs text-gray-500 mt-1">Your location: <strong>{me.location}</strong></p>
+          )}
         </div>
 
         {/* Current user at top */}
@@ -177,6 +205,7 @@ export default function FindFriends({ onFriendUpdate }) {
                   <div>
                     <p className="text-gray-800 font-medium">@{user.username}</p>
                     {user.nickname && <p className="text-xs text-gray-500">{user.nickname}</p>}
+                    {user.location && <p className="text-xs text-gray-400">📍 {user.location}</p>}
                   </div>
                 </div>
 

@@ -8,6 +8,72 @@ const db = require('../db');
 
 const router = express.Router();
 
+// ===== COMMENT-SPECIFIC ROUTES (MUST BE FIRST) =====
+// Delete a comment
+router.delete('/:postId/comments/:commentId', auth, (req, res) => {
+  const commentId = Number(req.params.commentId);
+  const postId = Number(req.params.postId);
+  const requester = req.user.id;
+
+  db.get('SELECT * FROM comments WHERE id = ? AND post_id = ?', [commentId, postId], (err, comment) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+    if (comment.user_id !== requester) return res.status(403).json({ error: 'Not authorized to delete this comment' });
+
+    db.run('DELETE FROM comments WHERE id = ?', [commentId], (err2) => {
+      if (err2) return res.status(500).json({ error: 'Failed to delete comment' });
+      
+      // Clean up likes on this comment
+      db.run('DELETE FROM comment_likes WHERE comment_id = ?', [commentId], () => {
+        // Update comment count
+        db.get('SELECT COUNT(*) as count FROM comments WHERE post_id = ?', [postId], (err3, cntRow) => {
+          if (err3) return res.status(500).json({ error: 'DB error' });
+          res.json({ message: 'Deleted', comments_count: cntRow.count });
+        });
+      });
+    });
+  });
+});
+
+// Like/Unlike a comment
+router.post('/:postId/comments/:commentId/like', auth, (req, res) => {
+  const commentId = Number(req.params.commentId);
+  const postId = Number(req.params.postId);
+  const requester = req.user.id;
+
+  db.get('SELECT * FROM comments WHERE id = ? AND post_id = ?', [commentId, postId], (err, comment) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+    // Check if already liked
+    db.get('SELECT id FROM comment_likes WHERE comment_id = ? AND user_id = ?', [commentId, requester], (err2, likeRow) => {
+      if (err2) return res.status(500).json({ error: 'DB error' });
+
+      if (likeRow) {
+        // Unlike
+        db.run('DELETE FROM comment_likes WHERE id = ?', [likeRow.id], (err3) => {
+          if (err3) return res.status(500).json({ error: 'Failed to unlike' });
+          db.get('SELECT COUNT(*) as count FROM comment_likes WHERE comment_id = ?', [commentId], (err4, cnt) => {
+            if (err4) return res.status(500).json({ error: 'DB error' });
+            res.json({ liked: false, likes_count: cnt.count });
+          });
+        });
+      } else {
+        // Like
+        db.run('INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)', [commentId, requester], (err3) => {
+          if (err3) return res.status(500).json({ error: 'Failed to like' });
+          db.get('SELECT COUNT(*) as count FROM comment_likes WHERE comment_id = ?', [commentId], (err4, cnt) => {
+            if (err4) return res.status(500).json({ error: 'DB error' });
+            res.json({ liked: true, likes_count: cnt.count });
+          });
+        });
+      }
+    });
+  });
+});
+
+// ===== END OF COMMENT-SPECIFIC ROUTES =====
+
 const uploadDir = path.join(__dirname, '..', 'uploads', 'media');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -297,28 +363,46 @@ router.get('/saved', auth, (req, res) => {
 // Comments: get comments for a post
 router.get('/:id/comments', auth, (req, res) => {
   const postId = Number(req.params.id);
+  const requester = req.user.id;
   db.get('SELECT * FROM posts WHERE id = ?', [postId], (err, post) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
     // Check permission: only owner or friends can view (reuse friendship model)
-    const requester = req.user.id;
     const owner = post.user_id;
     if (owner !== requester) {
       db.get('SELECT * FROM friends WHERE user_id = ? AND friend_id = ?', [owner, requester], (err2, row) => {
         if (err2) return res.status(500).json({ error: 'DB error' });
         if (!row) return res.status(403).json({ error: 'Not authorized to view comments' });
 
-        db.all('SELECT c.*, u.username, u.nickname, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at ASC', [postId], (err3, rows) => {
-          if (err3) return res.status(500).json({ error: 'Failed to fetch comments' });
-          res.json({ comments: rows });
-        });
+        db.all(
+          `SELECT c.*, u.username, u.nickname, u.profile_picture,
+                  (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes_count,
+                  (SELECT 1 FROM comment_likes WHERE comment_id = c.id AND user_id = ?) as liked_by_me
+           FROM comments c JOIN users u ON c.user_id = u.id 
+           WHERE c.post_id = ? 
+           ORDER BY c.created_at ASC`,
+          [requester, postId],
+          (err3, rows) => {
+            if (err3) return res.status(500).json({ error: 'Failed to fetch comments' });
+            res.json({ comments: rows });
+          }
+        );
       });
     } else {
-      db.all('SELECT c.*, u.username, u.nickname, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at ASC', [postId], (err3, rows) => {
-        if (err3) return res.status(500).json({ error: 'Failed to fetch comments' });
-        res.json({ comments: rows });
-      });
+      db.all(
+        `SELECT c.*, u.username, u.nickname, u.profile_picture,
+                (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes_count,
+                (SELECT 1 FROM comment_likes WHERE comment_id = c.id AND user_id = ?) as liked_by_me
+         FROM comments c JOIN users u ON c.user_id = u.id 
+         WHERE c.post_id = ? 
+         ORDER BY c.created_at ASC`,
+        [requester, postId],
+        (err3, rows) => {
+          if (err3) return res.status(500).json({ error: 'Failed to fetch comments' });
+          res.json({ comments: rows });
+        }
+      );
     }
   });
 });
