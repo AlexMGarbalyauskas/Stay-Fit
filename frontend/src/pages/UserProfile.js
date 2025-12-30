@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getUser, getFriendStatus, sendFriendRequest, unfriend } from '../api';
-import { User, Users as UsersIcon, UserX } from 'lucide-react';
+import { User, Users as UsersIcon, UserX, ArrowLeft } from 'lucide-react';
 
 export default function UserProfile() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState('loading');
   const [friendsCount, setFriendsCount] = useState(0);
@@ -51,20 +52,84 @@ export default function UserProfile() {
   if (!user) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
 
   return (
-    <div className="pt-20 pb-20 min-h-screen bg-gray-100 flex flex-col items-center">
-      <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-        {user.profile_picture ? <img src={user.profile_picture} alt={user.username} className="w-full h-full object-cover" /> : <User className="w-14 h-14 text-gray-500" />}
-      </div>
-      <h2 className="text-xl font-bold mt-4">@{user.username}</h2>
-      {user.nickname && <p className="text-sm text-gray-500">{user.nickname}</p>}
-      <p className="text-sm text-gray-500">ID: {user.id}</p>
-      <div className="mt-1 flex items-center gap-1 text-gray-700"><UsersIcon className="w-4 h-4" /><span>{friendsCount} Friends</span></div>
-      <p className="mt-4 text-center text-gray-700">{user.bio || 'No bio yet.'}</p>
-      <p className="text-gray-500">{user.location || 'No location specified'}</p>
-      <div className="mt-4">
-        {status === 'none' && <button onClick={handleSendRequest} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">Add Friend</button>}
-        {status === 'sent' && <button disabled className="px-4 py-2 bg-gray-400 text-white rounded">Request Sent</button>}
-        {status === 'friends' && <button onClick={handleUnfriend} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition flex items-center gap-1"><UserX size={16} /> Unfriend</button>}
+    <div className="pt-20 pb-20 min-h-screen bg-gray-50 px-4">
+      {/* Back Button */}
+      <button 
+        onClick={() => navigate(-1)}
+        className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 transition text-gray-700"
+        title="Go back"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        <span className="text-sm font-medium">Go back</span>
+      </button>
+
+      {/* Profile Container */}
+      <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
+        <div className="flex items-start gap-4 mb-4">
+          {/* Profile Picture */}
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
+            {user.profile_picture ? (
+              <img src={user.profile_picture} alt={user.username} className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-12 h-12 text-gray-500" />
+            )}
+          </div>
+
+          {/* User Info */}
+          <div className="flex-1">
+            <h2 className="text-2xl font-semibold text-gray-900">@{user.username}</h2>
+            {user.nickname && (
+              <p className="text-xl font-light text-gray-700 mt-1">{user.nickname}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Bio */}
+        <div className="mb-3">
+          <p className="text-sm text-gray-700">{user.bio || 'No bio'}</p>
+        </div>
+
+        {/* Location */}
+        <div className="mb-4">
+          <p className="text-sm text-gray-700">{user.location || 'No location'}</p>
+        </div>
+
+        {/* Stats */}
+        <div className="flex gap-6 mb-4 text-sm">
+          <div>
+            <span className="font-semibold">{friendsCount}</span>
+            <span className="text-gray-500"> friends</span>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="mt-4">
+          {status === 'none' && (
+            <button 
+              onClick={handleSendRequest} 
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              Add Friend
+            </button>
+          )}
+          {status === 'sent' && (
+            <button 
+              disabled 
+              className="w-full px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed"
+            >
+              Request Sent
+            </button>
+          )}
+          {status === 'friends' && (
+            <button 
+              onClick={handleUnfriend} 
+              className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition flex items-center justify-center gap-2"
+            >
+              <UserX size={16} />
+              Unfriend
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

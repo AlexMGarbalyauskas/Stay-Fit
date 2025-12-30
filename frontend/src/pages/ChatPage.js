@@ -279,28 +279,23 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-3 border-t bg-white flex gap-2">
+              <div className="p-3 border-t bg-white flex gap-2 items-center flex-wrap">
                 <input
                   value={text}
                   onChange={e => setText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && sendMessage()}
                   placeholder="Type a message..."
-                  className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+                  className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 min-w-[150px]"
                 />
-                <button onClick={sendMessage} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-                  Send
-                </button>
-              </div>
-
-              {/* GIF Toggle Button */}
-              <div className="p-2 border-t bg-white flex items-center justify-between">
                 <button
                   onClick={() => setGifPanelOpen(!gifPanelOpen)}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 transition text-gray-700"
+                  className="inline-flex items-center gap-1 p-2 rounded hover:bg-gray-100 transition text-gray-700"
                   title="Toggle GIF search"
                 >
                   <ImageIcon className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-medium">GIFs</span>
+                </button>
+                <button onClick={sendMessage} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                  Send
                 </button>
               </div>
 

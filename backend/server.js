@@ -33,6 +33,7 @@ app.get('/', (req, res) => res.send('✅ Stay-Fit API running'));
 const server = http.createServer(app);
 const FRONTEND_URLS = [
   'http://localhost:3000',
+  'http://192.168.0.16:3000',
   'https://stay-fit-1.onrender.com',
   'https://stay-fit-2.onrender.com',
 ];

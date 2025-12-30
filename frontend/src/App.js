@@ -19,6 +19,7 @@ import Friends from './pages/Friends';
 import ChatPage from './pages/ChatPage';
 import CalendarPage from './pages/Calendar';
 import Terms from './pages/Terms';
+import DebugOverlay from './components/DebugOverlay';
 import { io } from 'socket.io-client';
 import { API_BASE } from './api';
 
@@ -174,6 +175,42 @@ function App() {
       </div>
     );
   }
+
+  return (
+    <Router>
+      <Routes>
+        {!isAuthenticated ? (
+          <>
+            <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/social-login" element={<SocialLogin setIsAuthenticated={setIsAuthenticated} />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+          </>
+        ) : booting ? (
+          <Route path="*" element={<SplashLoader />} />
+        ) : (
+          <>
+            <Route path="/home" element={<Home refreshTrigger={refreshFriends} />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/find-friends" element={<FindFriends onFriendsAdded={triggerFriendRefresh} />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/friend-requests" element={<FriendRequests onAcceptReject={triggerFriendRefresh} />} />
+            <Route path="/chat/:friendId" element={<ChatPage />} />
+            <Route path="/posts/:postId/comments" element={<PostComments />} />
+            <Route path="/user/:userId" element={<UserProfile />} />
+            <Route path="/post" element={<Post />} />
+            <Route path="/saved-posts" element={<SavedPosts />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="*" element={<Navigate to="/home" />} />
+          </>
+        )}
+      </Routes>
+      <DebugOverlay />
+    </Router>
+  );
 }
 
 export default App;

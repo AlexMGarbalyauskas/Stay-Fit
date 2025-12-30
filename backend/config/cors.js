@@ -2,6 +2,7 @@ const cors = require('cors');
 
 const allowedOrigins = [
   'http://localhost:3000',
+  'http://192.168.0.16:3000',
   'https://stay-fit-1.onrender.com',
   'https://stay-fit-2.onrender.com',
 ];
