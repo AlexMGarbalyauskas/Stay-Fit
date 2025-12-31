@@ -46,6 +46,7 @@ export const deleteMessage = messageId => api.delete(`/api/messages/${messageId}
 export const getNotifications = (type) => api.get(`/api/notifications${type ? `?type=${type}` : ''}`);
 export const markNotificationRead = (id) => api.post('/api/notifications/mark-read', { id });
 export const markAllNotificationsRead = () => api.post('/api/notifications/mark-all-read');
+export const deleteNotification = (id) => api.delete(`/api/notifications/${id}`);
 
 // POSTS
 export const getPosts = () => api.get('/api/posts');

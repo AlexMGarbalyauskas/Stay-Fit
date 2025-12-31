@@ -56,4 +56,14 @@ router.post('/mark-all-read', auth, (req, res) => {
   });
 });
 
+// Delete a notification
+router.delete('/:id', auth, (req, res) => {
+  const notificationId = req.params.id;
+  db.run('DELETE FROM notifications WHERE id = ? AND user_id = ?', [notificationId, req.user.id], function (err) {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    if (this.changes === 0) return res.status(404).json({ error: 'Notification not found or not yours' });
+    res.json({ deleted: true });
+  });
+});
+
 module.exports = router;
