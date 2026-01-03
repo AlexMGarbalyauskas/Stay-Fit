@@ -16,6 +16,7 @@ export default function Settings() {
   const [showTimezoneModal, setShowTimezoneModal] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const navigate = useNavigate();
   const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
 
@@ -332,18 +333,28 @@ export default function Settings() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-auto">
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 px-4 ${
+            isDark ? 'bg-black/70 backdrop-blur-sm' : 'bg-black bg-opacity-50'
+          }`}
+        >
+          <div
+            className={`rounded-lg p-6 max-w-md w-full mx-auto shadow-xl ${
+              isDark
+                ? 'bg-gray-900 text-gray-100 border border-gray-800'
+                : 'bg-white'
+            }`}
+          >
             <div className="text-center mb-4">
               <Lock className="w-12 h-12 mx-auto mb-3 text-blue-500" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Privacy Change</h3>
-              <p className="text-gray-600 mb-1">
+              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-gray-50' : 'text-gray-900'}`}>Confirm Privacy Change</h3>
+              <p className={isDark ? 'text-gray-300 mb-1' : 'text-gray-700 mb-1'}>
                 You are changing your privacy setting to:
               </p>
-              <p className="text-lg font-semibold text-gray-900 mb-3">
+              <p className={`text-lg font-semibold mb-3 ${isDark ? 'text-gray-50' : 'text-gray-900'}`}>
                 {pendingPrivacy}
               </p>
-              <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded mb-4 text-left">
+              <div className={`text-sm p-3 rounded mb-4 text-left ${isDark ? 'text-gray-200 bg-gray-800' : 'text-gray-800 bg-gray-100'}`}>
                 {pendingPrivacy === 'Public' && (
                   <p>✓ Everyone can see your profile and posts</p>
                 )}
@@ -358,7 +369,7 @@ export default function Settings() {
             <div className="flex gap-3">
               <button
                 onClick={cancelPrivacyChange}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition"
               >
                 <X size={18} />
                 Cancel
@@ -377,15 +388,25 @@ export default function Settings() {
 
       {/* Timezone Modal */}
       {showTimezoneModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-auto max-h-[80vh] flex flex-col">
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 px-4 ${
+            isDark ? 'bg-black/70 backdrop-blur-sm' : 'bg-black bg-opacity-50'
+          }`}
+        >
+          <div
+            className={`rounded-lg shadow-xl p-6 max-w-md w-full mx-auto max-h-[80vh] flex flex-col ${
+              isDark
+                ? 'bg-gray-900 text-gray-100 border border-gray-800'
+                : 'bg-white'
+            }`}
+          >
             <div className="text-center mb-4">
               <Globe className="w-12 h-12 mx-auto mb-3 text-blue-500" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Change Timezone</h3>
-              <p className="text-sm text-gray-600 mb-1">
-                Current time: <span className="font-semibold">{currentTime}</span>
+              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-gray-50' : 'text-gray-900'}`}>Change Timezone</h3>
+              <p className={`text-sm mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                Current time: <span className={isDark ? 'font-semibold text-gray-100' : 'font-semibold text-gray-900'}>{currentTime}</span>
               </p>
-              <p className="text-xs text-gray-500">
+              <p className={isDark ? 'text-xs text-gray-400' : 'text-xs text-gray-700'}>
                 Select your timezone or update your location in Profile for auto-detection
               </p>
             </div>
@@ -398,8 +419,12 @@ export default function Settings() {
                     onClick={() => handleTimezoneChange(tz.value)}
                     className={`w-full text-left px-3 py-2 rounded transition ${
                       (pendingTimezone || timezone) === tz.value
-                        ? 'bg-blue-100 border-2 border-blue-500 text-blue-900'
-                        : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                        ? isDark
+                          ? 'bg-blue-900/30 border-2 border-blue-500 text-blue-100'
+                          : 'bg-blue-100 border-2 border-blue-500 text-blue-900'
+                        : isDark
+                          ? 'bg-gray-800 hover:bg-gray-700 border-2 border-transparent text-gray-100'
+                          : 'bg-white hover:bg-gray-50 border border-gray-200 text-gray-800'
                     }`}
                   >
                     <div className="font-medium text-sm">{tz.label}</div>
@@ -408,10 +433,14 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2 border-t">
+            <div className="flex gap-3 pt-2 border-t border-gray-200 dark:border-gray-800">
               <button
                 onClick={cancelTimezoneChange}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition ${
+                  isDark
+                    ? 'bg-gray-800 text-gray-100 hover:bg-gray-700'
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                }`}
               >
                 <X size={18} />
                 Cancel
@@ -422,7 +451,9 @@ export default function Settings() {
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition ${
                   pendingTimezone
                     ? 'bg-blue-500 text-white hover:bg-blue-600'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : isDark
+                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-300 text-gray-600 cursor-not-allowed'
                 }`}
               >
                 <Check size={18} />
