@@ -24,6 +24,7 @@ app.use('/api/friends', require('./routes/friendsRoutes'));
 app.use('/api/messages', require('./routes/messagesRoutes'));
 app.use('/api/notifications', require('./routes/notificationsRoutes'));
 app.use('/api/posts', require('./routes/postsRoutes'));
+app.use('/api/workout-schedules', require('./routes/workoutSchedulesRoutes'));
 
 
 // Health check
@@ -58,41 +59,77 @@ io.use((socket, next) => {
 app.set('io', io);
 
 io.on('connection', (socket) => {
-  const userId = socket.user.id;
-  console.log(`🟢 User connected: ${userId}`);
-  socket.join(`user:${userId}`);
+  try {
+    const userId = socket.user.id;
+    console.log(`🟢 User connected: ${userId}`);
+    socket.join(`user:${userId}`);
 
-  socket.on('send_message', ({ receiverId, content, messageType, mediaUrl }) => {
-    const type = messageType || (mediaUrl ? 'gif' : 'text');
-    const cleanedContent = (content || '').trim();
-    if (!cleanedContent && !mediaUrl) return; // need something to send
+    socket.on('send_message', ({ receiverId, content, messageType, mediaUrl }) => {
+      try {
+        const type = messageType || (mediaUrl ? 'gif' : 'text');
+        const cleanedContent = (content || '').trim();
+        if (!cleanedContent && !mediaUrl) return; // need something to send
 
-    const createdAt = new Date().toISOString();
-    const finalContent = cleanedContent || (mediaUrl ? '[gif]' : '');
+        const createdAt = new Date().toISOString();
+        const finalContent = cleanedContent || (mediaUrl ? '[gif]' : '');
 
-    db.run(
-      'INSERT INTO messages (sender_id, receiver_id, content, message_type, media_url, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, receiverId, finalContent, type, mediaUrl || null, createdAt],
-      function (err) {
-        if (err) return console.error(err);
-        const message = { id: this.lastID, sender_id: userId, receiver_id: receiverId, content: finalContent, message_type: type, media_url: mediaUrl || null, created_at: createdAt };
-        io.to(`user:${receiverId}`).emit('receive_message', message);
-        socket.emit('receive_message', message);
+        db.run(
+          'INSERT INTO messages (sender_id, receiver_id, content, message_type, media_url, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+          [userId, receiverId, finalContent, type, mediaUrl || null, createdAt],
+          function (err) {
+            if (err) {
+              console.error('Error saving message:', err);
+              return;
+            }
+            const message = { id: this.lastID, sender_id: userId, receiver_id: receiverId, content: finalContent, message_type: type, media_url: mediaUrl || null, created_at: createdAt };
+            io.to(`user:${receiverId}`).emit('receive_message', message);
+            socket.emit('receive_message', message);
 
-        // Create a notification for the receiver
-        const preview = mediaUrl ? '[GIF]' : finalContent.slice(0, 200);
-        db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: preview })], (err) => {
-          if (err) console.error('Failed to create message notification', err);
-          // include preview content in the socket event for toast
-          io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
-        });
+            // Create a notification for the receiver
+            const preview = mediaUrl ? '[GIF]' : finalContent.slice(0, 200);
+            db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: preview })], (err) => {
+              if (err) console.error('Failed to create message notification', err);
+              // include preview content in the socket event for toast
+              io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
+            });
+          }
+        );
+      } catch (err) {
+        console.error('Error handling send_message:', err);
       }
-    );
-  });
+    });
 
-  socket.on('disconnect', () => console.log(`🔴 User disconnected: ${userId}`));
+    socket.on('disconnect', () => {
+      console.log(`🔴 User disconnected: ${userId}`);
+    });
+
+    socket.on('error', (error) => {
+      console.error(`Socket error for user ${userId}:`, error);
+    });
+  } catch (err) {
+    console.error('Error in socket connection handler:', err);
+  }
 });
 
 // ===== Start server =====
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
+// Global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // Continue running instead of crashing
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getMe, getPosts, API_BASE } from '../api';
 import { useNavigate } from 'react-router-dom';
-import { User, Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
+import { User, Heart, MessageCircle, Share2, Bookmark, Clock, Dumbbell } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { toggleLike, toggleSave } from '../api';
@@ -10,6 +10,8 @@ export default function Home({ onLogout }) {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [commentsForPost, setCommentsForPost] = useState(null);
+  const [countdown, setCountdown] = useState('');
+  const [todayWorkout, setTodayWorkout] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +61,54 @@ export default function Home({ onLogout }) {
     };
   }, [navigate, onLogout]);
 
+  // Countdown timer for today's workout
+  useEffect(() => {
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateKey = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+    
+    const interval = setInterval(() => {
+      const today = new Date();
+      const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      try {
+        const stored = localStorage.getItem('workout-plans');
+        if (stored) {
+          const plans = JSON.parse(stored);
+          const todayPlan = plans[todayKey];
+          
+          if (todayPlan && todayPlan.time) {
+            setTodayWorkout(todayPlan);
+            const now = new Date();
+            const [hours, minutes] = todayPlan.time.split(':');
+            const reminderDate = new Date();
+            reminderDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            
+            const diff = reminderDate - now;
+            
+            if (diff > 0) {
+              const hours = Math.floor(diff / (1000 * 60 * 60));
+              const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+              const secs = Math.floor((diff % (1000 * 60)) / 1000);
+              setCountdown(`${pad(hours)}:${pad(mins)}:${pad(secs)}`);
+            } else if (diff > -60000 && diff <= 0) {
+              setCountdown('NOW!');
+            } else {
+              setCountdown('');
+              setTodayWorkout(null);
+            }
+          } else {
+            setCountdown('');
+            setTodayWorkout(null);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load workout plans', e);
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchPosts = async () => {
     try {
       const res = await getPosts();
@@ -84,6 +134,29 @@ export default function Home({ onLogout }) {
 
       <main className="min-h-screen bg-gray-100 pt-16 pb-16">
         <div className="max-w-2xl mx-auto">
+          {/* Countdown Timer Display */}
+          {countdown && todayWorkout && (
+            <div className="mt-6 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white shadow-lg cursor-pointer hover:shadow-xl transition" onClick={() => navigate('/calendar')}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white bg-opacity-20 rounded-full p-2">
+                    <Dumbbell className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide opacity-90">Next Workout</p>
+                    <p className="text-lg font-bold">{todayWorkout.workout}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-medium opacity-90 flex items-center gap-1 justify-end">
+                    <Clock className="h-3 w-3" /> Time Until Reminder
+                  </p>
+                  <p className="text-3xl font-bold tabular-nums">{countdown}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Welcome / quick actions */}
           <div className="bg-white shadow-lg rounded-lg p-6 mt-6">
             <div className="flex items-center gap-4">

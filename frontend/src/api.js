@@ -25,6 +25,7 @@ export const login = (login, password) =>
 export const getUsers = () => api.get('/api/users');
 export const getUser = id => api.get(`/api/users/${id}`);
 export const getMe = () => api.get('/api/me');
+export const updateMe = (data) => api.put('/api/me', data);
 
 // FRIENDS
 export const sendFriendRequest = receiverId => api.post('/api/friends/request', { receiverId });
@@ -47,6 +48,10 @@ export const getNotifications = (type) => api.get(`/api/notifications${type ? `?
 export const markNotificationRead = (id) => api.post('/api/notifications/mark-read', { id });
 export const markAllNotificationsRead = () => api.post('/api/notifications/mark-all-read');
 export const deleteNotification = (id) => api.delete(`/api/notifications/${id}`);
+
+// WORKOUT SCHEDULES
+export const respondToWorkoutInvite = (participantId, status) => 
+  api.post(`/api/workout-schedules/invites/${participantId}/respond`, { status });
 
 // POSTS
 export const getPosts = () => api.get('/api/posts');

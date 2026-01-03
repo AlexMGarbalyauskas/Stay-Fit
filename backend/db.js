@@ -122,6 +122,25 @@ CREATE TABLE IF NOT EXISTS comment_likes (
 db.exec(initSql, (err) => {
   if (err) console.error('DB init error', err);
 
+  // Run migrations
+  const migrationsDir = path.join(__dirname, 'migrations');
+  const migrationFiles = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+  
+  migrationFiles.forEach(file => {
+    const filePath = path.join(migrationsDir, file);
+    const sql = fs.readFileSync(filePath, 'utf-8');
+    db.exec(sql, (err) => {
+      if (err) {
+        // Only log if it's not a duplicate column or already exists error
+        if (!err.message.includes('duplicate column') && !err.message.includes('already exists')) {
+          console.error(`Migration error for ${file}:`, err);
+        }
+      } else {
+        console.log(`✅ Migration ${file} completed`);
+      }
+    });
+  });
+
   // Ensure 'nickname' column exists (safe for upgrades)
   db.all("PRAGMA table_info('users')", (err2, cols) => {
     if (err2) return console.error('Failed to check users table info', err2);

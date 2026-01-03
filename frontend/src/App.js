@@ -20,8 +20,10 @@ import ChatPage from './pages/ChatPage';
 import CalendarPage from './pages/Calendar';
 import Terms from './pages/Terms';
 import DebugOverlay from './components/DebugOverlay';
+import { WorkoutReminderProvider, useWorkoutReminder } from './context/WorkoutReminderContext';
 import { io } from 'socket.io-client';
 import { API_BASE } from './api';
+import { Dumbbell, X as Close } from 'lucide-react';
 
 function App() {
   const [refreshFriends, setRefreshFriends] = useState(0);
@@ -71,8 +73,9 @@ function App() {
 
   return (
     <Router>
-      {booting && <SplashLoader />}
-      <Routes>
+      <WorkoutReminderProvider>
+        {booting && <SplashLoader />}
+        <Routes>
         <Route path="/" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
         <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
@@ -105,8 +108,231 @@ function App() {
         <Route path="/notifications" element={isAuthenticated ? <Notifications /> : <Navigate to="/login" />} />
       </Routes>
 
+      {/* Global Workout Prompt Modal */}
+      <GlobalWorkoutPrompt />
+
       {/* Global notification toast rendered inside Router so it can navigate */}
       <NotificationToast />
+    </WorkoutReminderProvider>
+    </Router>
+  );
+
+  // Global Workout Prompt Component
+  function GlobalWorkoutPrompt() {
+    const { showWorkoutPrompt, todayWorkout, closePrompt, dismissPrompt } = useWorkoutReminder();
+    const navigate = useNavigate();
+
+    console.log('🏋️ GlobalWorkoutPrompt state:', { showWorkoutPrompt, todayWorkout });
+
+    if (!showWorkoutPrompt || !todayWorkout) return null;
+
+    const removeLocalPlan = () => {
+      try {
+        const stored = localStorage.getItem('workout-plans');
+        if (!stored) return;
+        const plans = JSON.parse(stored);
+        const today = new Date();
+        const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        const key = todayWorkout?.date || todayKey;
+        delete plans[key];
+        localStorage.setItem('workout-plans', JSON.stringify(plans));
+      } catch (e) {
+        console.error('Failed to clean local plan on cancel:', e);
+      }
+    };
+
+    const cancelWorkoutServer = async (reason) => {
+      if (!todayWorkout?.scheduleId) return;
+      try {
+        const res = await fetch(`${API_BASE.replace('/api', '')}/api/workout-schedules/${todayWorkout.scheduleId}${reason ? `?reason=${reason}` : ''}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!res.ok && res.status !== 404) {
+          throw new Error(`Cancel failed: ${res.status}`);
+        }
+      } catch (e) {
+        console.error('Failed to cancel workout on server:', e);
+      }
+    };
+
+    const handlePostWorkout = () => {
+      dismissPrompt();
+      navigate('/post');
+    };
+
+    const declineInviteIfNeeded = async () => {
+      if (!todayWorkout?.isInvite || !todayWorkout?.participantId) return;
+      try {
+        await fetch(`${API_BASE.replace('/api', '')}/api/workout-schedules/invites/${todayWorkout.participantId}/respond`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ status: 'declined' })
+        });
+      } catch (e) {
+        console.error('Failed to decline invite on Not Now:', e);
+      }
+    };
+
+    const handleSkipWorkout = async () => {
+      if (todayWorkout?.isInvite) {
+        // For invites, just decline but do not delete the schedule
+        await declineInviteIfNeeded();
+      } else {
+        // Treat Not Now as cancel for own plans
+        await cancelWorkoutServer('optout');
+        removeLocalPlan();
+      }
+      dismissPrompt();
+    };
+
+    const handleAcceptInvite = () => {
+      // Call accept endpoint
+      if (todayWorkout.participantId && todayWorkout.scheduleId) {
+        fetch(`${API_BASE.replace('/api', '')}/api/workout-schedules/invites/${todayWorkout.participantId}/respond`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ status: 'accepted' })
+        }).then(() => {
+          dismissPrompt();
+          alert('Workout accepted! See you there! 💪');
+        }).catch(err => {
+          console.error('Failed to accept workout invite:', err);
+          alert('Failed to accept invite');
+        });
+      }
+    };
+
+    const handleDeclineInvite = () => {
+      // Call decline endpoint
+      if (todayWorkout.participantId && todayWorkout.scheduleId) {
+        fetch(`${API_BASE.replace('/api', '')}/api/workout-schedules/invites/${todayWorkout.participantId}/respond`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ status: 'declined' })
+        }).then(() => {
+          dismissPrompt();
+          alert('Invite declined');
+        }).catch(err => {
+          console.error('Failed to decline workout invite:', err);
+          alert('Failed to decline invite');
+        });
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600">
+              <Dumbbell className="h-8 w-8 text-white" />
+            </div>
+            
+            {todayWorkout.isInvite ? (
+              <>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Workout Invite! 🎉</h2>
+                <p className="text-lg text-gray-700 mb-1">
+                  <span className="font-bold text-blue-600">{todayWorkout.creatorUsername}</span> invited you to a <span className="font-bold text-blue-600">{todayWorkout.workout}</span> workout
+                </p>
+                <p className="text-sm text-gray-500 mb-6">
+                  {todayWorkout.date && `📅 ${todayWorkout.date}`} {todayWorkout.time && `⏰ ${todayWorkout.time}`}
+                </p>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDeclineInvite}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
+                  >
+                    Maybe Later
+                  </button>
+                  <button
+                    onClick={handleAcceptInvite}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition shadow-lg"
+                  >
+                    Yes, I'm In! 💪
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Workout Time! 🏋️</h2>
+                <p className="text-lg text-gray-700 mb-1">It's time for your <span className="font-bold text-blue-600">{todayWorkout.workout}</span> workout!</p>
+                <p className="text-sm text-gray-500 mb-6">Ready to post your workout video?</p>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSkipWorkout}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
+                  >
+                    Not Now
+                  </button>
+                  <button
+                    onClick={handlePostWorkout}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition shadow-lg"
+                  >
+                    Yes, Post! 📸
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Router>
+      <WorkoutReminderProvider>
+        {booting && <SplashLoader />}
+        <Routes>
+          <Route path="/" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
+          <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+          <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+          <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+
+          <Route path="/home" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
+          <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
+          <Route path="/saved-posts" element={isAuthenticated ? <SavedPosts /> : <Navigate to="/login" />} />
+          <Route path="/post" element={isAuthenticated ? <Post /> : <Navigate to="/login" />} />
+          <Route path="/posts/:id/comments" element={isAuthenticated ? <PostComments /> : <Navigate to="/login" />} />
+          <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
+          <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
+          <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
+          <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
+          <Route path="/terms" element={<Terms />} />
+
+          <Route
+            path="/find"
+            element={isAuthenticated ? <FindFriends onFriendUpdate={triggerFriendRefresh} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/friend-requests"
+            element={isAuthenticated ? <FriendRequests onFriendUpdate={triggerFriendRefresh} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/friends"
+            element={isAuthenticated ? <Friends refreshTrigger={refreshFriends} /> : <Navigate to="/login" />}
+          />
+          <Route path="/users/:id" element={isAuthenticated ? <UserProfile /> : <Navigate to="/login" />} />
+          <Route path="/notifications" element={isAuthenticated ? <Notifications /> : <Navigate to="/login" />} />
+        </Routes>
+
+        {/* Global Workout Prompt Modal */}
+        <GlobalWorkoutPrompt />
+
+        {/* Global notification toast rendered inside Router so it can navigate */}
+        <NotificationToast />
+      </WorkoutReminderProvider>
     </Router>
   );
 
@@ -175,42 +401,6 @@ function App() {
       </div>
     );
   }
-
-  return (
-    <Router>
-      <Routes>
-        {!isAuthenticated ? (
-          <>
-            <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/social-login" element={<SocialLogin setIsAuthenticated={setIsAuthenticated} />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="*" element={<Navigate to="/login" />} />
-          </>
-        ) : booting ? (
-          <Route path="*" element={<SplashLoader />} />
-        ) : (
-          <>
-            <Route path="/home" element={<Home refreshTrigger={refreshFriends} />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/find-friends" element={<FindFriends onFriendsAdded={triggerFriendRefresh} />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/friend-requests" element={<FriendRequests onAcceptReject={triggerFriendRefresh} />} />
-            <Route path="/chat/:friendId" element={<ChatPage />} />
-            <Route path="/posts/:postId/comments" element={<PostComments />} />
-            <Route path="/user/:userId" element={<UserProfile />} />
-            <Route path="/post" element={<Post />} />
-            <Route path="/saved-posts" element={<SavedPosts />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="*" element={<Navigate to="/home" />} />
-          </>
-        )}
-      </Routes>
-      <DebugOverlay />
-    </Router>
-  );
 }
 
 export default App;

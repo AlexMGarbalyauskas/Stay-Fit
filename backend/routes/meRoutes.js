@@ -4,6 +4,7 @@ const db = require('../db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { getTimezoneFromLocation } = require('../utils/timezone');
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const upload = multer({ storage });
 // GET current user
 router.get('/', auth, (req, res) => {
   db.get(
-    'SELECT id, username, email, bio, location, profile_picture, nickname FROM users WHERE id = ?',
+    'SELECT id, username, email, bio, location, profile_picture, nickname, privacy, timezone, notifications_enabled FROM users WHERE id = ?',
     [req.user.id],
     (err, row) => {
       if (err) return res.status(500).json({ error: 'DB error' });
@@ -35,7 +36,7 @@ router.get('/', auth, (req, res) => {
 
 // UPDATE bio & location & nickname (PUT endpoint)
 router.put('/', auth, (req, res) => {
-  const { bio, location, nickname } = req.body;
+  const { bio, location, nickname, privacy, timezone, notifications_enabled } = req.body;
   const updates = [];
   const params = [];
 
@@ -46,10 +47,26 @@ router.put('/', auth, (req, res) => {
   if (location !== undefined) {
     updates.push('location = ?');
     params.push(location);
+    // Auto-set timezone based on location
+    const autoTimezone = getTimezoneFromLocation(location);
+    updates.push('timezone = ?');
+    params.push(autoTimezone);
   }
   if (nickname !== undefined) {
     updates.push('nickname = ?');
     params.push(nickname);
+  }
+  if (privacy !== undefined) {
+    updates.push('privacy = ?');
+    params.push(privacy);
+  }
+  if (timezone !== undefined) {
+    updates.push('timezone = ?');
+    params.push(timezone);
+  }
+  if (notifications_enabled !== undefined) {
+    updates.push('notifications_enabled = ?');
+    params.push(notifications_enabled ? 1 : 0);
   }
 
   if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
@@ -61,7 +78,7 @@ router.put('/', auth, (req, res) => {
     if (err) return res.status(500).json({ error: 'DB error' });
 
     db.get(
-      'SELECT id, username, email, bio, location, profile_picture, nickname FROM users WHERE id = ?',
+      'SELECT id, username, email, bio, location, profile_picture, nickname, privacy, timezone, notifications_enabled FROM users WHERE id = ?',
       [req.user.id],
       (err, row) => {
         if (err || !row) return res.status(500).json({ error: 'Failed to fetch updated user' });
@@ -73,7 +90,7 @@ router.put('/', auth, (req, res) => {
 
 // UPDATE bio & location (legacy POST endpoint for backward compatibility)
 router.post('/update', auth, (req, res) => {
-  const { bio, location, nickname } = req.body;
+  const { bio, location, nickname, privacy, timezone } = req.body;
   const updates = [];
   const params = [];
 
@@ -84,10 +101,22 @@ router.post('/update', auth, (req, res) => {
   if (location !== undefined) {
     updates.push('location = ?');
     params.push(location);
+    // Auto-set timezone based on location
+    const autoTimezone = getTimezoneFromLocation(location);
+    updates.push('timezone = ?');
+    params.push(autoTimezone);
   }
   if (nickname !== undefined) {
     updates.push('nickname = ?');
     params.push(nickname);
+  }
+  if (privacy !== undefined) {
+    updates.push('privacy = ?');
+    params.push(privacy);
+  }
+  if (timezone !== undefined) {
+    updates.push('timezone = ?');
+    params.push(timezone);
   }
 
   if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
@@ -99,7 +128,7 @@ router.post('/update', auth, (req, res) => {
     if (err) return res.status(500).json({ error: 'DB error' });
 
     db.get(
-      'SELECT id, username, email, bio, location, profile_picture, nickname FROM users WHERE id = ?',
+      'SELECT id, username, email, bio, location, profile_picture, nickname, privacy, timezone FROM users WHERE id = ?',
       [req.user.id],
       (err, row) => {
         if (err || !row) return res.status(500).json({ error: 'Failed to fetch updated user' });
@@ -121,7 +150,7 @@ router.post('/profile-picture', auth, upload.single('file'), (req, res) => {
       if (err) return res.status(500).json({ error: 'Failed to save profile picture' });
 
       db.get(
-        'SELECT id, username, email, bio, location, profile_picture, nickname FROM users WHERE id = ?',
+        'SELECT id, username, email, bio, location, profile_picture, nickname, privacy, timezone FROM users WHERE id = ?',
         [req.user.id],
         (err, row) => {
           if (err || !row) return res.status(500).json({ error: 'Failed to fetch user' });
