@@ -394,7 +394,7 @@ export default function Settings() {
           }`}
         >
           <div
-            className={`rounded-lg shadow-xl p-6 max-w-md w-full mx-auto max-h-[80vh] flex flex-col ${
+            className={`rounded-lg shadow-xl p-6 max-w-md w-full mx-auto max-h-[65vh] flex flex-col ${
               isDark
                 ? 'bg-gray-900 text-gray-100 border border-gray-800'
                 : 'bg-white'

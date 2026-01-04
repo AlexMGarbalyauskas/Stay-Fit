@@ -38,6 +38,23 @@ router.get('/', auth, (req, res) => {
   });
 });
 
+// Create a notification
+router.post('/create', auth, (req, res) => {
+  const { type, data } = req.body;
+  if (!type) return res.status(400).json({ error: 'Missing notification type' });
+  
+  const dataStr = typeof data === 'string' ? data : JSON.stringify(data || {});
+  const createdAt = new Date().toISOString();
+  
+  db.run('INSERT INTO notifications (user_id, type, data, created_at) VALUES (?, ?, ?, ?)', 
+    [req.user.id, type, dataStr, createdAt], 
+    function (err) {
+      if (err) return res.status(500).json({ error: 'Failed to create notification' });
+      res.json({ id: this.lastID, type, data: JSON.parse(dataStr), created_at: createdAt, read: 0 });
+    }
+  );
+});
+
 // Mark one notification read
 router.post('/mark-read', auth, (req, res) => {
   const { id } = req.body;

@@ -14,6 +14,7 @@ import Post from './pages/Post';
 import PostComments from './pages/PostComments';
 import FriendRequests from './pages/FriendRequests';
 import UserProfile from './pages/UserProfile';
+import UserFriends from './pages/UserFriends';
 import Notifications from './pages/Notifications';
 import Friends from './pages/Friends';
 import ChatPage from './pages/ChatPage';
@@ -106,6 +107,7 @@ function App() {
         />
         <Route path="/users/:id" element={isAuthenticated ? <UserProfile /> : <Navigate to="/login" />} />
         <Route path="/notifications" element={isAuthenticated ? <Notifications /> : <Navigate to="/login" />} />
+        <Route path="/user/:id/friends" element={<UserFriends />} />
       </Routes>
 
       {/* Global Workout Prompt Modal */}
@@ -186,6 +188,34 @@ function App() {
         await cancelWorkoutServer('optout');
         removeLocalPlan();
       }
+      
+      // Create notification that user cancelled/skipped the workout
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          await fetch(`${API_BASE}/api/notifications/create`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              type: 'workout_cancelled',
+              data: {
+                workoutName: todayWorkout.workout || 'Workout',
+                cancelledAt: new Date().toISOString(),
+                isInvite: todayWorkout.isInvite || false,
+                message: todayWorkout.isInvite 
+                  ? `You declined the workout invite from ${todayWorkout.creatorUsername}`
+                  : `You skipped your scheduled ${todayWorkout.workout} workout`
+              }
+            })
+          }).catch(e => console.error('Failed to create cancellation notification:', e));
+        }
+      } catch (e) {
+        console.error('Failed to create cancellation notification:', e);
+      }
+      
       dismissPrompt();
     };
 
@@ -325,6 +355,7 @@ function App() {
           />
           <Route path="/users/:id" element={isAuthenticated ? <UserProfile /> : <Navigate to="/login" />} />
           <Route path="/notifications" element={isAuthenticated ? <Notifications /> : <Navigate to="/login" />} />
+          <Route path="/user/:id/friends" element={<UserFriends />} />
         </Routes>
 
         {/* Global Workout Prompt Modal */}

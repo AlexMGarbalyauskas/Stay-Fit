@@ -12,7 +12,7 @@ export default function Notifications({ onFriendUpdate }) {
   const [error, setError] = useState(null);
   const navigate = useNavigate(); // for Go Back
 
-  const workoutTypes = useMemo(() => ['workout_invite', 'workout_canceled', 'workout_opt_out'], []);
+  const workoutTypes = useMemo(() => ['workout_invite', 'workout_canceled', 'workout_opt_out', 'workout_cancelled'], []);
 
   const tabs = useMemo(() => ([
     { key: 'requests', label: 'Friend Requests', icon: Users, hint: 'Approve or decline new connections', tone: 'blue' },
@@ -316,18 +316,29 @@ export default function Notifications({ onFriendUpdate }) {
           const isInvite = n.type === 'workout_invite';
           const isCanceled = n.type === 'workout_canceled';
           const isOptOut = n.type === 'workout_opt_out';
+          const isCancelledByUser = n.type === 'workout_cancelled'; // User cancelled their own workout
           const label = (() => {
+            if (isCancelledByUser) return data.message || `You skipped your scheduled ${data.workoutName || 'workout'}`;
             if (isCanceled) return `${data.creatorUsername || 'Your buddy'} canceled the workout.`;
             if (isOptOut) return `${data.fromUsername || 'Your buddy'} opted out of the workout.`;
             return `${data.creatorUsername || 'Unknown'} invited you to workout: ${data.workout || 'Workout'}`;
           })();
           
           return (
-            <div key={n.id} className={`rounded-2xl border border-slate-200 bg-white p-4 ${isOutdated ? 'opacity-60' : toneClasses.purple.glow}`}>
+            <div key={n.id} className={`rounded-2xl border border-slate-200 bg-white p-4 ${isOutdated || isCancelledByUser ? 'opacity-60' : toneClasses.purple.glow}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-900">@{data.creatorUsername || data.fromUsername || 'Unknown'}</p>
-                  <p className="text-sm text-slate-600">{label}</p>
+                  {isCancelledByUser ? (
+                    <>
+                      <p className="font-semibold text-slate-900">⏭️ Workout Skipped</p>
+                      <p className="text-sm text-slate-600">{label}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-slate-900">@{data.creatorUsername || data.fromUsername || 'Unknown'}</p>
+                      <p className="text-sm text-slate-600">{label}</p>
+                    </>
+                  )}
                   <p className="text-xs text-slate-500">
                     {data.date && `📅 ${data.date}`} {data.time && `⏰ ${data.time}`}
                   </p>
@@ -338,7 +349,7 @@ export default function Notifications({ onFriendUpdate }) {
                 </div>
                 <div className="flex items-center gap-2">
                   {n.read === 0 && <span className="rounded-full bg-purple-100 px-3 py-1 text-[11px] font-semibold text-purple-700">NEW</span>}
-                  {isOutdated || isCanceled || isOptOut || !isInvite ? (
+                  {isOutdated || isCanceled || isOptOut || isCancelledByUser || !isInvite ? (
                     <button
                       onClick={() => handleDelete(n.id)}
                       className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition bg-slate-200 text-slate-700 hover:bg-slate-300"

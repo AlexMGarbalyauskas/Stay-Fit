@@ -20,15 +20,34 @@ router.delete('/:postId/comments/:commentId', auth, (req, res) => {
     if (!comment) return res.status(404).json({ error: 'Comment not found' });
     if (comment.user_id !== requester) return res.status(403).json({ error: 'Not authorized to delete this comment' });
 
-    db.run('DELETE FROM comments WHERE id = ?', [commentId], (err2) => {
-      if (err2) return res.status(500).json({ error: 'Failed to delete comment' });
+    // Get all reply IDs for cascading delete
+    db.all('SELECT id FROM comments WHERE parent_comment_id = ?', [commentId], (err_replies, replies) => {
+      if (err_replies) return res.status(500).json({ error: 'DB error' });
       
-      // Clean up likes on this comment
-      db.run('DELETE FROM comment_likes WHERE comment_id = ?', [commentId], () => {
-        // Update comment count
-        db.get('SELECT COUNT(*) as count FROM comments WHERE post_id = ?', [postId], (err3, cntRow) => {
-          if (err3) return res.status(500).json({ error: 'DB error' });
-          res.json({ message: 'Deleted', comments_count: cntRow.count });
+      // Delete all reply likes
+      const replyIds = replies ? replies.map(r => r.id) : [];
+      if (replyIds.length > 0) {
+        replyIds.forEach(rId => {
+          db.run('DELETE FROM comment_likes WHERE comment_id = ?', [rId], () => {});
+        });
+      }
+      
+      // Delete all replies
+      db.run('DELETE FROM comments WHERE parent_comment_id = ?', [commentId], (err_del_replies) => {
+        if (err_del_replies) console.error('Error deleting replies:', err_del_replies);
+        
+        // Delete the parent comment
+        db.run('DELETE FROM comments WHERE id = ?', [commentId], (err2) => {
+          if (err2) return res.status(500).json({ error: 'Failed to delete comment' });
+          
+          // Clean up likes on this comment
+          db.run('DELETE FROM comment_likes WHERE comment_id = ?', [commentId], () => {
+            // Update comment count (only count parent comments)
+            db.get('SELECT COUNT(*) as count FROM comments WHERE post_id = ? AND parent_comment_id IS NULL', [postId], (err3, cntRow) => {
+              if (err3) return res.status(500).json({ error: 'DB error' });
+              res.json({ message: 'Deleted', comments_count: cntRow.count });
+            });
+          });
         });
       });
     });
@@ -375,32 +394,43 @@ router.get('/:id/comments', auth, (req, res) => {
         if (err2) return res.status(500).json({ error: 'DB error' });
         if (!row) return res.status(403).json({ error: 'Not authorized to view comments' });
 
-        db.all(
-          `SELECT c.*, u.username, u.nickname, u.profile_picture,
-                  (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes_count,
-                  (SELECT 1 FROM comment_likes WHERE comment_id = c.id AND user_id = ?) as liked_by_me
-           FROM comments c JOIN users u ON c.user_id = u.id 
-           WHERE c.post_id = ? 
-           ORDER BY c.created_at ASC`,
-          [requester, postId],
-          (err3, rows) => {
-            if (err3) return res.status(500).json({ error: 'Failed to fetch comments' });
-            res.json({ comments: rows });
-          }
-        );
+        fetchComments();
       });
     } else {
+      fetchComments();
+    }
+
+    function fetchComments() {
+      // Fetch all comments (both parent and child)
       db.all(
         `SELECT c.*, u.username, u.nickname, u.profile_picture,
                 (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes_count,
-                (SELECT 1 FROM comment_likes WHERE comment_id = c.id AND user_id = ?) as liked_by_me
+                (SELECT 1 FROM comment_likes WHERE comment_id = c.id AND user_id = ?) as liked_by_me,
+                (SELECT COUNT(*) FROM comments WHERE parent_comment_id = c.id) as replies_count
          FROM comments c JOIN users u ON c.user_id = u.id 
          WHERE c.post_id = ? 
-         ORDER BY c.created_at ASC`,
+         ORDER BY c.parent_comment_id, c.created_at ASC`,
         [requester, postId],
         (err3, rows) => {
           if (err3) return res.status(500).json({ error: 'Failed to fetch comments' });
-          res.json({ comments: rows });
+          
+          // Structure comments into parent/child relationships
+          const comments = [];
+          const commentsMap = {};
+          
+          rows.forEach(row => {
+            commentsMap[row.id] = { ...row, replies: [] };
+          });
+          
+          rows.forEach(row => {
+            if (row.parent_comment_id === null) {
+              comments.push(commentsMap[row.id]);
+            } else if (commentsMap[row.parent_comment_id]) {
+              commentsMap[row.parent_comment_id].replies.push(commentsMap[row.id]);
+            }
+          });
+          
+          res.json({ comments });
         }
       );
     }
@@ -410,7 +440,7 @@ router.get('/:id/comments', auth, (req, res) => {
 // Create a comment on a post
 router.post('/:id/comments', auth, (req, res) => {
   const postId = Number(req.params.id);
-  const { content } = req.body;
+  const { content, parent_comment_id } = req.body;
   if (!content || !content.trim()) return res.status(400).json({ error: 'Comment content required' });
 
   db.get('SELECT * FROM posts WHERE id = ?', [postId], (err, post) => {
@@ -432,7 +462,8 @@ router.post('/:id/comments', auth, (req, res) => {
 
     function insertComment() {
       const createdAt = new Date().toISOString();
-      db.run('INSERT INTO comments (post_id, user_id, content, created_at) VALUES (?, ?, ?, ?)', [postId, requester, content.trim(), createdAt], function (err3) {
+      const parentCommentId = parent_comment_id ? Number(parent_comment_id) : null;
+      db.run('INSERT INTO comments (post_id, user_id, content, parent_comment_id, created_at) VALUES (?, ?, ?, ?, ?)', [postId, requester, content.trim(), parentCommentId, createdAt], function (err3) {
         if (err3) return res.status(500).json({ error: 'Failed to create comment' });
 
         const commentId = this.lastID;
@@ -451,7 +482,7 @@ router.post('/:id/comments', auth, (req, res) => {
           }
 
           // return created comment and updated comments_count
-          db.get('SELECT COUNT(*) as count FROM comments WHERE post_id = ?', [postId], (err5, cntRow) => {
+          db.get('SELECT COUNT(*) as count FROM comments WHERE post_id = ? AND parent_comment_id IS NULL', [postId], (err5, cntRow) => {
             if (err5) return res.status(500).json({ error: 'Failed to fetch comments count' });
             const commentsCount = cntRow.count;
             // emit an event for real-time updates

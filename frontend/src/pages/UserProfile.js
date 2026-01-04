@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { getUser, getFriendStatus, sendFriendRequest, unfriend } from '../api';
-import { User, Users as UsersIcon, UserX, ArrowLeft } from 'lucide-react';
+import { User, UserX, ArrowLeft, Heart, Share2 } from 'lucide-react';
+import Navbar from '../components/Navbar';
 
 export default function UserProfile() {
   const { id } = useParams();
@@ -9,6 +11,7 @@ export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState('loading');
   const [friendsCount, setFriendsCount] = useState(0);
+  const [posts, setPosts] = useState([]);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
@@ -29,9 +32,25 @@ export default function UserProfile() {
       const statusRes = await getFriendStatus(id);
       setStatus(statusRes.data.status);
 
-      const friendsRes = await fetch(`${API_URL}/api/friends`, authHeaders);
-      const friendsData = await friendsRes.json();
-      setFriendsCount(friendsData.friends.filter(f => f.id !== id).length);
+      // Fetch user's friends list
+      try {
+        const friendsRes = await axios.get(`${API_URL}/api/users/${id}/friends`, authHeaders);
+        const friends = friendsRes.data.friends || [];
+        setFriendsCount(friends.length);
+      } catch (err) {
+        console.error('Failed to fetch user friends:', err);
+      }
+
+      // Fetch user's posts if public
+      if (u.privacy === 'Public') {
+        try {
+          const postsRes = await axios.get(`${API_URL}/api/users/${id}/posts`, authHeaders);
+          setPosts(postsRes.data.posts || []);
+        } catch (err) {
+          console.error('Failed to fetch user posts:', err);
+          setPosts([]);
+        }
+      }
     } catch (err) {
       console.error(err);
     }
@@ -52,85 +71,174 @@ export default function UserProfile() {
   if (!user) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
 
   return (
-    <div className="pt-20 pb-20 min-h-screen bg-gray-50 px-4">
-      <div className="max-w-md mx-auto">
-        {/* Back Button */}
-        <button 
-          onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 transition text-gray-700"
-          title="Go back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Go back</span>
-        </button>
+    <>
+      <Navbar />
+      <div className="pt-20 pb-20 min-h-screen bg-white">
+        <div className="max-w-2xl mx-auto px-4">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-6 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-gray-700"
+            title="Go back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Go back</span>
+          </button>
 
-        {/* Profile Container */}
-        <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-start gap-4 mb-4">
-          {/* Profile Picture */}
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
-            {user.profile_picture ? (
-              <img src={user.profile_picture} alt={user.username} className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-12 h-12 text-gray-500" />
-            )}
+          {/* Profile Header Section */}
+          <div className="flex gap-8 py-8 border-b">
+            {/* Profile Picture */}
+            <div className="flex justify-center">
+              {user.profile_picture ? (
+                <img
+                  src={user.profile_picture}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center">
+                  <User className="w-16 h-16 text-gray-500" />
+                </div>
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1">
+              {/* Username */}
+              <div className="mb-1">
+                <h1 className="text-2xl font-light text-gray-900">@{user.username}</h1>
+              </div>
+
+              {/* Nickname */}
+              <div className="mb-4">
+                <p className="text-xl font-light text-gray-700">{user.nickname || 'No nickname'}</p>
+              </div>
+
+              {/* Bio */}
+              <div className="mb-3">
+                <p className="text-sm text-gray-700">{user.bio || 'No bio'}</p>
+              </div>
+
+              {/* Location */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-700">{user.location || 'No location'}</p>
+              </div>
+
+              {/* Stats */}
+              <div className="flex gap-6 mb-4 text-sm">
+                <div>
+                  <span className="font-semibold">{posts.length}</span>
+                  <span className="text-gray-500"> posts</span>
+                </div>
+                <button
+                  onClick={() => navigate(`/user/${id}/friends`)}
+                  className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer"
+                >
+                  <span className="font-semibold">{friendsCount}</span>
+                  <span className="text-gray-500"> friends</span>
+                </button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Profile link copied!');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-100 rounded font-semibold text-sm hover:bg-gray-200 transition flex items-center justify-center gap-2"
+                >
+                  <Share2 className="w-4 h-4" /> Share
+                </button>
+                {status === 'none' && (
+                  <button
+                    onClick={handleSendRequest}
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded font-semibold text-sm hover:bg-blue-600 transition"
+                  >
+                    Add Friend
+                  </button>
+                )}
+                {status === 'sent' && (
+                  <button
+                    disabled
+                    className="flex-1 px-4 py-2 bg-gray-400 text-white rounded font-semibold text-sm cursor-not-allowed"
+                  >
+                    Request Sent
+                  </button>
+                )}
+                {status === 'friends' && (
+                  <button
+                    onClick={handleUnfriend}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded font-semibold text-sm hover:bg-red-600 transition flex items-center justify-center gap-2"
+                  >
+                    <UserX size={16} />
+                    Unfriend
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* User Info */}
-          <div className="flex-1">
-            <h2 className="text-2xl font-semibold text-gray-900">{user.nickname || user.username}</h2>
-            <p className="text-sm text-gray-500 mt-1">@{user.username}</p>
-          </div>
-        </div>
+          {/* Posts Section (only if user is public) */}
+          {user.privacy === 'Public' && (
+            <div className="mt-8">
+              <h2 className="font-semibold text-sm uppercase tracking-wider border-t py-4">Posts</h2>
+              <div className="grid grid-cols-3 gap-1 mt-4">
+                {posts.length === 0 ? (
+                  <div className="col-span-3 text-center text-gray-500 py-8">No posts yet.</div>
+                ) : (
+                  posts.map((p) => (
+                    <div
+                      key={p.id}
+                      onClick={() => navigate(`/posts/${p.id}/comments`)}
+                      className="aspect-square bg-gray-200 relative overflow-hidden rounded group cursor-pointer"
+                    >
+                      {p.media_type && p.media_type.startsWith('image/') ? (
+                        <img
+                          src={`${API_URL}${p.media_path}`}
+                          className="w-full h-full object-cover"
+                          alt="post"
+                        />
+                      ) : (
+                        <video
+                          src={`${API_URL}${p.media_path}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
 
-        {/* Bio */}
-        <div className="mb-3">
-          <p className="text-sm text-gray-700">{user.bio || 'No bio'}</p>
-        </div>
+                      {/* Overlay on hover */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100">
+                        {/* Like Count */}
+                        <div className="text-white flex items-center gap-2">
+                          <Heart
+                            size={20}
+                            fill={p.liked ? 'currentColor' : 'none'}
+                            className={p.liked ? 'text-red-500' : ''}
+                          />
+                          <span className="text-sm font-semibold">{p.likes_count || 0}</span>
+                        </div>
+                      </div>
 
-        {/* Location */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-700">{user.location || 'No location'}</p>
-        </div>
-
-        {/* Stats */}
-        <div className="flex gap-6 mb-4 text-sm">
-          <div>
-            <span className="font-semibold">{friendsCount}</span>
-            <span className="text-gray-500"> friends</span>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <div className="mt-4">
-          {status === 'none' && (
-            <button 
-              onClick={handleSendRequest} 
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            >
-              Add Friend
-            </button>
+                      {/* Title overlay */}
+                      {p.title && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
+                          <p className="text-white text-xs truncate">{p.title}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           )}
-          {status === 'sent' && (
-            <button 
-              disabled 
-              className="w-full px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed"
-            >
-              Request Sent
-            </button>
-          )}
-          {status === 'friends' && (
-            <button 
-              onClick={handleUnfriend} 
-              className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition flex items-center justify-center gap-2"
-            >
-              <UserX size={16} />
-              Unfriend
-            </button>
+
+          {user.privacy !== 'Public' && (
+            <div className="mt-8 text-center py-8 text-gray-500">
+              <p>This user's posts are {user.privacy === 'Private' ? 'private' : 'friends only'}.</p>
+            </div>
           )}
         </div>
       </div>
-      </div>
-    </div>
+    </>
   );
 }
