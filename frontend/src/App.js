@@ -11,6 +11,8 @@ import SavedPosts from './pages/SavedPosts';
 import Settings from './pages/Settings';
 import OtherSettings from './pages/OtherSettings';
 import AboutSettings from './pages/AboutSettings';
+import ShareApp from './pages/ShareApp';
+import PublicShare from './pages/PublicShare';
 import FindFriends from './pages/FindFriends';
 import Post from './pages/Post';
 import PostComments from './pages/PostComments';
@@ -86,6 +88,7 @@ function App() {
         <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+        <Route path="/download" element={<PublicShare />} />
 
         <Route path="/home" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
@@ -95,6 +98,7 @@ function App() {
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         <Route path="/settings/other" element={isAuthenticated ? <OtherSettings /> : <Navigate to="/login" />} />
         <Route path="/settings/about" element={isAuthenticated ? <AboutSettings /> : <Navigate to="/login" />} />
+        <Route path="/share" element={isAuthenticated ? <ShareApp /> : <Navigate to="/login" />} />
         <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
         <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
         <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
@@ -337,6 +341,7 @@ function App() {
           <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
           <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
           <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+          <Route path="/download" element={<PublicShare />} />
 
           <Route path="/home" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
           <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
@@ -346,6 +351,7 @@ function App() {
           <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
           <Route path="/settings/other" element={isAuthenticated ? <OtherSettings /> : <Navigate to="/login" />} />
           <Route path="/settings/about" element={isAuthenticated ? <AboutSettings /> : <Navigate to="/login" />} />
+          <Route path="/share" element={isAuthenticated ? <ShareApp /> : <Navigate to="/login" />} />
           <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
           <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
           <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />

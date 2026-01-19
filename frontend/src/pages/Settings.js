@@ -309,10 +309,10 @@ export default function Settings() {
             <Info size={20} className="text-gray-900" /> About
           </button>
           <button
-            onClick={handleShareAccount}
+            onClick={() => navigate('/share')}
             className="flex items-center gap-2 py-2 w-full text-left text-gray-700 hover:bg-gray-100 rounded"
           >
-            <Share2 size={20} /> Share Account
+            <Share2 size={20} /> Share App
           </button>
           <button
             onClick={handleRateApp}
