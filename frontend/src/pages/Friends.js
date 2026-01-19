@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Users, UserX, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { getFriends, unfriend, API_BASE } from '../api';
 import Navbar from '../components/Navbar';
 import ConfirmModal from '../components/ConfirmModal';
@@ -70,24 +70,36 @@ export default function Friends({ refreshTrigger }) {
           ) : (
             <ul className="space-y-3">
               {friends.map(friend => (
-                <li key={friend.id} className="bg-white p-4 rounded-lg shadow flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {friend.profile_picture ? (
-                      <img src={friend.profile_picture.startsWith('http') ? friend.profile_picture : `${API_BASE}${friend.profile_picture}`} alt={friend.username} className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-gray-500" />
+                <li key={friend.id} className="bg-white rounded-lg shadow hover:shadow-md transition">
+                  <div className="flex items-center justify-between p-4">
+                    <Link 
+                      to={`/users/${friend.id}`} 
+                      className="flex items-center gap-3 flex-1 cursor-pointer hover:opacity-80 transition"
+                    >
+                      {friend.profile_picture ? (
+                        <img src={friend.profile_picture.startsWith('http') ? friend.profile_picture : `${API_BASE}${friend.profile_picture}`} alt={friend.username} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <Users className="w-5 h-5 text-gray-500" />
+                        </div>
+                      )}
+                      <div>
+                        <span className="font-medium">{friend.nickname || friend.username}</span>
+                        {friend.nickname && <div className="text-xs text-gray-500">@{friend.username}</div>}
                       </div>
-                    )}
-                    <div>
-                      <span className="font-medium">{friend.nickname || friend.username}</span>
-                      {friend.nickname && <div className="text-xs text-gray-500">@{friend.username}</div>}
-                    </div>
-                  </div>
+                    </Link>
 
-                  <button onClick={() => openUnfriendModal(friend)} className="text-red-500 hover:text-red-700" title="Unfriend">
-                    <UserX size={18} />
-                  </button>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        openUnfriendModal(friend);
+                      }} 
+                      className="text-red-500 hover:text-red-700 ml-2" 
+                      title="Unfriend"
+                    >
+                      <UserX size={18} />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

@@ -6,7 +6,7 @@ import api, { API_BASE, toggleMessageReaction, deleteMessage as apiDeleteMessage
 import Navbar from '../components/Navbar';
 import EmojiPickerModal from '../components/EmojiPickerModal';
 import dayjs from 'dayjs';
-import { User, Image as ImageIcon, Search, ChevronDown, Lock, LockOpen } from 'lucide-react';
+import { User, Image as ImageIcon, Search, ChevronDown, Lock } from 'lucide-react';
 import { encryptMessage, decryptMessage, isEncryptionReady } from '../utils/crypto';
 
 export default function ChatPage() {
@@ -27,7 +27,6 @@ export default function ChatPage() {
   const [lastGifQuery, setLastGifQuery] = useState('');
   const [gifPanelOpen, setGifPanelOpen] = useState(false);
   const [reactionsMap, setReactionsMap] = useState({}); // { messageId: [{emoji,count,reacted_by_me}] }
-  const [encryptionEnabled, setEncryptionEnabled] = useState(true); // Toggle for E2EE
   const gifSearchTimeoutRef = useRef(null);
   const [pickerOpenFor, setPickerOpenFor] = useState(null);
   const [pickerContextIsMine, setPickerContextIsMine] = useState(false);
@@ -149,31 +148,34 @@ export default function ChatPage() {
     if (!activeFriend || !socketRef.current || !hasText) return;
     
     try {
-      let messageData = {
-        receiverId: activeFriend.id,
-        content: text.trim(),
-        messageType: 'text',
-        mediaUrl: null,
-        isEncrypted: false
-      };
-
-      // Encrypt if encryption is enabled
-      if (encryptionEnabled && isEncryptionReady()) {
+      // Always encrypt messages if encryption is ready
+      if (isEncryptionReady()) {
         const encrypted = await encryptMessage(
           text.trim(),
           currentUser.id,
           activeFriend.id
         );
-        messageData = {
-          ...messageData,
+        const messageData = {
+          receiverId: activeFriend.id,
           content: '[Encrypted]', // Placeholder for non-encrypted viewers
+          messageType: 'text',
+          mediaUrl: null,
           encrypted: encrypted.encrypted,
           iv: encrypted.iv,
           isEncrypted: true
         };
+        socketRef.current.emit('send_message', messageData);
+      } else {
+        // Fallback if encryption not ready (shouldn't happen)
+        console.warn('Encryption not ready, sending unencrypted');
+        socketRef.current.emit('send_message', {
+          receiverId: activeFriend.id,
+          content: text.trim(),
+          messageType: 'text',
+          mediaUrl: null,
+          isEncrypted: false
+        });
       }
-
-      socketRef.current.emit('send_message', messageData);
       setText('');
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -286,18 +288,13 @@ export default function ChatPage() {
                   <div className="font-semibold text-lg">{activeFriend.nickname || activeFriend.username}</div>
                   {activeFriend.nickname && <div className="text-xs text-gray-500">@{activeFriend.username}</div>}
                 </div>
-                <button
-                  onClick={() => setEncryptionEnabled(!encryptionEnabled)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition ${
-                    encryptionEnabled 
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                  title={encryptionEnabled ? 'End-to-end encryption enabled' : 'Encryption disabled'}
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm bg-green-100 text-green-700"
+                  title="End-to-end encrypted - Messages are secure"
                 >
-                  {encryptionEnabled ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
-                  <span className="hidden sm:inline">{encryptionEnabled ? 'Encrypted' : 'Unencrypted'}</span>
-                </button>
+                  <Lock className="w-4 h-4" />
+                  <span className="hidden sm:inline">Encrypted</span>
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {messages.map((msg, idx) => {

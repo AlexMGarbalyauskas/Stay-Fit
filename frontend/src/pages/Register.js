@@ -3,12 +3,26 @@ import { register, API_BASE } from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Register() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const DRAFT_KEY = 'register_form_draft';
+
+  const loadDraft = () => {
+    try {
+      const draftRaw = localStorage.getItem(DRAFT_KEY);
+      if (!draftRaw) return {};
+      return JSON.parse(draftRaw) || {};
+    } catch {
+      return {};
+    }
+  };
+
+  const initialDraft = loadDraft();
+
+  const [username, setUsername] = useState(initialDraft.username || '');
+  const [email, setEmail] = useState(initialDraft.email || '');
+  const [password, setPassword] = useState(initialDraft.password || '');
+  const [passwordConfirm, setPasswordConfirm] = useState(initialDraft.passwordConfirm || '');
   const [error, setError] = useState('');
-  const [agree, setAgree] = useState(false);
+  const [agree, setAgree] = useState(!!initialDraft.agree);
   const [tosRead, setTosRead] = useState(() => !!localStorage.getItem('tosAccepted'));
   const navigate = useNavigate();
 
@@ -17,6 +31,29 @@ export default function Register() {
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
   }, []);
+
+  // Load draft from local storage so inputs survive visiting Terms page and back
+  useEffect(() => {
+    try {
+      const draftRaw = localStorage.getItem(DRAFT_KEY);
+      if (draftRaw) {
+        const draft = JSON.parse(draftRaw);
+        setUsername(draft.username || '');
+        setEmail(draft.email || '');
+        setPassword(draft.password || '');
+        setPasswordConfirm(draft.passwordConfirm || '');
+        setAgree(!!draft.agree);
+      }
+    } catch (e) {
+      console.error('Failed to load draft', e);
+    }
+  }, []);
+
+  // Persist draft while user types
+  useEffect(() => {
+    const draft = { username, email, password, passwordConfirm, agree };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [username, email, password, passwordConfirm, agree]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,6 +67,7 @@ export default function Register() {
     }
     try {
       await register(username, email, password);
+      localStorage.removeItem(DRAFT_KEY);
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
@@ -107,9 +145,10 @@ export default function Register() {
             className="w-full border border-gray-300 p-3 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
             <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              src="https://www.gstatic.com/images/branding/googleg/1x/googleg_standard_color_48dp.png"
               alt="Google logo"
               className="w-6 h-6 mr-2"
+              loading="lazy"
             />
             Continue with Google
           </button>

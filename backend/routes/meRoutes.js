@@ -5,6 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { getTimezoneFromLocation } = require('../utils/timezone');
+const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
@@ -159,6 +160,70 @@ router.post('/profile-picture', auth, upload.single('file'), (req, res) => {
       );
     }
   );
+});
+
+// DELETE account
+router.delete('/delete', auth, async (req, res) => {
+  const { password } = req.body || {};
+  if (!password) return res.status(400).json({ error: 'Password is required' });
+
+  const userId = req.user.id;
+
+  // Verify password
+  const userRow = await new Promise((resolve, reject) => {
+    db.get('SELECT password_hash FROM users WHERE id = ?', [userId], (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  }).catch(() => null);
+
+  if (!userRow) return res.status(404).json({ error: 'User not found' });
+  const ok = await bcrypt.compare(password, userRow.password_hash).catch(() => false);
+  if (!ok) return res.status(401).json({ error: 'Invalid password' });
+
+  // Helper to run statement
+  const run = (sql, params = []) => new Promise((resolve) => db.run(sql, params, () => resolve()));
+  const all = (sql, params = []) => new Promise((resolve) => db.all(sql, params, (err, rows) => resolve(rows || [])));
+
+  // Clean up user data
+  const userPosts = await all('SELECT id FROM posts WHERE user_id = ?', [userId]);
+  const postIds = userPosts.map(p => p.id);
+
+  // Delete comment likes on user's comments and posts
+  await run('DELETE FROM comment_likes WHERE user_id = ?', [userId]);
+  if (postIds.length) {
+    const placeholders = postIds.map(() => '?').join(',');
+    const commentsOnPosts = await all(`SELECT id FROM comments WHERE post_id IN (${placeholders})`, postIds);
+    const commentIds = commentsOnPosts.map(c => c.id);
+    if (commentIds.length) {
+      const ph = commentIds.map(() => '?').join(',');
+      await run(`DELETE FROM comment_likes WHERE comment_id IN (${ph})`, commentIds);
+      await run(`DELETE FROM comments WHERE id IN (${ph})`, commentIds);
+    }
+  }
+
+  await run('DELETE FROM comments WHERE user_id = ?', [userId]);
+  await run('DELETE FROM likes WHERE user_id = ?', [userId]);
+  await run('DELETE FROM saves WHERE user_id = ?', [userId]);
+  if (postIds.length) {
+    const placeholders = postIds.map(() => '?').join(',');
+    await run(`DELETE FROM likes WHERE post_id IN (${placeholders})`, postIds);
+    await run(`DELETE FROM saves WHERE post_id IN (${placeholders})`, postIds);
+    await run(`DELETE FROM comments WHERE post_id IN (${placeholders})`, postIds);
+    await run(`DELETE FROM posts WHERE id IN (${placeholders})`, postIds);
+  }
+
+  await run('DELETE FROM friend_requests WHERE sender_id = ? OR receiver_id = ?', [userId, userId]);
+  await run('DELETE FROM friends WHERE user_id = ? OR friend_id = ?', [userId, userId]);
+  await run('DELETE FROM message_reactions WHERE user_id = ?', [userId]);
+  await run('DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?', [userId, userId]);
+  await run('DELETE FROM notifications WHERE user_id = ?', [userId]);
+  await run('DELETE FROM workout_schedules WHERE user_id = ?', [userId]);
+
+  // Finally delete user
+  await run('DELETE FROM users WHERE id = ?', [userId]);
+
+  res.json({ message: 'Account deleted' });
 });
 
 module.exports = router;

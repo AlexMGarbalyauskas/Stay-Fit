@@ -8,6 +8,14 @@ const db = require('../db');
 
 const router = express.Router();
 
+// Export my posts
+router.get('/mine/export', auth, (req, res) => {
+  db.all('SELECT id, title, caption, media_path, media_type, duration_seconds, created_at FROM posts WHERE user_id = ? ORDER BY created_at DESC', [req.user.id], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    res.json({ posts: rows });
+  });
+});
+
 // ===== COMMENT-SPECIFIC ROUTES (MUST BE FIRST) =====
 // Delete a comment
 router.delete('/:postId/comments/:commentId', auth, (req, res) => {

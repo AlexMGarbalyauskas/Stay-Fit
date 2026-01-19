@@ -9,6 +9,8 @@ import SocialLogin from './pages/SocialLogin';
 import Profile from './pages/Profile';
 import SavedPosts from './pages/SavedPosts';
 import Settings from './pages/Settings';
+import OtherSettings from './pages/OtherSettings';
+import AboutSettings from './pages/AboutSettings';
 import FindFriends from './pages/FindFriends';
 import Post from './pages/Post';
 import PostComments from './pages/PostComments';
@@ -21,6 +23,7 @@ import ChatPage from './pages/ChatPage';
 import { clearEncryption } from './utils/crypto';
 import CalendarPage from './pages/Calendar';
 import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import DebugOverlay from './components/DebugOverlay';
 import { WorkoutReminderProvider, useWorkoutReminder } from './context/WorkoutReminderContext';
 import { io } from 'socket.io-client';
@@ -90,10 +93,13 @@ function App() {
         <Route path="/post" element={isAuthenticated ? <Post /> : <Navigate to="/login" />} />
         <Route path="/posts/:id/comments" element={isAuthenticated ? <PostComments /> : <Navigate to="/login" />} />
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
+        <Route path="/settings/other" element={isAuthenticated ? <OtherSettings /> : <Navigate to="/login" />} />
+        <Route path="/settings/about" element={isAuthenticated ? <AboutSettings /> : <Navigate to="/login" />} />
         <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
         <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
         <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
 
         <Route
           path="/find"
@@ -338,10 +344,13 @@ function App() {
           <Route path="/post" element={isAuthenticated ? <Post /> : <Navigate to="/login" />} />
           <Route path="/posts/:id/comments" element={isAuthenticated ? <PostComments /> : <Navigate to="/login" />} />
           <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
+          <Route path="/settings/other" element={isAuthenticated ? <OtherSettings /> : <Navigate to="/login" />} />
+          <Route path="/settings/about" element={isAuthenticated ? <AboutSettings /> : <Navigate to="/login" />} />
           <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
           <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
           <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
 
           <Route
             path="/find"

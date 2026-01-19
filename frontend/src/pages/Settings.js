@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, FileText, Moon, Sun, Check, X } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -290,22 +290,24 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Terms of Service */}
+          {/* Other settings */}
           <button
-            onClick={() => navigate('/terms')}
-            className="flex items-center justify-between w-full py-2 hover:bg-gray-50 rounded mt-2"
+            onClick={() => navigate('/settings/other')}
+            className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
           >
-            <div className="flex items-center gap-2">
-              <FileText size={20} />
-              <span className="text-gray-700">Terms of Service</span>
-            </div>
-            <span className="text-xs text-gray-500">{tosAcceptedAt ? `Agreed: ${new Date(tosAcceptedAt).toLocaleDateString()}` : 'Not accepted'}</span>
+            <Wrench size={20} className="text-gray-900" /> Other
           </button>
         </div>
 
         {/* About Section */}
         <div className="mt-4 bg-white p-4 rounded shadow">
           <h3 className="font-semibold text-gray-700 mb-2">About</h3>
+          <button
+            onClick={() => navigate('/settings/about')}
+            className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
+          >
+            <Info size={20} className="text-gray-900" /> About
+          </button>
           <button
             onClick={handleShareAccount}
             className="flex items-center gap-2 py-2 w-full text-left text-gray-700 hover:bg-gray-100 rounded"
@@ -329,6 +331,7 @@ export default function Settings() {
             <LogOut size={20} /> Logout
           </button>
         </div>
+
       </div>
 
       {/* Confirmation Modal */}
@@ -465,6 +468,7 @@ export default function Settings() {
       )}
 
       <Navbar />
+
     </div>
   );
 }

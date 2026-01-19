@@ -87,9 +87,10 @@ export default function Login({ onLogin }) {
             className="w-full border border-gray-300 p-3 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
             <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              src="https://www.gstatic.com/images/branding/googleg/1x/googleg_standard_color_48dp.png"
               alt="Google logo"
               className="w-6 h-6 mr-2"
+              loading="lazy"
             />
             Login with Google
           </button>

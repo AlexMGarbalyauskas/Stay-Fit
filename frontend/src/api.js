@@ -60,6 +60,7 @@ export const getUserPosts = (userId) => api.get(`/api/posts/user/${userId}`);
 export const createPost = (formData) => api.post('/api/posts', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const updatePost = (postId, data) => api.put(`/api/posts/${postId}`, data);
 export const deletePost = (postId) => api.delete(`/api/posts/${postId}`);
+export const exportMyPosts = () => api.get('/api/posts/mine/export');
 
 // LIKES & SAVES
 export const getPostLikes = (postId) => api.get(`/api/posts/${postId}/likes`);
@@ -75,5 +76,8 @@ export const deleteComment = (postId, commentId) => api.delete(`/api/posts/${pos
 export const toggleCommentLike = (postId, commentId) => api.post(`/api/posts/${postId}/comments/${commentId}/like`);
 export const getPost = (postId) => api.get(`/api/posts/${postId}`);
 export const getSavedPosts = () => api.get('/api/posts/saved');
+
+// ACCOUNT
+export const deleteAccount = (password) => api.delete('/api/me/delete', { data: { password } });
 
 export default api;
