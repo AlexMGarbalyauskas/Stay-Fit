@@ -18,6 +18,7 @@ import UserFriends from './pages/UserFriends';
 import Notifications from './pages/Notifications';
 import Friends from './pages/Friends';
 import ChatPage from './pages/ChatPage';
+import { clearEncryption } from './utils/crypto';
 import CalendarPage from './pages/Calendar';
 import Terms from './pages/Terms';
 import DebugOverlay from './components/DebugOverlay';
@@ -64,6 +65,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.clear();
+    clearEncryption(); // Clear encryption keys
     setIsAuthenticated(false);
   };
 

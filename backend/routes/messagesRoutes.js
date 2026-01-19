@@ -13,6 +13,9 @@ router.get('/:userId', auth, (req, res) => {
     `SELECT id, sender_id, receiver_id, content,
             IFNULL(message_type,'text') as message_type,
             media_url,
+            encrypted_content,
+            iv,
+            is_encrypted,
             created_at
      FROM messages
      WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)

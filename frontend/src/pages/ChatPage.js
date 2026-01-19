@@ -6,7 +6,8 @@ import api, { API_BASE, toggleMessageReaction, deleteMessage as apiDeleteMessage
 import Navbar from '../components/Navbar';
 import EmojiPickerModal from '../components/EmojiPickerModal';
 import dayjs from 'dayjs';
-import { User, Image as ImageIcon, Search, ChevronDown } from 'lucide-react';
+import { User, Image as ImageIcon, Search, ChevronDown, Lock, LockOpen } from 'lucide-react';
+import { encryptMessage, decryptMessage, isEncryptionReady } from '../utils/crypto';
 
 export default function ChatPage() {
   let currentUser = null;
@@ -26,6 +27,7 @@ export default function ChatPage() {
   const [lastGifQuery, setLastGifQuery] = useState('');
   const [gifPanelOpen, setGifPanelOpen] = useState(false);
   const [reactionsMap, setReactionsMap] = useState({}); // { messageId: [{emoji,count,reacted_by_me}] }
+  const [encryptionEnabled, setEncryptionEnabled] = useState(true); // Toggle for E2EE
   const gifSearchTimeoutRef = useRef(null);
   const [pickerOpenFor, setPickerOpenFor] = useState(null);
   const [pickerContextIsMine, setPickerContextIsMine] = useState(false);
@@ -44,8 +46,24 @@ export default function ChatPage() {
 
     s.on('connect_error', (err) => console.error('Socket connect error:', err));
 
-    s.on('receive_message', (msg) => {
+    s.on('receive_message', async (msg) => {
       if (activeFriend && (msg.sender_id === activeFriend.id || msg.receiver_id === activeFriend.id)) {
+        // Decrypt message if encrypted
+        if (msg.is_encrypted && msg.encrypted_content && msg.iv) {
+          try {
+            const decrypted = await decryptMessage(
+              msg.encrypted_content,
+              msg.iv,
+              msg.sender_id,
+              msg.receiver_id
+            );
+            msg.content = decrypted;
+          } catch (error) {
+            console.error('Failed to decrypt message:', error);
+            msg.content = '[Encrypted message - unable to decrypt]';
+          }
+        }
+        
         setMessages(prev => [...prev, msg]);
         // fetch reactions for new message
         api.get(`/api/messages/${msg.id}/reactions`).then(r => {
@@ -93,7 +111,29 @@ export default function ChatPage() {
     api.get(`/api/messages/${activeFriend.id}`)
       .then(async res => {
         const msgs = res.data.messages || [];
-        setMessages(msgs);
+        
+        // Decrypt encrypted messages
+        const decryptedMsgs = await Promise.all(
+          msgs.map(async (msg) => {
+            if (msg.is_encrypted && msg.encrypted_content && msg.iv) {
+              try {
+                const decrypted = await decryptMessage(
+                  msg.encrypted_content,
+                  msg.iv,
+                  msg.sender_id,
+                  msg.receiver_id
+                );
+                return { ...msg, content: decrypted };
+              } catch (error) {
+                console.error('Failed to decrypt message:', error);
+                return { ...msg, content: '[Encrypted message - unable to decrypt]' };
+              }
+            }
+            return msg;
+          })
+        );
+        
+        setMessages(decryptedMsgs);
         // fetch reactions for each message
         const map = {};
         await Promise.all(msgs.map(m =>
@@ -104,16 +144,41 @@ export default function ChatPage() {
       .catch(err => console.error('Messages load error', err));
   }, [activeFriend]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const hasText = text.trim().length > 0;
     if (!activeFriend || !socketRef.current || !hasText) return;
-    socketRef.current.emit('send_message', {
-      receiverId: activeFriend.id,
-      content: text.trim(),
-      messageType: 'text',
-      mediaUrl: null,
-    });
-    setText('');
+    
+    try {
+      let messageData = {
+        receiverId: activeFriend.id,
+        content: text.trim(),
+        messageType: 'text',
+        mediaUrl: null,
+        isEncrypted: false
+      };
+
+      // Encrypt if encryption is enabled
+      if (encryptionEnabled && isEncryptionReady()) {
+        const encrypted = await encryptMessage(
+          text.trim(),
+          currentUser.id,
+          activeFriend.id
+        );
+        messageData = {
+          ...messageData,
+          content: '[Encrypted]', // Placeholder for non-encrypted viewers
+          encrypted: encrypted.encrypted,
+          iv: encrypted.iv,
+          isEncrypted: true
+        };
+      }
+
+      socketRef.current.emit('send_message', messageData);
+      setText('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      alert('Failed to send message');
+    }
   };
 
   const sendGif = (url, gifId) => {
@@ -216,9 +281,23 @@ export default function ChatPage() {
             </div>
           ) : (
             <>
-              <div className="p-4 border-b bg-white">
-                <div className="font-semibold text-lg">{activeFriend.nickname || activeFriend.username}</div>
-                {activeFriend.nickname && <div className="text-xs text-gray-500">@{activeFriend.username}</div>}
+              <div className="p-4 border-b bg-white flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-lg">{activeFriend.nickname || activeFriend.username}</div>
+                  {activeFriend.nickname && <div className="text-xs text-gray-500">@{activeFriend.username}</div>}
+                </div>
+                <button
+                  onClick={() => setEncryptionEnabled(!encryptionEnabled)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition ${
+                    encryptionEnabled 
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title={encryptionEnabled ? 'End-to-end encryption enabled' : 'Encryption disabled'}
+                >
+                  {encryptionEnabled ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                  <span className="hidden sm:inline">{encryptionEnabled ? 'Encrypted' : 'Unencrypted'}</span>
+                </button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {messages.map((msg, idx) => {

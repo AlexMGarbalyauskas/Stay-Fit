@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { login, API_BASE } from '../api';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { initializeEncryption } from '../utils/crypto';
 
 export default function Login({ onLogin }) {
   const [identifier, setIdentifier] = useState('');
@@ -15,7 +16,16 @@ export default function Login({ onLogin }) {
     const userParam = params.get('user');
     if (token) {
       localStorage.setItem('token', token);
-      if (userParam) localStorage.setItem('user', userParam);
+      if (userParam) {
+        localStorage.setItem('user', userParam);
+        try {
+          const user = JSON.parse(userParam);
+          // Initialize encryption for OAuth login using token as seed
+          initializeEncryption(token + user.id);
+        } catch (e) {
+          console.error('Failed to parse user data:', e);
+        }
+      }
       if (onLogin) onLogin();
       navigate('/home');
     }
@@ -27,6 +37,10 @@ export default function Login({ onLogin }) {
       const res = await login(identifier, password);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      
+      // Initialize encryption with user's credentials
+      initializeEncryption(password + res.data.user.id);
+      
       if (onLogin) onLogin();
       navigate('/home');
     } catch (err) {

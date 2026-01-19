@@ -64,24 +64,40 @@ io.on('connection', (socket) => {
     console.log(`🟢 User connected: ${userId}`);
     socket.join(`user:${userId}`);
 
-    socket.on('send_message', ({ receiverId, content, messageType, mediaUrl }) => {
+    socket.on('send_message', ({ receiverId, content, messageType, mediaUrl, encrypted, iv, isEncrypted }) => {
       try {
         const type = messageType || (mediaUrl ? 'gif' : 'text');
         const cleanedContent = (content || '').trim();
-        if (!cleanedContent && !mediaUrl) return; // need something to send
+        if (!cleanedContent && !mediaUrl && !encrypted) return; // need something to send
 
         const createdAt = new Date().toISOString();
         const finalContent = cleanedContent || (mediaUrl ? '[gif]' : '');
+        
+        // Handle encrypted messages
+        const encryptedContent = isEncrypted ? encrypted : null;
+        const encryptedIv = isEncrypted ? iv : null;
+        const isEncryptedFlag = isEncrypted ? 1 : 0;
 
         db.run(
-          'INSERT INTO messages (sender_id, receiver_id, content, message_type, media_url, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-          [userId, receiverId, finalContent, type, mediaUrl || null, createdAt],
+          'INSERT INTO messages (sender_id, receiver_id, content, message_type, media_url, encrypted_content, iv, is_encrypted, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [userId, receiverId, finalContent, type, mediaUrl || null, encryptedContent, encryptedIv, isEncryptedFlag, createdAt],
           function (err) {
             if (err) {
               console.error('Error saving message:', err);
               return;
             }
-            const message = { id: this.lastID, sender_id: userId, receiver_id: receiverId, content: finalContent, message_type: type, media_url: mediaUrl || null, created_at: createdAt };
+            const message = { 
+              id: this.lastID, 
+              sender_id: userId, 
+              receiver_id: receiverId, 
+              content: finalContent, 
+              message_type: type, 
+              media_url: mediaUrl || null, 
+              encrypted_content: encryptedContent,
+              iv: encryptedIv,
+              is_encrypted: isEncryptedFlag,
+              created_at: createdAt 
+            };
             io.to(`user:${receiverId}`).emit('receive_message', message);
             socket.emit('receive_message', message);
 
