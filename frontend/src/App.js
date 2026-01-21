@@ -13,6 +13,7 @@ import OtherSettings from './pages/OtherSettings';
 import AboutSettings from './pages/AboutSettings';
 import ShareApp from './pages/ShareApp';
 import PublicShare from './pages/PublicShare';
+import AuthRequired from './pages/AuthRequired';
 import FindFriends from './pages/FindFriends';
 import Post from './pages/Post';
 import PostComments from './pages/PostComments';
@@ -42,6 +43,8 @@ function App() {
     }
   });
   const [booting, setBooting] = useState(true);
+
+  const requireAuth = (element) => isAuthenticated ? element : <AuthRequired />;
 
   const triggerFriendRefresh = () => setRefreshFriends(prev => prev + 1);
 
@@ -84,42 +87,42 @@ function App() {
       <WorkoutReminderProvider>
         {booting && <SplashLoader />}
         <Routes>
-        <Route path="/" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
+        <Route path="/" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
         <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/download" element={<PublicShare />} />
 
-        <Route path="/home" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
-        <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
-        <Route path="/saved-posts" element={isAuthenticated ? <SavedPosts /> : <Navigate to="/login" />} />
-        <Route path="/post" element={isAuthenticated ? <Post /> : <Navigate to="/login" />} />
-        <Route path="/posts/:id/comments" element={isAuthenticated ? <PostComments /> : <Navigate to="/login" />} />
-        <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
-        <Route path="/settings/other" element={isAuthenticated ? <OtherSettings /> : <Navigate to="/login" />} />
-        <Route path="/settings/about" element={isAuthenticated ? <AboutSettings /> : <Navigate to="/login" />} />
-        <Route path="/share" element={isAuthenticated ? <ShareApp /> : <Navigate to="/login" />} />
-        <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
-        <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
-        <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
+        <Route path="/home" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
+        <Route path="/profile" element={requireAuth(<Profile />)} />
+        <Route path="/saved-posts" element={requireAuth(<SavedPosts />)} />
+        <Route path="/post" element={requireAuth(<Post />)} />
+        <Route path="/posts/:id/comments" element={requireAuth(<PostComments />)} />
+        <Route path="/settings" element={requireAuth(<Settings />)} />
+        <Route path="/settings/other" element={requireAuth(<OtherSettings />)} />
+        <Route path="/settings/about" element={requireAuth(<AboutSettings />)} />
+        <Route path="/share" element={requireAuth(<ShareApp />)} />
+        <Route path="/chat" element={requireAuth(<ChatPage />)} />
+        <Route path="/chat/:id" element={requireAuth(<ChatPage />)} />
+        <Route path="/calendar" element={requireAuth(<CalendarPage />)} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
 
         <Route
           path="/find"
-          element={isAuthenticated ? <FindFriends onFriendUpdate={triggerFriendRefresh} /> : <Navigate to="/login" />}
+          element={requireAuth(<FindFriends onFriendUpdate={triggerFriendRefresh} />)}
         />
         <Route
           path="/friend-requests"
-          element={isAuthenticated ? <FriendRequests onFriendUpdate={triggerFriendRefresh} /> : <Navigate to="/login" />}
+          element={requireAuth(<FriendRequests onFriendUpdate={triggerFriendRefresh} />)}
         />
         <Route
           path="/friends"
-          element={isAuthenticated ? <Friends refreshTrigger={refreshFriends} /> : <Navigate to="/login" />}
+          element={requireAuth(<Friends refreshTrigger={refreshFriends} />)}
         />
-        <Route path="/users/:id" element={isAuthenticated ? <UserProfile /> : <Navigate to="/login" />} />
-        <Route path="/notifications" element={isAuthenticated ? <Notifications /> : <Navigate to="/login" />} />
-        <Route path="/user/:id/friends" element={<UserFriends />} />
+        <Route path="/users/:id" element={requireAuth(<UserProfile />)} />
+        <Route path="/notifications" element={requireAuth(<Notifications />)} />
+        <Route path="/user/:id/friends" element={requireAuth(<UserFriends />)} />
       </Routes>
 
       {/* Global Workout Prompt Modal */}
@@ -337,42 +340,42 @@ function App() {
       <WorkoutReminderProvider>
         {booting && <SplashLoader />}
         <Routes>
-          <Route path="/" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
+          <Route path="/" element={requireAuth(<Home onLogout={handleLogout} />)} />
           <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
           <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
           <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
           <Route path="/download" element={<PublicShare />} />
 
-          <Route path="/home" element={isAuthenticated ? <Home onLogout={handleLogout} /> : <Navigate to="/login" />} />
-          <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
-          <Route path="/saved-posts" element={isAuthenticated ? <SavedPosts /> : <Navigate to="/login" />} />
-          <Route path="/post" element={isAuthenticated ? <Post /> : <Navigate to="/login" />} />
-          <Route path="/posts/:id/comments" element={isAuthenticated ? <PostComments /> : <Navigate to="/login" />} />
-          <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
-          <Route path="/settings/other" element={isAuthenticated ? <OtherSettings /> : <Navigate to="/login" />} />
-          <Route path="/settings/about" element={isAuthenticated ? <AboutSettings /> : <Navigate to="/login" />} />
-          <Route path="/share" element={isAuthenticated ? <ShareApp /> : <Navigate to="/login" />} />
-          <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
-          <Route path="/chat/:id" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
-          <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
+          <Route path="/home" element={requireAuth(<Home onLogout={handleLogout} />)} />
+          <Route path="/profile" element={requireAuth(<Profile />)} />
+          <Route path="/saved-posts" element={requireAuth(<SavedPosts />)} />
+          <Route path="/post" element={requireAuth(<Post />)} />
+          <Route path="/posts/:id/comments" element={requireAuth(<PostComments />)} />
+          <Route path="/settings" element={requireAuth(<Settings />)} />
+          <Route path="/settings/other" element={requireAuth(<OtherSettings />)} />
+          <Route path="/settings/about" element={requireAuth(<AboutSettings />)} />
+          <Route path="/share" element={requireAuth(<ShareApp />)} />
+          <Route path="/chat" element={requireAuth(<ChatPage />)} />
+          <Route path="/chat/:id" element={requireAuth(<ChatPage />)} />
+          <Route path="/calendar" element={requireAuth(<CalendarPage />)} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
 
           <Route
             path="/find"
-            element={isAuthenticated ? <FindFriends onFriendUpdate={triggerFriendRefresh} /> : <Navigate to="/login" />}
+            element={requireAuth(<FindFriends onFriendUpdate={triggerFriendRefresh} />)}
           />
           <Route
             path="/friend-requests"
-            element={isAuthenticated ? <FriendRequests onFriendUpdate={triggerFriendRefresh} /> : <Navigate to="/login" />}
+            element={requireAuth(<FriendRequests onFriendUpdate={triggerFriendRefresh} />)}
           />
           <Route
             path="/friends"
-            element={isAuthenticated ? <Friends refreshTrigger={refreshFriends} /> : <Navigate to="/login" />}
+            element={requireAuth(<Friends refreshTrigger={refreshFriends} />)}
           />
-          <Route path="/users/:id" element={isAuthenticated ? <UserProfile /> : <Navigate to="/login" />} />
-          <Route path="/notifications" element={isAuthenticated ? <Notifications /> : <Navigate to="/login" />} />
-          <Route path="/user/:id/friends" element={<UserFriends />} />
+          <Route path="/users/:id" element={requireAuth(<UserProfile />)} />
+          <Route path="/notifications" element={requireAuth(<Notifications />)} />
+          <Route path="/user/:id/friends" element={requireAuth(<UserFriends />)} />
         </Routes>
 
         {/* Global Workout Prompt Modal */}

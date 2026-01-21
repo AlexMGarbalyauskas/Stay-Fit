@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { User, X } from 'lucide-react';
+import { User, X, UserPlus, Dumbbell } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
@@ -17,9 +17,12 @@ export default function FindFriends({ onFriendUpdate }) {
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
 
   // Fetch users
   const fetchUsers = () => {
+    if (!isAuthenticated) return;
     getUsers()
       .then(res => {
         const allUsers = res.data.users || [];
@@ -40,10 +43,11 @@ export default function FindFriends({ onFriendUpdate }) {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [isAuthenticated]);
 
   // Fetch current user (me)
   useEffect(() => {
+    if (!isAuthenticated) return;
     getMe()
       .then(res => {
         const user = res.data.user || res.data;
@@ -62,6 +66,7 @@ export default function FindFriends({ onFriendUpdate }) {
 
   // When users or me change, fetch friend statuses for other users
   useEffect(() => {
+    if (!isAuthenticated) return;
     users.forEach(u => {
       if (me && u.id === me.id) return;
       getFriendStatus(u.id).then(r =>
@@ -72,6 +77,7 @@ export default function FindFriends({ onFriendUpdate }) {
 
   // Re-filter when search term or location changes
   useEffect(() => {
+    if (!isAuthenticated) return;
     let result = users;
     
     // Filter by username search
@@ -122,6 +128,46 @@ export default function FindFriends({ onFriendUpdate }) {
         closeUnfriendModal();
       });
   };
+
+  // Auth guard render
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header disableNotifications />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+          <div className="px-4 max-w-md mx-auto text-center mt-20">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <UserPlus className="w-12 h-12 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Find Fitness Friends</h1>
+              <p className="text-gray-600 text-lg px-4">Please login to discover and connect with new fitness buddies in your area.</p>
+            </div>
+            
+            <div className="flex flex-col gap-4 mt-12">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Go to Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
+              >
+                Create an Account
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-8">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
+        </div>
+        <Navbar />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-20 pb-20 bg-gray-100">

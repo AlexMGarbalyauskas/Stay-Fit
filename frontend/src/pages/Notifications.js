@@ -3,14 +3,19 @@ import { getFriendRequests, acceptFriendRequest, rejectFriendRequest, getNotific
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../api';
-import { ArrowLeft, Users, UserX, MessageSquare, BellRing, Check, X as Close, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, UserX, MessageSquare, BellRing, Check, X as Close, Trash2, Bell, Dumbbell } from 'lucide-react';
+import Header from '../components/Header';
+import Navbar from '../components/Navbar';
 
 export default function Notifications({ onFriendUpdate }) {
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
   const [tab, setTab] = useState('requests'); // requests, unfriended, messages
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // for Go Back
+  const socketRef = useRef(null);
 
   const workoutTypes = useMemo(() => ['workout_invite', 'workout_canceled', 'workout_opt_out', 'workout_cancelled'], []);
 
@@ -48,6 +53,7 @@ export default function Notifications({ onFriendUpdate }) {
   };
 
   const fetchRequests = async () => {
+    if (!isAuthenticated) return [];
     setLoading(true);
     try {
       const res = await getFriendRequests();
@@ -59,6 +65,7 @@ export default function Notifications({ onFriendUpdate }) {
   };
 
   const fetchNotifications = async (type, transform) => {
+    if (!isAuthenticated) return [];
     setLoading(true);
     setError(null);
     try {
@@ -76,9 +83,8 @@ export default function Notifications({ onFriendUpdate }) {
     }
   };
 
-  const socketRef = useRef(null);
-
   useEffect(() => {
+    if (!isAuthenticated) return;
     const loadCurrentTab = () => {
       if (tab === 'requests') {
         fetchRequests().then(rs => setItems(rs));
@@ -111,7 +117,7 @@ export default function Notifications({ onFriendUpdate }) {
     }
 
     return () => { clearInterval(interval); if (socketRef.current) socketRef.current.disconnect(); };
-  }, [tab]);
+  }, [tab, isAuthenticated]);
 
   const handleAccept = async (requestId, senderId) => {
     await acceptFriendRequest(requestId, senderId);
@@ -181,6 +187,46 @@ export default function Notifications({ onFriendUpdate }) {
       }
     }
   };
+
+  // Auth guard render
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header disableNotifications />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+          <div className="px-4 max-w-md mx-auto text-center mt-20">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <Bell className="w-12 h-12 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Notifications</h1>
+              <p className="text-gray-600 text-lg px-4">Please login to view your notifications, friend requests, and workout invites.</p>
+            </div>
+            
+            <div className="flex flex-col gap-4 mt-12">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Go to Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
+              >
+                Create an Account
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-8">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
+        </div>
+        <Navbar />
+      </>
+    );
+  }
 
   const handleDeclineWorkout = async (notifId, participantId) => {
     try {

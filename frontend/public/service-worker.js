@@ -36,20 +36,27 @@ self.addEventListener('activate', event => {
 
 // Fetch with network-first strategy
 self.addEventListener('fetch', event => {
-  // Skip caching for API calls
-  if (event.request.url.includes('/api/')) {
-    event.respondWith(fetch(event.request));
-    return;
+  const url = new URL(event.request.url);
+  
+  // Skip service worker entirely for API calls, non-GET requests, or external domains
+  if (
+    event.request.method !== 'GET' || 
+    url.pathname.startsWith('/api/') ||
+    url.hostname.includes('localhost') && url.port === '4000'
+  ) {
+    return; // Don't handle these requests at all
   }
 
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Clone response before caching
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseClone);
-        });
+        // Only cache successful responses
+        if (response.ok) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+        }
         return response;
       })
       .catch(() => {

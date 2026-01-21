@@ -76,8 +76,8 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+    localStorage.clear();
+    window.location.href = '/';
   };
 
   const handleShareAccount = () => {

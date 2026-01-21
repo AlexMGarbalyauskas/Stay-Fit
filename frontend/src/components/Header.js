@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getNotifications, API_BASE } from '../api';
 import { io } from 'socket.io-client';
 
-export default function Header() {
+export default function Header({ disableNotifications = false }) {
   const navigate = useNavigate();
   const [hasUnread, setHasUnread] = useState(false);
   const socketRef = useRef(null);
@@ -21,6 +21,7 @@ export default function Header() {
   };
 
   useEffect(() => {
+    if (disableNotifications) return;
     refreshUnread();
     const interval = setInterval(refreshUnread, 10000);
 
@@ -34,9 +35,10 @@ export default function Header() {
       clearInterval(interval);
       if (socketRef.current) socketRef.current.disconnect();
     };
-  }, []);
+  }, [disableNotifications]);
 
   const handleNotificationsClick = () => {
+    if (disableNotifications) return;
     navigate('/notifications'); // Navigate to Notifications page
   };
 
@@ -52,12 +54,15 @@ export default function Header() {
         {/* Notification Icon (far right) */}
         <button
           onClick={handleNotificationsClick}
-          className="ml-auto relative p-2 rounded-full hover:bg-gray-100 transition"
+          disabled={disableNotifications}
+          className={`ml-auto relative p-2 rounded-full transition ${
+            disableNotifications ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'
+          }`}
         >
           <Bell className="w-6 h-6 text-gray-700" />
 
           {/* Optional notification dot */}
-          {hasUnread && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />}
+          {hasUnread && !disableNotifications && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />}
         </button>
 
       </div>

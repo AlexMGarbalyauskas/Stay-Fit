@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { toggleLike, toggleSave } from '../api';
 
-export default function Home({ onLogout }) {
+export default function Home({ onLogout, isAuthenticated }) {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [commentsForPost, setCommentsForPost] = useState(null);
@@ -15,16 +15,25 @@ export default function Home({ onLogout }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
+    if (!isAuthenticated) {
+      setUser(null);
+      setPosts([]);
       return;
     }
 
+    console.log('🔍 Home: Fetching user data...');
+    console.log('🔍 isAuthenticated:', isAuthenticated);
+    console.log('🔍 API_BASE:', API_BASE);
+    console.log('🔍 Token:', localStorage.getItem('token'));
+
     getMe()
-      .then(res => setUser(res.data.user || res.data))
+      .then(res => {
+        console.log('✅ getMe response:', res);
+        setUser(res.data.user || res.data);
+      })
       .catch(err => {
-        console.error(err);
+        console.error('❌ getMe error:', err);
+        console.error('❌ Error response:', err.response);
         if (err?.response?.status === 404) {
           alert('Session invalid or user not found. Please log in again.');
         }
@@ -59,7 +68,7 @@ export default function Home({ onLogout }) {
       window.removeEventListener('post:deleted', deleteHandler);
       window.removeEventListener('feed:refresh', refreshHandler);
     };
-  }, [navigate, onLogout]);
+  }, [navigate, onLogout, isAuthenticated]);
 
   // Countdown timer for today's workout
   useEffect(() => {
@@ -123,9 +132,50 @@ export default function Home({ onLogout }) {
   const handleLogout = () => {
     localStorage.clear();
     if (onLogout) onLogout();
-    navigate('/login');
+    navigate('/');
   };
 
+  // Check authentication first, before checking user
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header disableNotifications />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+          <div className="px-4 max-w-md mx-auto text-center mt-20">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <Dumbbell className="w-12 h-12 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to StayFit</h1>
+              <p className="text-gray-600 text-lg px-4">Join our fitness community to share workouts, connect with friends, and achieve your goals together.</p>
+            </div>
+            
+            <div className="flex flex-col gap-4 mt-12">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Go to Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
+              >
+                Create an Account
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-8">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
+        </div>
+        <Navbar />
+      </>
+    );
+  }
+
+  // Now check if user is loaded
   if (!user) return <p className="text-center mt-20 text-gray-500">Loading user…</p>;
 
   return (

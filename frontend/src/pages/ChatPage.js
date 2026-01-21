@@ -1,20 +1,23 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getUser } from '../api';
 import { io } from 'socket.io-client';
 import api, { API_BASE, toggleMessageReaction, deleteMessage as apiDeleteMessage } from '../api';
 import Navbar from '../components/Navbar';
+import Header from '../components/Header';
 import EmojiPickerModal from '../components/EmojiPickerModal';
 import dayjs from 'dayjs';
-import { User, Image as ImageIcon, Search, ChevronDown, Lock } from 'lucide-react';
+import { User, Image as ImageIcon, Search, ChevronDown, Lock, MessageCircle, Dumbbell } from 'lucide-react';
 import { encryptMessage, decryptMessage, isEncryptionReady } from '../utils/crypto';
 
 export default function ChatPage() {
+  const navigate = useNavigate();
   let currentUser = null;
   try {
     currentUser = JSON.parse(localStorage.getItem('user'));
   } catch {}
   const token = localStorage.getItem('token');
+  const isAuthenticated = !!(token && currentUser);
 
   const [friends, setFriends] = useState([]);
   const [activeFriend, setActiveFriend] = useState(null);
@@ -39,7 +42,7 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     socketRef.current = io(API_BASE.replace('/api',''), { auth: { token } });
     const s = socketRef.current;
 
@@ -85,6 +88,7 @@ export default function ChatPage() {
   }, [token, activeFriend]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     api.get('/api/friends')
       .then(res => setFriends(res.data.friends || []))
       .catch(err => console.error('Friends load error', err));
@@ -93,6 +97,7 @@ export default function ChatPage() {
   const params = useParams();
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     // If route param present, fetch and set active friend
     const userIdFromParams = params?.id;
     if (userIdFromParams) {
@@ -106,7 +111,7 @@ export default function ChatPage() {
   }, [params?.id, friends]);
 
   useEffect(() => {
-    if (!activeFriend) return;
+    if (!isAuthenticated || !activeFriend) return;
     api.get(`/api/messages/${activeFriend.id}`)
       .then(async res => {
         const msgs = res.data.messages || [];
@@ -142,6 +147,46 @@ export default function ChatPage() {
       })
       .catch(err => console.error('Messages load error', err));
   }, [activeFriend]);
+
+  // Auth guard render
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header disableNotifications />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+          <div className="px-4 max-w-md mx-auto text-center mt-20">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <MessageCircle className="w-12 h-12 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Chat with Friends</h1>
+              <p className="text-gray-600 text-lg px-4">Please login to start chatting with your friends and share your fitness journey.</p>
+            </div>
+            
+            <div className="flex flex-col gap-4 mt-12">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Go to Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
+              >
+                Create an Account
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-8">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
+        </div>
+        <Navbar />
+      </>
+    );
+  }
 
   const sendMessage = async () => {
     const hasText = text.trim().length > 0;

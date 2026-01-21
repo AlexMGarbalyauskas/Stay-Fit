@@ -43,11 +43,11 @@ root.render(
   </React.StrictMode>
 );
 
-// Register service worker for PWA installability
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js')
-    .then(registration => console.log('SW registered:', registration.scope))
-    .catch(err => console.log('SW registration failed:', err));
-}
+// DISABLE service worker completely - it's breaking API calls
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('/service-worker.js')
+//     .then(registration => console.log('SW registered:', registration.scope))
+//     .catch(err => console.log('SW registration failed:', err));
+// }
 
 reportWebVitals();

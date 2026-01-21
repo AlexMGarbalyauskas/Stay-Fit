@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Users, UserX, ArrowLeft } from 'lucide-react';
+import { Users, UserX, ArrowLeft, Dumbbell } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getFriends, unfriend, API_BASE } from '../api';
 import Navbar from '../components/Navbar';
+import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
 
 
@@ -11,8 +12,13 @@ export default function Friends({ refreshTrigger }) {
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
   const fetchFriends = async () => {
+    if (!isAuthenticated) return;
     setLoading(true);
     try {
       const res = await getFriends();
@@ -24,10 +30,7 @@ export default function Friends({ refreshTrigger }) {
     }
   };
 
-  useEffect(() => { fetchFriends(); }, [refreshTrigger]);
-
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmTarget, setConfirmTarget] = useState(null);
+  useEffect(() => { fetchFriends(); }, [refreshTrigger, isAuthenticated]);
 
   const openUnfriendModal = (friend) => {
     setConfirmTarget(friend);
@@ -40,6 +43,46 @@ export default function Friends({ refreshTrigger }) {
     setFriends(prev => prev.filter(f => f.id !== confirmTarget.id));
     closeUnfriendModal();
   };
+
+  // Auth guard render
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header disableNotifications />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+          <div className="px-4 max-w-md mx-auto text-center mt-20">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-rose-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <Users className="w-12 h-12 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Your Friends</h1>
+              <p className="text-gray-600 text-lg px-4">Please login to view your friends list and connect with your fitness community.</p>
+            </div>
+            
+            <div className="flex flex-col gap-4 mt-12">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-pink-700 hover:to-rose-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Go to Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
+              >
+                Create an Account
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-8">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
+        </div>
+        <Navbar />
+      </>
+    );
+  }
 
   if (loading) return <p className="mt-20 text-center text-gray-500">Loading friends...</p>;
 
