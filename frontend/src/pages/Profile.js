@@ -9,6 +9,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function Profile() {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [user, setUser] = useState(null);
   const [friendsCount, setFriendsCount] = useState(0);
   const [posts, setPosts] = useState([]);
@@ -150,7 +152,7 @@ export default function Profile() {
   return (
     <>
       <ProfileHeader />
-      <div className="pt-20 pb-20 min-h-screen bg-white">
+      <div className={`pt-20 pb-20 min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-white text-slate-800'}`}>
         <div className="max-w-2xl mx-auto px-4">
           {/* Profile Header Section */}
           <div className="flex gap-8 py-8 border-b">
@@ -282,8 +284,8 @@ export default function Profile() {
                   </div>
                 ) : (
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-700">{user.location || 'No location'}</p>
-                    <button onClick={() => setLocationEditing(true)} className="text-gray-400 hover:text-gray-600 text-xs">
+                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{user.location || 'No location'}</p>
+                    <button onClick={() => setLocationEditing(true)} className={`text-xs ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
                       <Edit2 size={14} />
                     </button>
                   </div>
@@ -293,12 +295,12 @@ export default function Profile() {
               {/* Stats */}
               <div className="flex gap-6 mb-4 text-sm">
                 <div>
-                  <span className="font-semibold">{posts.length}</span>
-                  <span className="text-gray-500"> {t('posts')}</span>
+                  <span className={`font-semibold ${isDark ? 'text-gray-100' : ''}`}>{posts.length}</span>
+                  <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}> {t('posts')}</span>
                 </div>
                 <div>
-                  <span className="font-semibold">{friendsCount}</span>
-                  <span className="text-gray-500"> {t('friends_count')}</span>
+                  <span className={`font-semibold ${isDark ? 'text-gray-100' : ''}`}>{friendsCount}</span>
+                  <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}> {t('friends_count')}</span>
                 </div>
               </div>
 
@@ -310,7 +312,7 @@ export default function Profile() {
                     setShowShareNotification(true);
                     setTimeout(() => setShowShareNotification(false), 3000);
                   }}
-                  className="flex-1 px-4 py-2 bg-gray-100 rounded font-semibold text-sm hover:bg-gray-200 transition flex items-center justify-center gap-2"
+                  className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition flex items-center justify-center gap-2 ${isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   <Share2 className="w-4 h-4" /> {t('share')}
                 </button>
@@ -513,7 +515,7 @@ export default function Profile() {
           onContextMenu={(e) => e.preventDefault()}
         >
           <div
-            className="absolute bg-white shadow-lg rounded-md border border-gray-200 py-2 px-3 text-sm font-medium text-red-600 hover:bg-red-50 cursor-pointer"
+            className={`absolute shadow-lg rounded-md border py-2 px-3 text-sm font-medium cursor-pointer ${isDark ? 'bg-gray-900 border-gray-700 text-red-400 hover:bg-gray-800' : 'bg-white border-gray-200 text-red-600 hover:bg-red-50'}`}
             style={{ top: contextMenu.y, left: contextMenu.x, minWidth: '140px' }}
             onClick={(e) => {
               e.stopPropagation();
@@ -529,7 +531,7 @@ export default function Profile() {
       {/* Confirm delete modal */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 px-4" onClick={() => setConfirmDeleteId(null)}>
-          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-5" onClick={(e) => e.stopPropagation()}>
+          <div className={`rounded-lg shadow-xl max-w-sm w-full p-5 border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white'}`} onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete post?</h3>
             <p className="text-sm text-gray-600 mb-4">This cannot be undone.</p>
             <div className="flex justify-end gap-3">

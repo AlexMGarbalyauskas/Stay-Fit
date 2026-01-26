@@ -32,42 +32,64 @@
 .loader-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+  background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
   z-index: 9999;
+}
+
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.loader-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);
+  animation: loader-icon-pulse 2s ease-in-out infinite;
 }
 
 .loader-swirl {
   position: relative;
-  width: 96px;
-  height: 96px;
-  animation: loader-rotate 1.4s linear infinite;
+  width: 120px;
+  height: 120px;
+  animation: loader-rotate 2s linear infinite;
 }
 
 .loader-swirl .dot {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 9999px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
   transform: translate(-50%, -50%);
-  animation: loader-pulse 1.2s ease-in-out infinite;
+  animation: loader-pulse 1.5s ease-in-out infinite;
 }
 
-.loader-swirl .dot-a { transform: translate(-50%, -50%) translate(32px, 0); background: #2563eb; animation-delay: 0s; }
-.loader-swirl .dot-b { transform: translate(-50%, -50%) translate(-16px, 28px); background: #f97316; animation-delay: 0.15s; }
-.loader-swirl .dot-c { transform: translate(-50%, -50%) translate(-16px, -28px); background: #10b981; animation-delay: 0.3s; }
+.loader-swirl .dot-a { transform: translate(-50%, -50%) translate(45px, 0); animation-delay: 0s; }
+.loader-swirl .dot-b { transform: translate(-50%, -50%) translate(-22px, 38px); animation-delay: 0.2s; }
+.loader-swirl .dot-c { transform: translate(-50%, -50%) translate(-22px, -38px); animation-delay: 0.4s; }
 
 .loader-text {
   font-weight: 600;
-  color: #0f172a;
-  letter-spacing: 0.02em;
+  color: #065f46;
+  letter-spacing: 0.03em;
+  font-size: 1.125rem;
 }
 
 @keyframes loader-rotate {
@@ -76,8 +98,13 @@
 }
 
 @keyframes loader-pulse {
-  0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.85; }
-  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+  0%, 100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
+  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+}
+
+@keyframes loader-icon-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 15px 50px rgba(16, 185, 129, 0.5); }
 }
 
 @keyframes App-logo-spin {

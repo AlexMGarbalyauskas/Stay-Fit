@@ -8,6 +8,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function SavedPosts() {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [savedPosts, setSavedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 

@@ -8,6 +8,8 @@ import { Upload, Camera, Video, Image as ImageIcon, Sparkles } from 'lucide-reac
 
 export default function Post() {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [mediaKind, setMediaKind] = useState('video'); // 'video' or 'image'
   const [source, setSource] = useState('upload'); // 'upload' or 'camera'
   const [composerOpen, setComposerOpen] = useState(false);
@@ -464,8 +466,8 @@ export default function Post() {
     <>
       <Header />
 
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16 pb-16 flex flex-col items-center px-4">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-lg mt-12 border border-white/20">
+      <main className={`min-h-screen bg-gradient-to-br pt-16 pb-16 flex flex-col items-center px-4 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800' : 'from-blue-50 via-purple-50 to-pink-50'}`}>
+        <div className={`backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-lg mt-12 border ${isDark ? 'bg-gray-900/80 border-gray-700/20' : 'bg-white/80 border-white/20'}`}>
           {!composerOpen ? (
             <div className="text-center space-y-6">
               {/* Icon header */}
@@ -479,10 +481,10 @@ export default function Post() {
               </div>
 
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-widest">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3" style={{ wordSpacing: '0.25em' }}>
                   {t('chooseMediaType')}
                 </h2>
-                <p className="text-gray-600 text-lg">{t('chooseSource')}</p>
+                <p className="text-gray-600 text-lg" style={{ wordSpacing: '0.15em' }}>{t('chooseSource')}</p>
               </div>
 
               <div className="flex flex-col gap-4 pt-2">
@@ -526,14 +528,14 @@ export default function Post() {
               <div className="flex gap-2 mb-4 flex-wrap">
                 <button 
                   onClick={() => setMediaKind('video')} 
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${mediaKind === 'video' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${mediaKind === 'video' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   <Video className="w-4 h-4" />
                   {t('video')}
                 </button>
                 <button 
                   onClick={() => setMediaKind('image')} 
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${mediaKind === 'image' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${mediaKind === 'image' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   <ImageIcon className="w-4 h-4" />
                   {t('photo')}
@@ -541,14 +543,14 @@ export default function Post() {
                 <div className="ml-auto flex gap-2">
                   <button 
                     onClick={() => setSource('upload')} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${source === 'upload' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${source === 'upload' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md' : isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                   >
                     <Upload className="w-4 h-4" />
                     {t('upload')}
                   </button>
                   <button 
                     onClick={() => { setSource('camera'); startCamera(); }} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${source === 'camera' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${source === 'camera' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md' : isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                   >
                     <Camera className="w-4 h-4" />
                     {t('camera')}
@@ -573,12 +575,12 @@ export default function Post() {
                   </label>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div className={`border rounded-lg p-4 mb-4 ${isDark ? 'border-green-900/30 bg-green-900/20' : 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50'}`}>
                   <div className="flex items-start gap-3">
-                    <Camera className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-gray-700">
-                      <p className="font-medium text-green-700 mb-1">Camera mode active</p>
-                      <p className="text-gray-600">Full-screen camera will open when you're ready to capture.</p>
+                    <Camera className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <p className={`font-medium mb-1 ${isDark ? 'text-green-400' : 'text-green-700'}`}>Camera mode active</p>
+                      <p className={isDark ? 'text-gray-500' : 'text-gray-600'}>Full-screen camera will open when you're ready to capture.</p>
                     </div>
                   </div>
                 </div>
@@ -644,7 +646,7 @@ export default function Post() {
                     setComposerOpen(false);
                     setSource('upload');
                   }}
-                  className="px-6 py-3 rounded-xl font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all"
+                  className={`px-6 py-3 rounded-xl font-medium transition-all ${isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                   {t('cancel')}
                 </button>

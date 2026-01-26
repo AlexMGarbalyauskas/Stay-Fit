@@ -9,6 +9,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function FindFriends({ onFriendUpdate }) {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [search, setSearch] = useState('');
@@ -136,10 +138,10 @@ export default function FindFriends({ onFriendUpdate }) {
     return (
       <>
         <Header disableNotifications />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+        <div className={`min-h-screen bg-gradient-to-br pb-24 pt-20 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
           <div className="px-4 max-w-md mx-auto text-center mt-20">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <UserPlus className="w-12 h-12 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('findFitnessFriends')}</h1>
@@ -149,7 +151,7 @@ export default function FindFriends({ onFriendUpdate }) {
             <div className="flex flex-col gap-4 mt-12">
               <button
                 onClick={() => navigate('/login')}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {t('goToLogin')}
               </button>
@@ -172,7 +174,7 @@ export default function FindFriends({ onFriendUpdate }) {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-20 bg-gray-100">
+    <div className={`min-h-screen pt-20 pb-20 ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-slate-800'}`}>
       <Header title={t('findFriends')} showBack />
       <div className="max-w-md mx-auto px-4 mt-4">
         <h2 className="text-xl font-bold text-gray-800 mb-3">{t('findFriends')}</h2>

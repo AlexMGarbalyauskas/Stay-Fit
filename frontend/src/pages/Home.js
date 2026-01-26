@@ -9,6 +9,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function Home({ onLogout, isAuthenticated }) {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [commentsForPost, setCommentsForPost] = useState(null);
@@ -142,10 +144,10 @@ export default function Home({ onLogout, isAuthenticated }) {
     return (
       <>
         <Header disableNotifications />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-100 pb-24 pt-20">
           <div className="px-4 max-w-md mx-auto text-center mt-20">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <Dumbbell className="w-12 h-12 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('welcomeToStayFit')}</h1>
@@ -155,7 +157,7 @@ export default function Home({ onLogout, isAuthenticated }) {
             <div className="flex flex-col gap-4 mt-12">
               <button
                 onClick={() => navigate('/login')}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {t('goToLogin')}
               </button>
@@ -184,46 +186,46 @@ export default function Home({ onLogout, isAuthenticated }) {
     <>
       <Header onNotificationsClick={() => alert('Notifications clicked')} />
 
-      <main className="min-h-screen bg-gray-100 pt-16 pb-16">
+      <main className={`min-h-screen bg-gradient-to-br pt-16 pb-16 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
         <div className="max-w-2xl mx-auto">
           {/* Countdown Timer Display */}
           {countdown && todayWorkout && (
-            <div className="mt-6 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white shadow-lg cursor-pointer hover:shadow-xl transition" onClick={() => navigate('/calendar')}>
+            <div className={`mt-6 rounded-xl p-4 shadow-lg cursor-pointer hover:shadow-xl transition ${isDark ? 'bg-gradient-to-r from-gray-800 to-gray-700 text-gray-100' : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'}`} onClick={() => navigate('/calendar')}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-white bg-opacity-20 rounded-full p-2">
+                  <div className={`${isDark ? 'bg-gray-700 bg-opacity-40' : 'bg-white bg-opacity-20'} rounded-full p-2`}>
                     <Dumbbell className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide opacity-90">{t('nextWorkout')}</p>
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'opacity-80' : 'opacity-90'}`}>{t('nextWorkout')}</p>
                     <p className="text-lg font-bold">{todayWorkout.workout}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs uppercase tracking-wide opacity-90 flex items-center gap-1 justify-end">
+                    <p className={`text-xs uppercase tracking-wide flex items-center gap-1 justify-end ${isDark ? 'opacity-80' : 'opacity-90'}`}>
                       <Clock className="h-3 w-3" /> {t('timeUntilReminder')}
                   </p>
-                  <p className="text-3xl font-bold tabular-nums">{countdown}</p>
+                  <p className={`text-3xl font-bold tabular-nums ${isDark ? 'text-gray-100' : ''}`}>{countdown}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Welcome / quick actions */}
-          <div className="bg-white shadow-lg rounded-lg p-6 mt-6">
+          <div className={`shadow-lg rounded-lg p-6 mt-6 border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white'}`}>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+              <div className={`w-12 h-12 rounded-full overflow-hidden flex items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
                 {user.profile_picture ? (
                   <img src={`${API_BASE}${user.profile_picture}`} alt="avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-gray-500" />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                    <User className={`w-6 h-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
                   </div>
                 )}
               </div>
               <div>
-                <h2 className="font-semibold text-lg">{t('welcome')}, {user.nickname || user.username}</h2>
-                <p className="text-sm text-gray-600">{t('shareVideo')}</p>
+                <h2 className={`font-semibold text-lg ${isDark ? 'text-gray-100' : ''}`}>{t('welcome')}, {user.nickname || user.username}</h2>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t('shareVideo')}</p>
               </div>
             </div>
           </div>

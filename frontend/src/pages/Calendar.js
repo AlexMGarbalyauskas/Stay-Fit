@@ -11,6 +11,8 @@ const dateKey = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
 
 export default function CalendarPage() {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const navigate = useNavigate();
   const { countdown } = useWorkoutReminder();
   const today = useMemo(() => new Date(), []);
@@ -252,7 +254,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-white text-slate-800'}`}>
       <div className="mx-auto max-w-6xl px-4 py-6">
         {/* Countdown Timer Display */}
         {countdown && (
@@ -438,7 +440,7 @@ export default function CalendarPage() {
       {/* Buddy Selection Modal */}
       {showBuddyModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-auto max-h-[80vh] flex flex-col">
+          <div className={`rounded-lg shadow-xl p-6 max-w-md w-full mx-auto max-h-[80vh] flex flex-col border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white'}`}>
             <div className="mb-4">
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <Users className="w-6 h-6 text-blue-500" />

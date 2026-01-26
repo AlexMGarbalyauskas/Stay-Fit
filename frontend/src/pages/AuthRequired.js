@@ -25,10 +25,10 @@ export default function AuthRequired() {
   return (
     <>
       <Header disableNotifications />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-100 pb-24 pt-20">
         <div className="px-4 max-w-md mx-auto text-center mt-20">
           <div className="mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
               <Dumbbell className="w-12 h-12 text-white" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Login required</h1>
@@ -38,7 +38,7 @@ export default function AuthRequired() {
           <div className="flex flex-col gap-4 mt-12">
             <Link
               to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Go to Login
             </Link>

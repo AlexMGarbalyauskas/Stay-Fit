@@ -7,6 +7,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function UserFriends() {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const { id } = useParams();
   const navigate = useNavigate();
   const [friends, setFriends] = useState([]);

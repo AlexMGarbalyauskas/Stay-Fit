@@ -108,6 +108,8 @@ export const translations = {
     
     // Post
     createPost: 'Create Post',
+    chooseMediaType: 'Choose Media Type',
+    chooseSource: 'Choose Source',
     uploadFromDevice: 'Upload from device',
     useCamera: 'Use camera (fullscreen)',
     video: 'Video',
@@ -211,6 +213,11 @@ export const translations = {
     noPostsYet: 'No posts yet',
     noSavedPosts: 'No saved posts',
     failedToLoad: 'Failed to load',
+    welcomeToStayFit: 'Welcome to StayFit',
+    joinFitnessCommumity: 'Join our fitness community',
+    goToLogin: 'Go to Login',
+    createAnAccount: 'Create an Account',
+    byJoining: 'By joining, you agree to our Terms of Service and Privacy Policy',
     
     // Auth
     login: 'Login',

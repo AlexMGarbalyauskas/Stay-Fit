@@ -13,6 +13,8 @@ export default function Notifications({ onFriendUpdate }) {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const isAuthenticated = !!token;
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [tab, setTab] = useState('requests'); // requests, unfriended, messages
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -195,10 +197,10 @@ export default function Notifications({ onFriendUpdate }) {
     return (
       <>
         <Header disableNotifications />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-100 pb-24 pt-20">
           <div className="px-4 max-w-md mx-auto text-center mt-20">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <Bell className="w-12 h-12 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('notifications')}</h1>
@@ -208,7 +210,7 @@ export default function Notifications({ onFriendUpdate }) {
             <div className="flex flex-col gap-4 mt-12">
               <button
                 onClick={() => navigate('/login')}
-                className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {t('goToLogin')}
               </button>
@@ -252,20 +254,20 @@ export default function Notifications({ onFriendUpdate }) {
   };
 
   const renderEmptyState = (title, desc) => (
-    <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-700 shadow-lg">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-        <BellRing className="h-6 w-6 text-slate-500" />
+    <div className={`mt-8 rounded-2xl border shadow-lg p-8 text-center ${isDark ? 'border-gray-700 bg-gray-900 text-gray-300' : 'border-slate-200 bg-white text-slate-700'}`}>
+      <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ${isDark ? 'bg-gray-800' : 'bg-slate-100'}`}>
+        <BellRing className={`h-6 w-6 ${isDark ? 'text-gray-500' : 'text-slate-500'}`} />
       </div>
-      <p className="text-lg font-semibold text-slate-800">{title}</p>
-      <p className="text-sm text-slate-500">{desc}</p>
+      <p className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-slate-800'}`}>{title}</p>
+      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>{desc}</p>
     </div>
   );
 
   const renderLoading = () => (
     <div className="mt-6 space-y-3">
       {[1, 2, 3].map(i => (
-        <div key={i} className="animate-pulse rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="h-3 w-28 rounded-full bg-slate-200" />
+        <div key={i} className={`animate-pulse rounded-2xl border p-4 ${isDark ? 'border-gray-700 bg-gray-900' : 'border-slate-200 bg-white'}`}>
+          <div className={`h-3 w-28 rounded-full ${isDark ? 'bg-gray-700' : 'bg-slate-200'}`} />
           <div className="mt-2 h-3 w-48 rounded-full bg-slate-100" />
         </div>
       ))}
@@ -275,10 +277,10 @@ export default function Notifications({ onFriendUpdate }) {
   const renderRequests = () => (
     <div className="mt-6 space-y-3">
       {items.map(r => (
-        <div key={r.id} className={`flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 ${toneClasses.blue.glow}`}>
+        <div key={r.id} className={`flex items-center justify-between rounded-2xl border p-4 ${toneClasses.blue.glow} ${isDark ? 'border-gray-700 bg-gray-900' : 'border-slate-200 bg-white'}`}>
           <div>
-            <p className="font-semibold text-slate-900">@{r.username}</p>
-            <p className="text-sm text-slate-500">{t('sentYouFriendRequest')}</p>
+            <p className={`font-semibold ${isDark ? 'text-gray-100' : 'text-slate-900'}`}>@{r.username}</p>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>{t('sentYouFriendRequest')}</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -302,10 +304,10 @@ export default function Notifications({ onFriendUpdate }) {
   const renderUnfriended = () => (
     <div className="mt-6 space-y-3">
       {items.map(n => (
-        <div key={n.id} className={`rounded-2xl border border-slate-200 bg-white p-4 ${toneClasses.amber.glow}`}>
+        <div key={n.id} className={`rounded-2xl border p-4 ${toneClasses.amber.glow} ${isDark ? 'border-gray-700 bg-gray-900' : 'border-slate-200 bg-white'}`}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-semibold text-slate-900">@{n.data?.fromUsername || ('user #' + n.data?.byUserId)}</p>
+              <p className={`font-semibold ${isDark ? 'text-gray-100' : 'text-slate-900'}`}>@{n.data?.fromUsername || ('user #' + n.data?.byUserId)}</p>
               <p className="text-sm text-slate-600">{t('unfriendedYou')}</p>
               <p className="text-xs text-slate-500">{new Date(n.created_at).toLocaleString()}</p>
             </div>
@@ -322,21 +324,21 @@ export default function Notifications({ onFriendUpdate }) {
   const renderMessages = () => (
     <div className="mt-6 space-y-3">
       {items.map(n => (
-        <div key={n.id} className={`rounded-2xl border border-slate-200 bg-white p-4 ${toneClasses.emerald.glow}`}>
+        <div key={n.id} className={`rounded-2xl border p-4 ${toneClasses.emerald.glow} ${isDark ? 'border-gray-700 bg-gray-900' : 'border-slate-200 bg-white'}`}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
-              <p className="font-semibold text-slate-900">@{n.data?.fromUsername || ('user #' + n.data?.fromUserId)}</p>
-              <p className="text-sm text-slate-600">{n.data?.content || t('newMessage')}</p>
-              <p className="text-xs text-slate-500">{new Date(n.created_at).toLocaleString()}</p>
+              <p className={`font-semibold ${isDark ? 'text-gray-100' : 'text-slate-900'}`}>@{n.data?.fromUsername || ('user #' + n.data?.fromUserId)}</p>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>{n.data?.content || t('newMessage')}</p>
+              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-slate-500'}`}>{new Date(n.created_at).toLocaleString()}</p>
             </div>
             <div className="flex items-center gap-2">
-              {n.read === 0 && <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold text-emerald-700">NEW</span>}
+              {n.read === 0 && <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${isDark ? 'bg-emerald-900 text-emerald-300' : 'bg-emerald-100 text-emerald-700'}`}>NEW</span>}
               <button onClick={() => { handleMarkRead(n.id); handleGoToChat(n.data?.fromUserId); }} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${toneClasses.emerald.button}`}>
                 {t('openChat')}
               </button>
               <button
                 onClick={() => handleDelete(n.id)}
-                className="rounded-full bg-red-50 hover:bg-red-100 p-2 text-red-600 transition"
+                className={`rounded-full p-2 transition ${isDark ? 'bg-red-900/30 hover:bg-red-800/30 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`}
                 title={t('delete')}
               >
                 <Trash2 className="h-4 w-4" />
@@ -373,13 +375,13 @@ export default function Notifications({ onFriendUpdate }) {
           })();
           
           return (
-            <div key={n.id} className={`rounded-2xl border border-slate-200 bg-white p-4 ${isOutdated || isCancelledByUser ? 'opacity-60' : toneClasses.purple.glow}`}>
+            <div key={n.id} className={`rounded-2xl border p-4 ${isOutdated || isCancelledByUser ? 'opacity-60' : toneClasses.purple.glow} ${isDark ? 'border-gray-700 bg-gray-900' : 'border-slate-200 bg-white'}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   {isCancelledByUser ? (
                     <>
-                      <p className="font-semibold text-slate-900">⏭️ {t('workoutSkipped')}</p>
-                      <p className="text-sm text-slate-600">{label}</p>
+                      <p className={`font-semibold ${isDark ? 'text-gray-100' : 'text-slate-900'}`}>⏭️ {t('workoutSkipped')}</p>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>{label}</p>
                     </>
                   ) : (
                     <>
@@ -430,10 +432,10 @@ export default function Notifications({ onFriendUpdate }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-800">
+    <div className={`min-h-screen bg-gradient-to-br text-slate-800 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100'}`}>
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-md shadow-slate-200 transition hover:bg-slate-50">
+          <button onClick={() => navigate(-1)} className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${isDark ? 'bg-gray-800 text-gray-300 shadow-gray-800 hover:bg-gray-700' : 'bg-white text-slate-700 shadow-slate-200 hover:bg-slate-50'}`}>
             <ArrowLeft className="h-4 w-4" /> {t('back')}
           </button>
           <div className="flex flex-wrap gap-2">
@@ -445,7 +447,7 @@ export default function Notifications({ onFriendUpdate }) {
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${active ? `${tone.button} ${tone.glow}` : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${active ? `${tone.button} ${tone.glow}` : isDark ? 'border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
                 >
                   <Icon className="h-4 w-4" />
                   {t.label}
@@ -458,13 +460,13 @@ export default function Notifications({ onFriendUpdate }) {
         <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-wide text-slate-500">Stay Fit</p>
-            <h1 className="text-2xl font-bold text-slate-900">{t('notifications')}</h1>
-            <p className="text-sm text-slate-500">{tabs.find(t => t.key === tab)?.hint}</p>
+            <h1 className={`text-2xl font-bold ${isDark ? 'text-gray-100' : 'text-slate-900'}`}>{t('notifications')}</h1>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>{tabs.find(t => t.key === tab)?.hint}</p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => markAllNotificationsRead().then(() => setItems(prev => prev.map(i => ({ ...i, read: 1 })))).catch(() => {})}
-              className="rounded-full bg-white border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${isDark ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
             >
               {t('markAllRead')}
             </button>

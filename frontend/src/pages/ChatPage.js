@@ -13,6 +13,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function ChatPage() {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const navigate = useNavigate();
   let currentUser = null;
   try {
@@ -155,10 +157,10 @@ export default function ChatPage() {
     return (
       <>
         <Header disableNotifications />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+        <div className={`min-h-screen bg-gradient-to-br pb-24 pt-20 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
           <div className="px-4 max-w-md mx-auto text-center mt-20">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <MessageCircle className="w-12 h-12 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">Chat with Friends</h1>
@@ -168,13 +170,13 @@ export default function ChatPage() {
             <div className="flex flex-col gap-4 mt-12">
               <button
                 onClick={() => navigate('/login')}
-                className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 Go to Login
               </button>
               <button
                 onClick={() => navigate('/register')}
-                className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
+                className={`w-full border-2 py-4 rounded-2xl font-semibold text-lg transition-all shadow-md ${isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-800 hover:bg-gray-50 hover:border-gray-300'}`}
               >
                 Create an Account
               </button>
@@ -296,8 +298,8 @@ export default function ChatPage() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-56px)] pt-2 bg-gray-50 relative" onClick={() => { if (pickerOpenFor) setPickerOpenFor(null); if (contextMenu.open) setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false }); }}>
-        <div className="w-1/3 border-r overflow-y-auto bg-white">
+      <div className={`flex h-[calc(100vh-56px)] pt-2 bg-gradient-to-br relative ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`} onClick={() => { if (pickerOpenFor) setPickerOpenFor(null); if (contextMenu.open) setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false }); }}>
+        <div className={`w-1/3 border-r overflow-y-auto ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
           {friends.map(friend => (
             <button
               key={friend.id}
@@ -330,7 +332,7 @@ export default function ChatPage() {
             </div>
           ) : (
             <>
-              <div className="p-4 border-b bg-white flex items-center justify-between">
+              <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
                 <div>
                   <div className="font-semibold text-lg">{activeFriend.nickname || activeFriend.username}</div>
                   {activeFriend.nickname && <div className="text-xs text-gray-500">@{activeFriend.username}</div>}
@@ -350,9 +352,9 @@ export default function ChatPage() {
                   const reactions = reactionsMap[msg.id] || [];
                   const bubbleBase = 'max-w-xs break-words rounded-lg shadow';
                   const bubbleStyle = isGif
-                    ? 'bg-white text-gray-800 border border-gray-200 p-2'
+                    ? (isDark ? 'bg-gray-900 text-gray-200 border border-gray-700 p-2' : 'bg-white text-gray-800 border border-gray-200 p-2')
                     : `${isMine ? 'bg-blue-600 text-white' : 'bg-green-500 text-white'} px-4 py-2`;
-                  const timeColor = isGif ? 'text-gray-500' : 'text-gray-100';
+                  const timeColor = isGif ? (isDark ? 'text-gray-400' : 'text-gray-500') : 'text-gray-100';
 
                   return (
                     <div key={msg.id + '-' + idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
@@ -387,7 +389,7 @@ export default function ChatPage() {
                             <button
                               key={r.emoji}
                               onClick={() => toggleMessageReaction(msg.id, r.emoji).catch(() => alert('Failed to toggle reaction'))}
-                              className={`px-2 py-0.5 rounded-full border ${r.reacted_by_me ? 'bg-white text-black' : 'bg-white text-gray-700'}`}
+                              className={`px-2 py-0.5 rounded-full border ${r.reacted_by_me ? (isDark ? 'bg-gray-900 text-gray-100 border-gray-700' : 'bg-white text-black') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700' : 'bg-white text-gray-700')}`}
                             >
                               {r.emoji} <span className="ml-1 text-xs">{r.count}</span>
                             </button>
@@ -402,7 +404,7 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-3 border-t bg-white flex gap-2 items-center flex-wrap">
+              <div className={`p-3 border-t flex gap-2 items-center flex-wrap ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
                 <input
                   value={text}
                   onChange={e => setText(e.target.value)}
@@ -412,7 +414,7 @@ export default function ChatPage() {
                 />
                 <button
                   onClick={() => setGifPanelOpen(!gifPanelOpen)}
-                  className="inline-flex items-center gap-1 p-2 rounded hover:bg-gray-100 transition text-gray-700"
+                  className={`inline-flex items-center gap-1 p-2 rounded transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'}`}
                   title="Toggle GIF search"
                 >
                   <ImageIcon className="h-5 w-5 text-blue-600" />
@@ -424,14 +426,14 @@ export default function ChatPage() {
 
               {/* GIF Search Panel */}
               {gifPanelOpen && (
-                <div className="p-3 border-t bg-gray-50">
+                <div className={`p-3 border-t ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-2 mb-3">
                     <input
                       value={gifQuery}
                       onChange={handleGifQueryChange}
                       placeholder={t('searchGif')}
                       autoFocus
-                      className="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-blue-300"
+                      className={`flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-blue-300 ${isDark ? 'bg-gray-900 border-gray-700 text-gray-200' : ''}`}
                     />
                     <button
                       onClick={() => {
@@ -439,7 +441,7 @@ export default function ChatPage() {
                         setGifQuery('');
                         setGifResults([]);
                       }}
-                      className="p-2 hover:bg-gray-200 rounded transition text-gray-700"
+                      className={`p-2 rounded transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-200 text-gray-700'}`}
                       title="Close GIF search"
                     >
                       <ChevronDown className="h-5 w-5" />
@@ -493,7 +495,7 @@ export default function ChatPage() {
               {/* Context menu for message actions */}
               {contextMenu.open && (
                 <div
-                  className="absolute z-50 bg-white rounded shadow-md border p-2 text-sm"
+                  className={`absolute z-50 rounded shadow-md border p-2 text-sm ${isDark ? 'bg-gray-900 border-gray-700 text-gray-200' : 'bg-white'}`}
                   style={{ left: contextMenu.x, top: contextMenu.y }}
                   onMouseLeave={() => setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false })}
                 >

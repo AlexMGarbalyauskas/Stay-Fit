@@ -8,6 +8,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function UserProfile() {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);

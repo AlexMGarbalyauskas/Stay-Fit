@@ -446,10 +446,15 @@ function App() {
   function SplashLoader() {
     return (
       <div className="loader-overlay">
-        <div className="loader-swirl">
-          <span className="dot dot-a" />
-          <span className="dot dot-b" />
-          <span className="dot dot-c" />
+        <div className="loader-container">
+          <div className="loader-icon">
+            <Dumbbell className="w-16 h-16 text-white" />
+          </div>
+          <div className="loader-swirl">
+            <span className="dot dot-a" />
+            <span className="dot dot-b" />
+            <span className="dot dot-c" />
+          </div>
         </div>
         <div className="loader-text">Loading Stay Fit…</div>
       </div>

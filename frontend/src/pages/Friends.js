@@ -11,6 +11,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function Friends({ refreshTrigger }) {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -51,10 +53,10 @@ export default function Friends({ refreshTrigger }) {
     return (
       <>
         <Header disableNotifications />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-24 pt-20">
+        <div className={`min-h-screen bg-gradient-to-br pb-24 pt-20 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
           <div className="px-4 max-w-md mx-auto text-center mt-20">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-rose-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <Users className="w-12 h-12 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('yourFriends')}</h1>
@@ -64,7 +66,7 @@ export default function Friends({ refreshTrigger }) {
             <div className="flex flex-col gap-4 mt-12">
               <button
                 onClick={() => navigate('/login')}
-                className="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-pink-700 hover:to-rose-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {t('goToLogin')}
               </button>
@@ -90,7 +92,7 @@ export default function Friends({ refreshTrigger }) {
 
   return (
     <>
-      <div className="pt-20 pb-24 min-h-screen bg-gray-100">
+      <div className={`pt-20 pb-24 min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-slate-800'}`}>
         <div className="max-w-md mx-auto px-4">
           <button
             onClick={() => navigate(-1)}
@@ -103,7 +105,7 @@ export default function Friends({ refreshTrigger }) {
           </h1>
 
           {friends.length === 0 ? (
-            <div className="bg-white rounded-lg p-6 text-center shadow">
+            <div className={`rounded-lg p-6 text-center shadow border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white'}`}>
               <p className="text-gray-600 mb-4">{t('noFriendsYet')}</p>
               <button
                 onClick={() => navigate('/find')}
@@ -115,7 +117,7 @@ export default function Friends({ refreshTrigger }) {
           ) : (
             <ul className="space-y-3">
               {friends.map(friend => (
-                <li key={friend.id} className="bg-white rounded-lg shadow hover:shadow-md transition">
+                <li key={friend.id} className={`rounded-lg shadow hover:shadow-md transition border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white'}`}>
                   <div className="flex items-center justify-between p-4">
                     <Link 
                       to={`/users/${friend.id}`} 

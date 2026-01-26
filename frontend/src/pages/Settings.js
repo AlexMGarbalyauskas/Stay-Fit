@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, Palette } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -18,10 +18,30 @@ export default function Settings() {
   const [showTimezoneModal, setShowTimezoneModal] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [greenStyle, setGreenStyle] = useState(localStorage.getItem('greenStyle') === 'true');
   const [showShareNotification, setShowShareNotification] = useState(false);
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
+
+  const handleGreenStyleToggle = () => {
+    const newGreenStyle = !greenStyle;
+    setGreenStyle(newGreenStyle);
+    localStorage.setItem('greenStyle', newGreenStyle);
+    if (newGreenStyle) {
+      document.documentElement.classList.add('green-style');
+    } else {
+      document.documentElement.classList.remove('green-style');
+    }
+  };
+
+  useEffect(() => {
+    if (greenStyle) {
+      document.documentElement.classList.add('green-style');
+    } else {
+      document.documentElement.classList.remove('green-style');
+    }
+  }, [greenStyle]);
 
   const privacyLabel = (value) => {
     if (value === 'Public') return t('public');
@@ -196,19 +216,19 @@ export default function Settings() {
   if (!user) return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className={`min-h-screen bg-gradient-to-br ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
       <div className="pt-20 pb-20 px-4 max-w-md mx-auto">
 
         {/* Back button */}
         <button
           onClick={() => navigate('/profile')}
-          className="flex items-center gap-2 text-gray-700 mb-4 hover:text-gray-900"
+          className={`flex items-center gap-2 mb-4 transition ${isDark ? 'text-gray-200 hover:text-gray-100' : 'text-gray-700 hover:text-gray-900'}`}
         >
           <ArrowLeft size={20} /> {t('backToProfile')}
         </button>
 
         {/* Profile Info */}
-        <div className="flex items-center gap-4 bg-white p-4 rounded shadow">
+        <div className={`flex items-center gap-4 p-4 rounded shadow ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
           {user.profile_picture ? (
             <img
               src={user.profile_picture.startsWith('http') ? user.profile_picture : `${API_URL}${user.profile_picture}`}
@@ -221,40 +241,53 @@ export default function Settings() {
             </div>
           )}
           <div>
-            <h2 className="text-lg font-bold text-gray-900">@{user.username}</h2>
-            <p className="text-sm text-gray-500">{user.email}</p>
+            <h2 className={`text-lg font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>@{user.username}</h2>
+            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>{user.email}</p>
           </div>
         </div>
 
         {/* Features Section */}
-        <div className="mt-6 bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-gray-700 mb-2">{t('features')}</h3>
+        <div className={`mt-6 p-4 rounded shadow ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
+          <h3 className={`font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('features')}</h3>
           
           {/* Theme Toggle */}
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
-              <span className="text-gray-700">{theme === 'light' ? t('lightMode') : t('darkMode')}</span>
+              <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{theme === 'light' ? t('lightMode') : t('darkMode')}</span>
             </div>
             <button
               onClick={handleThemeToggle}
-              className="bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition"
-              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              className={`rounded-full p-2 transition ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-100' : 'bg-gray-200 hover:bg-gray-300'}`}
+              title={'Switch to ' + (theme === 'light' ? 'dark' : 'light') + ' mode'}
             >
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
           </div>
-
+          {/* Green Style Mode */}
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              <Palette size={20} className={greenStyle ? 'text-green-600' : (isDark ? 'text-gray-200' : 'text-gray-700')} />
+              <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Green Style Mode</span>
+            </div>
+            <button
+              onClick={handleGreenStyleToggle}
+              className={greenStyle ? 'bg-green-500 hover:bg-green-600 text-white rounded-full p-2 transition' : (isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-100 rounded-full p-2 transition' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full p-2 transition')}
+              title={(greenStyle ? 'Disable' : 'Enable') + ' green style mode'}
+            >
+              <Palette size={16} />
+            </button>
+          </div>
           {/* Language */}
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               <Languages size={20} />
-              <span className="text-gray-700">{t('language')}</span>
+              <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('language')}</span>
             </div>
             <select
               value={language}
               onChange={(e) => handleLanguageChange(e.target.value)}
-              className="border rounded px-3 py-1 text-sm bg-white text-gray-700 hover:bg-gray-50 transition"
+              className={`border rounded px-3 py-1 text-sm transition ${isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
             >
               <option value="en">English</option>
               <option value="es">Español</option>
@@ -265,14 +298,14 @@ export default function Settings() {
         </div>
 
         {/* Settings Section */}
-        <div className="mt-4 bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-gray-700 mb-2">{t('settings')}</h3>
+        <div className={`mt-4 p-4 rounded shadow ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
+          <h3 className={`font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('settings')}</h3>
 
           {/* Notifications */}
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               <Bell size={20} />
-              <span className="text-gray-700">{t('notificationSettings')}</span>
+              <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('notificationSettings')}</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -281,7 +314,7 @@ export default function Settings() {
                 onChange={handleNotificationToggle}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
             </label>
           </div>
 
@@ -289,12 +322,12 @@ export default function Settings() {
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               <Lock size={20} />
-              <span className="text-gray-700">{t('privacy')}</span>
+              <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('privacy')}</span>
             </div>
             <select
               value={privacy}
               onChange={e => handlePrivacyChange(e.target.value)}
-              className="border rounded px-2 py-1"
+              className={`border rounded px-2 py-1 ${isDark ? 'bg-gray-900 border-gray-700 text-gray-200' : ''}`}
             >
               <option value="Public">{t('public')}</option>
               <option value="Friends Only">{t('friendsOnly')}</option>
@@ -304,23 +337,23 @@ export default function Settings() {
 
           {/* Timezone */}
           <div 
-            className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2 transition"
+            className={`flex items-center justify-between py-2 cursor-pointer rounded px-2 -mx-2 transition ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
             onClick={handleTimezoneClick}
           >
             <div className="flex items-center gap-2">
               <Globe size={20} />
-              <span className="text-gray-700">{t('timezone')}</span>
+              <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('timezone')}</span>
             </div>
             <div className="text-right">
-              <div className="text-sm font-semibold text-gray-800">
+              <div className={`text-sm font-semibold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
                 {currentTime}
               </div>
-              <div className="text-xs text-gray-600 mt-0.5 flex items-center justify-end gap-1">
+              <div className={`text-xs mt-0.5 flex items-center justify-end gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 <span>{timezone}</span>
                 {user?.location && (
                   <>
                     <span>•</span>
-                    <span className="text-gray-400">{user.location}</span>
+                    <span className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{user.location}</span>
                   </>
                 )}
               </div>
@@ -330,32 +363,32 @@ export default function Settings() {
           {/* Other settings */}
           <button
             onClick={() => navigate('/settings/other')}
-            className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
+            className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <Wrench size={20} className="text-gray-900" /> {t('other')}
+            <Wrench size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('other')}
           </button>
         </div>
 
         {/* About Section */}
-        <div className="mt-4 bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-gray-700 mb-2">{t('about')}</h3>
+        <div className={`mt-4 p-4 rounded shadow ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
+          <h3 className={`font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('about')}</h3>
           <button
             onClick={() => navigate('/settings/about')}
-            className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
+            className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <Info size={20} className="text-gray-900" /> {t('about')}
+            <Info size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('about')}
           </button>
           <button
             onClick={() => navigate('/share')}
-            className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
+            className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <Share2 size={20} className="text-gray-900" /> {t('shareApp')}
+            <Share2 size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('shareApp')}
           </button>
           <button
             onClick={handleRateApp}
-            className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
+            className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <Star size={20} className="text-gray-900" /> {t('rateApp')}
+            <Star size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('rateApp')}
           </button>
         </div>
 
@@ -419,7 +452,7 @@ export default function Settings() {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
               >
                 <Check size={18} />
-                {t('confirm')}firm')}
+                {t('confirm')}
               </button>
             </div>
           </div>

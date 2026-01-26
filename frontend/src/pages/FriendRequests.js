@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { acceptFriendRequest, rejectFriendRequest, getFriendRequests } from '../api';
 
 export default function FriendRequests({ onFriendUpdate }) {
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [requests, setRequests] = useState([]);
 
   const fetchRequests = () => getFriendRequests().then(res => setRequests(res.data.requests));

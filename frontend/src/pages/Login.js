@@ -6,6 +6,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function Login({ onLogin }) {
   const { t } = useLanguage();
+  const [theme] = useState(localStorage.getItem('theme') || 'light');
+  const isDark = theme === 'dark';
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -56,9 +58,9 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-slate-800'}`}>
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">{t('login')}</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center" style={{ wordSpacing: '0.15em' }}>{t('login')}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
