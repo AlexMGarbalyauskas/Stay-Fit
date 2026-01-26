@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User, ArrowLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function UserFriends() {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
@@ -36,7 +38,7 @@ export default function UserFriends() {
   }, [id]);
 
   if (loading) {
-    return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+    return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
   }
 
   return (
@@ -50,19 +52,19 @@ export default function UserFriends() {
             className="mb-6 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-gray-700"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Go back</span>
+            <span className="text-sm font-medium">{t('back')}</span>
           </button>
 
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900">@{userName}'s Friends</h1>
-            <p className="text-sm text-gray-500 mt-1">{friends.length} friends</p>
+            <h1 className="text-2xl font-semibold text-gray-900">@{userName} {t('friends')}</h1>
+            <p className="text-sm text-gray-500 mt-1">{friends.length} {t('friends_count')}</p>
           </div>
 
           {/* Friends List */}
           {friends.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p>No friends yet</p>
+              <p>{t('noFriendsYet')}</p>
             </div>
           ) : (
             <div className="space-y-3">

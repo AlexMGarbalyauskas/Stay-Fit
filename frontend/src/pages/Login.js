@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { login, API_BASE } from '../api';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { initializeEncryption } from '../utils/crypto';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Login({ onLogin }) {
+  const { t } = useLanguage();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -56,19 +58,19 @@ export default function Login({ onLogin }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">{t('login')}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Username or Email"
+            placeholder={t('usernameOrEmail')}
             value={identifier}
             onChange={e => setIdentifier(e.target.value)}
           />
           <input
             className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
-            placeholder="Password"
+            placeholder={t('password')}
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
@@ -76,7 +78,7 @@ export default function Login({ onLogin }) {
             className="w-full bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition-colors"
             type="submit"
           >
-            Login
+            {t('login')}
           </button>
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </form>
@@ -92,14 +94,14 @@ export default function Login({ onLogin }) {
               className="w-6 h-6 mr-2"
               loading="lazy"
             />
-            Login with Google
+            {t('loginWithGoogle')}
           </button>
         </div>
 
         <p className="mt-4 text-center text-gray-600">
-          Don't have an account?{' '}
+          {t('dontHaveAccount')}{' '}
           <Link className="text-blue-500 hover:underline" to="/register">
-            Register here
+            {t('register')}
           </Link>
         </p>
       </div>

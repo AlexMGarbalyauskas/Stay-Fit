@@ -1,8 +1,10 @@
 import { ArrowLeft, FileText, Shield } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AboutSettings() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   return (

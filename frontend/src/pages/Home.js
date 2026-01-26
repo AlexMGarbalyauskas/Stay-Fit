@@ -5,8 +5,10 @@ import { User, Heart, MessageCircle, Share2, Bookmark, Clock, Dumbbell } from 'l
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { toggleLike, toggleSave } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Home({ onLogout, isAuthenticated }) {
+  const { t } = useLanguage();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [commentsForPost, setCommentsForPost] = useState(null);
@@ -146,8 +148,8 @@ export default function Home({ onLogout, isAuthenticated }) {
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <Dumbbell className="w-12 h-12 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to StayFit</h1>
-              <p className="text-gray-600 text-lg px-4">Join our fitness community to share workouts, connect with friends, and achieve your goals together.</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('welcomeToStayFit')}</h1>
+              <p className="text-gray-600 text-lg px-4">{t('joinFitnessCommumity')}</p>
             </div>
             
             <div className="flex flex-col gap-4 mt-12">
@@ -155,18 +157,18 @@ export default function Home({ onLogout, isAuthenticated }) {
                 onClick={() => navigate('/login')}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                Go to Login
+                {t('goToLogin')}
               </button>
               <button
                 onClick={() => navigate('/register')}
                 className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
               >
-                Create an Account
+                {t('createAnAccount')}
               </button>
             </div>
 
             <p className="text-xs text-gray-500 mt-8">
-              By continuing, you agree to our Terms of Service and Privacy Policy
+              {t('byJoining')}
             </p>
           </div>
         </div>
@@ -176,7 +178,7 @@ export default function Home({ onLogout, isAuthenticated }) {
   }
 
   // Now check if user is loaded
-  if (!user) return <p className="text-center mt-20 text-gray-500">Loading user…</p>;
+  if (!user) return <p className="text-center mt-20 text-gray-500">{t('loadingUser')}</p>;
 
   return (
     <>
@@ -193,13 +195,13 @@ export default function Home({ onLogout, isAuthenticated }) {
                     <Dumbbell className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide opacity-90">Next Workout</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide opacity-90">{t('nextWorkout')}</p>
                     <p className="text-lg font-bold">{todayWorkout.workout}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-medium opacity-90 flex items-center gap-1 justify-end">
-                    <Clock className="h-3 w-3" /> Time Until Reminder
+                    <p className="text-xs uppercase tracking-wide opacity-90 flex items-center gap-1 justify-end">
+                      <Clock className="h-3 w-3" /> {t('timeUntilReminder')}
                   </p>
                   <p className="text-3xl font-bold tabular-nums">{countdown}</p>
                 </div>
@@ -220,8 +222,8 @@ export default function Home({ onLogout, isAuthenticated }) {
                 )}
               </div>
               <div>
-                <h2 className="font-semibold text-lg">Welcome, {user.nickname || user.username}</h2>
-                <p className="text-sm text-gray-600">Share a 30-60s video with your friends</p>
+                <h2 className="font-semibold text-lg">{t('welcome')}, {user.nickname || user.username}</h2>
+                <p className="text-sm text-gray-600">{t('shareVideo')}</p>
               </div>
             </div>
           </div>
@@ -229,7 +231,7 @@ export default function Home({ onLogout, isAuthenticated }) {
           {/* Feed */}
           <div className="mt-6 space-y-6">
             {posts.length === 0 && (
-              <div className="bg-white rounded p-6 text-center text-gray-500">No posts yet — be the first!</div>
+              <div className="bg-white rounded p-6 text-center text-gray-500">{t('beTheFirst')}</div>
             )}
 
             {posts.map(post => (
@@ -266,7 +268,7 @@ export default function Home({ onLogout, isAuthenticated }) {
                     <Heart className="w-4 h-4" /> {post.likes_count || 0}
                   </button>
 
-                  <button onClick={() => navigate(`/posts/${post.id}/comments`)} className="flex items-center gap-1 text-sm text-gray-600"><MessageCircle className="w-4 h-4" /> {post.comments_count || 0} Comments</button>
+                  <button onClick={() => navigate(`/posts/${post.id}/comments`)} className="flex items-center gap-1 text-sm text-gray-600"><MessageCircle className="w-4 h-4" /> {post.comments_count || 0} {t('comments')}</button>
 
                   <button onClick={() => { navigator.clipboard.writeText(window.location.href + `#post-${post.id}`); alert('Link copied'); }} className="flex items-center gap-1 text-sm text-gray-600"><Share2 className="w-4 h-4" /> Share</button>
 

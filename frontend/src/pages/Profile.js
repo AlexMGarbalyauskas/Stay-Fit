@@ -5,8 +5,10 @@ import Navbar from '../components/Navbar';
 import ProfileHeader from '../components/ProfileHeader';
 import axios from 'axios';
 import { getMyPosts, getSavedPosts, toggleLike, toggleSave, updatePost, deletePost } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Profile() {
+  const { t } = useLanguage();
   const [user, setUser] = useState(null);
   const [friendsCount, setFriendsCount] = useState(0);
   const [posts, setPosts] = useState([]);
@@ -23,6 +25,8 @@ export default function Profile() {
   const [nicknameEditing, setNicknameEditing] = useState(false);
   const [nicknameInput, setNicknameInput] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
+  const [showShareNotification, setShowShareNotification] = useState(false);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
@@ -121,7 +125,8 @@ export default function Profile() {
       });
       setUser(prev => ({ ...prev, profile_picture: res.data.profile_picture }));
       setSelectedFile(null);
-      alert('Profile picture updated');
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
     } catch (err) {
       console.error(err);
       alert('Failed to upload profile picture');
@@ -289,11 +294,11 @@ export default function Profile() {
               <div className="flex gap-6 mb-4 text-sm">
                 <div>
                   <span className="font-semibold">{posts.length}</span>
-                  <span className="text-gray-500"> posts</span>
+                  <span className="text-gray-500"> {t('posts')}</span>
                 </div>
                 <div>
                   <span className="font-semibold">{friendsCount}</span>
-                  <span className="text-gray-500"> friends</span>
+                  <span className="text-gray-500"> {t('friends_count')}</span>
                 </div>
               </div>
 
@@ -302,17 +307,18 @@ export default function Profile() {
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
-                    alert('Profile link copied!');
+                    setShowShareNotification(true);
+                    setTimeout(() => setShowShareNotification(false), 3000);
                   }}
                   className="flex-1 px-4 py-2 bg-gray-100 rounded font-semibold text-sm hover:bg-gray-200 transition flex items-center justify-center gap-2"
                 >
-                  <Share2 className="w-4 h-4" /> Share
+                  <Share2 className="w-4 h-4" /> {t('share')}
                 </button>
                 <button
                   onClick={() => navigate('/saved-posts')}
                   className="flex-1 px-4 py-2 bg-blue-500 text-white rounded font-semibold text-sm hover:bg-blue-600 transition flex items-center justify-center gap-2"
                 >
-                  <Bookmark className="w-4 h-4" /> Saved
+                  <Bookmark className="w-4 h-4" /> {t('saved')}
                 </button>
               </div>
             </div>
@@ -322,20 +328,20 @@ export default function Profile() {
           <div className="mt-8">
             <div className="flex justify-between items-center border-t py-4">
               <h2 className="font-semibold text-sm uppercase tracking-wider">
-                {showSaved ? 'Saved Posts' : 'Posts'}
+                {showSaved ? t('savedPosts') : t('posts')}
               </h2>
               <button
                 onClick={() => setShowSaved(!showSaved)}
                 className="text-blue-500 text-sm font-semibold hover:text-blue-600"
               >
-                {showSaved ? 'View Posts' : 'View Saved'}
+                {showSaved ? t('viewPosts') : t('viewSaved')}
               </button>
             </div>
 
             <div className="grid grid-cols-3 gap-1 mt-4">
               {displayPosts.length === 0 ? (
                 <div className="col-span-3 text-center text-gray-500 py-8">
-                  {showSaved ? 'No saved posts yet.' : 'No posts yet.'}
+                  {showSaved ? t('noSavedPosts') : t('noPostsYet')}
                 </div>
               ) : (
                 displayPosts.map((p) => (
@@ -555,6 +561,39 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {/* Success Notification */}
+      {showNotification && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slideDown">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <Check className="w-5 h-5" />
+            <span className="font-semibold">{t('profilePictureUpdated')}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Share Notification */}
+      {showShareNotification && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slideDown">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <Check className="w-5 h-5" />
+            <span className="font-semibold">{t('profileLinkCopied')}</span>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideDown {
+          0% { transform: translate(-50%, -100%); opacity: 0; }
+          10% { transform: translate(-50%, 0); opacity: 1; }
+          90% { transform: translate(-50%, 0); opacity: 1; }
+          100% { transform: translate(-50%, 20px); opacity: 0; }
+        }
+        .animate-slideDown {
+          animation: slideDown 3s ease-out forwards;
+        }
+      `}</style>
+
       <Navbar />
     </>
   );

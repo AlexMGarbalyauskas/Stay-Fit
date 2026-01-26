@@ -29,6 +29,7 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import DebugOverlay from './components/DebugOverlay';
 import { WorkoutReminderProvider, useWorkoutReminder } from './context/WorkoutReminderContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { io } from 'socket.io-client';
 import { API_BASE } from './api';
 import { Dumbbell, X as Close } from 'lucide-react';
@@ -84,10 +85,11 @@ function App() {
 
   return (
     <Router>
-      <WorkoutReminderProvider>
-        {booting && <SplashLoader />}
-        <Routes>
-        <Route path="/" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
+      <LanguageProvider>
+        <WorkoutReminderProvider>
+          {booting && <SplashLoader />}
+          <Routes>
+          <Route path="/" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
         <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
@@ -131,6 +133,7 @@ function App() {
       {/* Global notification toast rendered inside Router so it can navigate */}
       <NotificationToast />
     </WorkoutReminderProvider>
+    </LanguageProvider>
     </Router>
   );
 

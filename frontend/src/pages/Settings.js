@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import { updateMe } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Settings() {
+  const { language, setLanguage: setGlobalLanguage, t } = useLanguage();
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState(true);
   const [privacy, setPrivacy] = useState('Public');
@@ -16,9 +18,17 @@ export default function Settings() {
   const [showTimezoneModal, setShowTimezoneModal] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [showShareNotification, setShowShareNotification] = useState(false);
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
+
+  const privacyLabel = (value) => {
+    if (value === 'Public') return t('public');
+    if (value === 'Friends Only') return t('friendsOnly');
+    if (value === 'Private') return t('private');
+    return value;
+  };
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
@@ -55,14 +65,14 @@ export default function Settings() {
         });
         setCurrentTime(formatter.format(now));
       } catch (error) {
-        setCurrentTime('Invalid timezone');
+        setCurrentTime(t('invalidTimezone'));
       }
     };
 
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, [timezone]);
+  }, [timezone, t]);
 
   const handleThemeToggle = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -75,18 +85,27 @@ export default function Settings() {
     }
   };
 
+  const handleLanguageChange = (newLanguage) => {
+    setGlobalLanguage(newLanguage);
+  };
+
   const handleLogout = () => {
+    const savedLanguage = localStorage.getItem('language');
+    const savedTheme = localStorage.getItem('theme');
     localStorage.clear();
+    if (savedLanguage) localStorage.setItem('language', savedLanguage);
+    if (savedTheme) localStorage.setItem('theme', savedTheme);
     window.location.href = '/';
   };
 
   const handleShareAccount = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert('Profile link copied!');
+    setShowShareNotification(true);
+    setTimeout(() => setShowShareNotification(false), 3000);
   };
 
   const handleRateApp = () => {
-    alert('Thanks for rating our app!');
+    alert(t('rateApp'));
   };
 
   const handlePrivacyChange = (newPrivacy) => {
@@ -103,7 +122,7 @@ export default function Settings() {
       setPendingPrivacy(null);
     } catch (error) {
       console.error('Error updating privacy:', error);
-      alert('Failed to update privacy setting');
+      alert(t('failedToUpdatePrivacy'));
     }
   };
 
@@ -129,7 +148,7 @@ export default function Settings() {
       setPendingTimezone(null);
     } catch (error) {
       console.error('Error updating timezone:', error);
-      alert('Failed to update timezone');
+      alert(t('failedToUpdateTimezone'));
     }
   };
 
@@ -146,7 +165,7 @@ export default function Settings() {
       setUser(response.data.user);
     } catch (error) {
       console.error('Error updating notifications:', error);
-      alert('Failed to update notification settings');
+      alert(t('failedToUpdateNotifications'));
     }
   };
 
@@ -174,7 +193,7 @@ export default function Settings() {
     { label: 'Pacific/Auckland (New Zealand)', value: 'Pacific/Auckland' },
   ];
 
-  if (!user) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+  if (!user) return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -185,7 +204,7 @@ export default function Settings() {
           onClick={() => navigate('/profile')}
           className="flex items-center gap-2 text-gray-700 mb-4 hover:text-gray-900"
         >
-          <ArrowLeft size={20} /> Back to Profile
+          <ArrowLeft size={20} /> {t('backToProfile')}
         </button>
 
         {/* Profile Info */}
@@ -209,13 +228,13 @@ export default function Settings() {
 
         {/* Features Section */}
         <div className="mt-6 bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-gray-700 mb-2">Features</h3>
+          <h3 className="font-semibold text-gray-700 mb-2">{t('features')}</h3>
           
           {/* Theme Toggle */}
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
-              <span className="text-gray-700">{theme === 'light' ? 'Light' : 'Dark'} Mode</span>
+              <span className="text-gray-700">{theme === 'light' ? t('lightMode') : t('darkMode')}</span>
             </div>
             <button
               onClick={handleThemeToggle}
@@ -225,17 +244,35 @@ export default function Settings() {
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
           </div>
+
+          {/* Language */}
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              <Languages size={20} />
+              <span className="text-gray-700">{t('language')}</span>
+            </div>
+            <select
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="border rounded px-3 py-1 text-sm bg-white text-gray-700 hover:bg-gray-50 transition"
+            >
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="it">Italiano</option>
+            </select>
+          </div>
         </div>
 
         {/* Settings Section */}
         <div className="mt-4 bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-gray-700 mb-2">Settings</h3>
+          <h3 className="font-semibold text-gray-700 mb-2">{t('settings')}</h3>
 
           {/* Notifications */}
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               <Bell size={20} />
-              <span className="text-gray-700">Notifications</span>
+              <span className="text-gray-700">{t('notificationSettings')}</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -252,16 +289,16 @@ export default function Settings() {
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               <Lock size={20} />
-              <span className="text-gray-700">Privacy</span>
+              <span className="text-gray-700">{t('privacy')}</span>
             </div>
             <select
               value={privacy}
               onChange={e => handlePrivacyChange(e.target.value)}
               className="border rounded px-2 py-1"
             >
-              <option>Public</option>
-              <option>Friends Only</option>
-              <option>Private</option>
+              <option value="Public">{t('public')}</option>
+              <option value="Friends Only">{t('friendsOnly')}</option>
+              <option value="Private">{t('private')}</option>
             </select>
           </div>
 
@@ -272,7 +309,7 @@ export default function Settings() {
           >
             <div className="flex items-center gap-2">
               <Globe size={20} />
-              <span className="text-gray-700">Timezone</span>
+              <span className="text-gray-700">{t('timezone')}</span>
             </div>
             <div className="text-right">
               <div className="text-sm font-semibold text-gray-800">
@@ -295,30 +332,30 @@ export default function Settings() {
             onClick={() => navigate('/settings/other')}
             className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
           >
-            <Wrench size={20} className="text-gray-900" /> Other
+            <Wrench size={20} className="text-gray-900" /> {t('other')}
           </button>
         </div>
 
         {/* About Section */}
         <div className="mt-4 bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-gray-700 mb-2">About</h3>
+          <h3 className="font-semibold text-gray-700 mb-2">{t('about')}</h3>
           <button
             onClick={() => navigate('/settings/about')}
             className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
           >
-            <Info size={20} className="text-gray-900" /> About
+            <Info size={20} className="text-gray-900" /> {t('about')}
           </button>
           <button
             onClick={() => navigate('/share')}
-            className="flex items-center gap-2 py-2 w-full text-left text-gray-700 hover:bg-gray-100 rounded"
+            className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
           >
-            <Share2 size={20} /> Share App
+            <Share2 size={20} className="text-gray-900" /> {t('shareApp')}
           </button>
           <button
             onClick={handleRateApp}
-            className="flex items-center gap-2 py-2 w-full text-left text-gray-700 hover:bg-gray-100 rounded"
+            className="flex items-center gap-2 py-2 w-full text-left text-gray-900 hover:bg-gray-100 rounded"
           >
-            <Star size={20} /> Rate App
+            <Star size={20} className="text-gray-900" /> {t('rateApp')}
           </button>
         </div>
 
@@ -328,7 +365,7 @@ export default function Settings() {
             onClick={handleLogout}
             className="flex items-center justify-center gap-2 w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
           >
-            <LogOut size={20} /> Logout
+            <LogOut size={20} /> {t('logout')}
           </button>
         </div>
 
@@ -350,22 +387,22 @@ export default function Settings() {
           >
             <div className="text-center mb-4">
               <Lock className="w-12 h-12 mx-auto mb-3 text-blue-500" />
-              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-gray-50' : 'text-gray-900'}`}>Confirm Privacy Change</h3>
+              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-gray-50' : 'text-gray-900'}`}>{t('confirmPrivacyChange')}</h3>
               <p className={isDark ? 'text-gray-300 mb-1' : 'text-gray-700 mb-1'}>
-                You are changing your privacy setting to:
+                {t('changingPrivacyTo')}
               </p>
               <p className={`text-lg font-semibold mb-3 ${isDark ? 'text-gray-50' : 'text-gray-900'}`}>
-                {pendingPrivacy}
+                {privacyLabel(pendingPrivacy)}
               </p>
               <div className={`text-sm p-3 rounded mb-4 text-left ${isDark ? 'text-gray-200 bg-gray-800' : 'text-gray-800 bg-gray-100'}`}>
                 {pendingPrivacy === 'Public' && (
-                  <p>✓ Everyone can see your profile and posts</p>
+                  <p>{t('publicDesc')}</p>
                 )}
                 {pendingPrivacy === 'Friends Only' && (
-                  <p>✓ Only your friends can see your profile and posts</p>
+                  <p>{t('friendsOnlyDesc')}</p>
                 )}
                 {pendingPrivacy === 'Private' && (
-                  <p>✓ Only you can see your profile and posts</p>
+                  <p>{t('privateDesc')}</p>
                 )}
               </div>
             </div>
@@ -375,14 +412,14 @@ export default function Settings() {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition"
               >
                 <X size={18} />
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={confirmPrivacyChange}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
               >
                 <Check size={18} />
-                Confirm
+                {t('confirm')}firm')}
               </button>
             </div>
           </div>
@@ -405,12 +442,12 @@ export default function Settings() {
           >
             <div className="text-center mb-4">
               <Globe className="w-12 h-12 mx-auto mb-3 text-blue-500" />
-              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-gray-50' : 'text-gray-900'}`}>Change Timezone</h3>
+              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-gray-50' : 'text-gray-900'}`}>{t('changeTimezone')}</h3>
               <p className={`text-sm mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                Current time: <span className={isDark ? 'font-semibold text-gray-100' : 'font-semibold text-gray-900'}>{currentTime}</span>
+                {t('currentTime')}: <span className={isDark ? 'font-semibold text-gray-100' : 'font-semibold text-gray-900'}>{currentTime}</span>
               </p>
               <p className={isDark ? 'text-xs text-gray-400' : 'text-xs text-gray-700'}>
-                Select your timezone or update your location in Profile for auto-detection
+                {t('selectTimezone')}
               </p>
             </div>
             
@@ -446,7 +483,7 @@ export default function Settings() {
                 }`}
               >
                 <X size={18} />
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={confirmTimezoneChange}
@@ -460,12 +497,34 @@ export default function Settings() {
                 }`}
               >
                 <Check size={18} />
-                Confirm
+                {t('confirm')}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Share Notification */}
+      {showShareNotification && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slideDown">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <Check className="w-5 h-5" />
+            <span className="font-semibold">{t('profileLinkCopied')}</span>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideDown {
+          0% { transform: translate(-50%, -100%); opacity: 0; }
+          10% { transform: translate(-50%, 0); opacity: 1; }
+          90% { transform: translate(-50%, 0); opacity: 1; }
+          100% { transform: translate(-50%, 20px); opacity: 0; }
+        }
+        .animate-slideDown {
+          animation: slideDown 3s ease-out forwards;
+        }
+      `}</style>
 
       <Navbar />
 

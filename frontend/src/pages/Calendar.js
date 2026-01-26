@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { startReminderService } from '../utils/workoutReminders';
 import { useWorkoutReminder } from '../context/WorkoutReminderContext';
-
-const workoutOptions = ['Rest', 'Full Body', 'Legs', 'Chest', 'Back', 'Arms', 'Shoulders', 'Cardio', 'Core'];
+import { useLanguage } from '../context/LanguageContext';
 
 const pad = (n) => String(n).padStart(2, '0');
 const dateKey = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
 
 export default function CalendarPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { countdown } = useWorkoutReminder();
   const today = useMemo(() => new Date(), []);
@@ -129,7 +129,7 @@ export default function CalendarPage() {
   };
 
   const cancelPlan = async () => {
-    if (!window.confirm('Are you sure you want to cancel this workout plan?')) {
+    if (!window.confirm(t('cancelPlanConfirm'))) {
       return;
     }
 
@@ -191,10 +191,27 @@ export default function CalendarPage() {
     });
   };
 
+  const workoutOptions = useMemo(() => ([
+    { value: 'Rest', label: t('workoutRest') },
+    { value: 'Full Body', label: t('workoutFullBody') },
+    { value: 'Legs', label: t('workoutLegs') },
+    { value: 'Chest', label: t('workoutChest') },
+    { value: 'Back', label: t('workoutBack') },
+    { value: 'Arms', label: t('workoutArms') },
+    { value: 'Shoulders', label: t('workoutShoulders') },
+    { value: 'Cardio', label: t('workoutCardio') },
+    { value: 'Core', label: t('workoutCore') }
+  ]), [t]);
+
   const months = useMemo(() => [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ], []);
+    t('monthJanuary'), t('monthFebruary'), t('monthMarch'), t('monthApril'), t('monthMay'), t('monthJune'),
+    t('monthJuly'), t('monthAugust'), t('monthSeptember'), t('monthOctober'), t('monthNovember'), t('monthDecember')
+  ], [t]);
+
+  const dayLabels = useMemo(() => [
+    t('daySunShort'), t('dayMonShort'), t('dayTueShort'), t('dayWedShort'),
+    t('dayThuShort'), t('dayFriShort'), t('daySatShort')
+  ], [t]);
 
   const weeksForMonth = (y, m) => {
     const firstDay = new Date(y, m, 1).getDay();
@@ -242,11 +259,11 @@ export default function CalendarPage() {
           <div className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide">Next Workout</p>
-                <p className="text-lg font-bold">{plans[dateKey(today.getFullYear(), today.getMonth(), today.getDate())]?.workout || 'Workout'}</p>
+                <p className="text-sm font-semibold uppercase tracking-wide">{t('nextWorkout')}</p>
+                <p className="text-lg font-bold">{plans[dateKey(today.getFullYear(), today.getMonth(), today.getDate())]?.workout || t('workout')}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs font-medium">Time Until Reminder</p>
+                <p className="text-xs font-medium">{t('timeUntilReminder')}</p>
                 <p className="text-3xl font-bold tabular-nums">{countdown}</p>
               </div>
             </div>
@@ -258,13 +275,13 @@ export default function CalendarPage() {
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-800"
           >
-            <ArrowLeft size={16} /> Back
+            <ArrowLeft size={16} /> {t('back')}
           </button>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => changeYear(-1)} 
               className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" 
-              aria-label="Previous year"
+              aria-label={t('previousYear')}
               disabled={year <= minYear}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -273,7 +290,7 @@ export default function CalendarPage() {
             <button 
               onClick={() => changeYear(1)} 
               className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" 
-              aria-label="Next year"
+              aria-label={t('nextYear')}
               disabled={year >= maxYear}
             >
               <ChevronRight className="h-4 w-4" />
@@ -288,7 +305,7 @@ export default function CalendarPage() {
                 <span className="text-sm font-semibold text-gray-800">{month}</span>
               </div>
               <div className="grid grid-cols-7 text-[11px] text-gray-400 px-3 pt-2">
-                {['S','M','T','W','T','F','S'].map((d, i) => (
+                {dayLabels.map((d, i) => (
                   <div key={`${d}-${i}`} className="text-center pb-1">{d}</div>
                 ))}
               </div>
@@ -323,11 +340,11 @@ export default function CalendarPage() {
         <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">Selected Day</p>
+              <p className="text-xs uppercase tracking-wide text-gray-500">{t('selectedDay')}</p>
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <Dumbbell className="h-5 w-5 text-blue-600" /> {selected.key}
               </h2>
-              <p className="text-sm text-gray-500">Assign a workout, time, and invite friends.</p>
+              <p className="text-sm text-gray-500">{t('assignWorkoutHelp')}</p>
             </div>
             <div className="flex items-center gap-2">
               {plans[selected.key] && (
@@ -335,57 +352,57 @@ export default function CalendarPage() {
                   onClick={cancelPlan}
                   className="inline-flex items-center gap-2 rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-600"
                 >
-                  <Close size={16} /> Cancel Plan
+                  <Close size={16} /> {t('cancelPlan')}
                 </button>
               )}
               <button
                 onClick={savePlan}
                 className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700"
               >
-                <Save size={16} /> {saved ? 'Saved' : 'Save Plan'}
+                <Save size={16} /> {saved ? t('saved') : t('savePlan')}
               </button>
             </div>
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-semibold text-gray-800">Workout</label>
+              <label className="text-sm font-semibold text-gray-800">{t('workout')}</label>
               <select
                 value={workout}
                 onChange={(e) => { setWorkout(e.target.value); setSaved(false); }}
                 className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none"
               >
-                {workoutOptions.map(opt => <option key={opt}>{opt}</option>)}
+                {workoutOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
             
             <div>
               <label className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                <Clock size={14} /> Reminder Time
+                <Clock size={14} /> {t('reminderTimeLabel')}
               </label>
               <input
                 type="time"
                 value={reminderTime}
                 onChange={(e) => { setReminderTime(e.target.value); setSaved(false); }}
                 className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none"
-                placeholder="Select time"
+                placeholder={t('selectTime')}
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="text-sm font-semibold text-gray-800">Notes</label>
+              <label className="text-sm font-semibold text-gray-800">{t('notes')}</label>
               <textarea
                 value={note}
                 onChange={(e) => { setNote(e.target.value); setSaved(false); }}
                 rows={3}
                 className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none"
-                placeholder="Add reminders, reps, or focus areas"
+                placeholder={t('notesPlaceholder')}
               />
             </div>
 
             <div className="md:col-span-2">
               <label className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-2">
-                <Users size={14} /> Workout Buddies
+                <Users size={14} /> {t('workoutBuddies')}
               </label>
               <button
                 onClick={openBuddyModal}
@@ -393,8 +410,8 @@ export default function CalendarPage() {
               >
                 <Users size={16} />
                 {selectedBuddies.length > 0 
-                  ? `${selectedBuddies.length} friend${selectedBuddies.length > 1 ? 's' : ''} invited` 
-                  : 'Invite friends to workout together'}
+                  ? `${selectedBuddies.length} ${selectedBuddies.length > 1 ? t('friendsInvited_plural') : t('friendsInvited')}` 
+                  : t('inviteFriendsWorkout')}
               </button>
               {selectedBuddies.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -408,13 +425,13 @@ export default function CalendarPage() {
               {reminderTime && selectedBuddies.length > 0 && (
                 <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
                   <Bell size={12} /> 
-                  Notification will be sent to you and your buddies at {reminderTime}
+                  {t('notificationSentAt')} {reminderTime}
                 </p>
               )}
             </div>
           </div>
 
-          {saved && <p className="mt-3 text-sm font-semibold text-green-600">Saved locally.</p>}
+          {saved && <p className="mt-3 text-sm font-semibold text-green-600">{t('savedLocally')}</p>}
         </div>
       </div>
 
@@ -425,11 +442,11 @@ export default function CalendarPage() {
             <div className="mb-4">
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <Users className="w-6 h-6 text-blue-500" />
-                Invite Workout Buddies
+                {t('inviteWorkoutBuddies')}
               </h3>
               <p className="text-sm text-gray-600 mt-1">
-                Select friends to join your {workout} workout on {selected.key}
-                {reminderTime && ` at ${reminderTime}`}
+                {t('selectFriendsToJoin')} {workout} {t('workout').toLowerCase()} {t('on')} {selected.key}
+                {reminderTime && ` ${t('at')} ${reminderTime}`}
               </p>
             </div>
 
@@ -437,12 +454,12 @@ export default function CalendarPage() {
               {availableBuddies.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No friends available</p>
+                  <p>{t('noFriendsAvailable')}</p>
                   <button
                     onClick={() => navigate('/find-friends')}
                     className="mt-2 text-sm text-blue-600 hover:underline"
                   >
-                    Find friends
+                    {t('findFriends')}
                   </button>
                 </div>
               ) : (
@@ -486,7 +503,7 @@ export default function CalendarPage() {
                 onClick={() => setShowBuddyModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
               >
-                Cancel
+                  {t('cancel')}
               </button>
               <button
                 onClick={() => {
@@ -495,7 +512,7 @@ export default function CalendarPage() {
                 }}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
-                Done ({selectedBuddies.length})
+                  {t('done')} ({selectedBuddies.length})
               </button>
             </div>
           </div>

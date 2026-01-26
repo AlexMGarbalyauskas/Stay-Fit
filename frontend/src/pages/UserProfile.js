@@ -4,8 +4,10 @@ import axios from 'axios';
 import { getUser, getFriendStatus, sendFriendRequest, unfriend } from '../api';
 import { User, UserX, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function UserProfile() {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -60,15 +62,15 @@ export default function UserProfile() {
 
   const handleSendRequest = async () => {
     try { await sendFriendRequest(id); setStatus('sent'); }
-    catch (err) { console.error(err); alert('Failed to send friend request'); }
+    catch (err) { console.error(err); alert(t('friendRequestFailed')); }
   };
 
   const handleUnfriend = async () => {
     try { await unfriend(id); setStatus('none'); }
-    catch (err) { console.error(err); alert('Failed to unfriend'); }
+    catch (err) { console.error(err); alert(t('unfriendFailed')); }
   };
 
-  if (!user) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+  if (!user) return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
 
   return (
     <>
@@ -79,10 +81,10 @@ export default function UserProfile() {
           <button
             onClick={() => navigate(-1)}
             className="mb-6 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-gray-700"
-            title="Go back"
+            title={t('back')}
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Go back</span>
+            <span className="text-sm font-medium">{t('back')}</span>
           </button>
 
           {/* Profile Header Section */}
@@ -111,31 +113,31 @@ export default function UserProfile() {
 
               {/* Nickname */}
               <div className="mb-4">
-                <p className="text-xl font-light text-gray-700">{user.nickname || 'No nickname'}</p>
+                <p className="text-xl font-light text-gray-700">{user.nickname || t('noNickname')}</p>
               </div>
 
               {/* Bio */}
               <div className="mb-3">
-                <p className="text-sm text-gray-700">{user.bio || 'No bio'}</p>
+                <p className="text-sm text-gray-700">{user.bio || t('noBio')}</p>
               </div>
 
               {/* Location */}
               <div className="mb-4">
-                <p className="text-sm text-gray-700">{user.location || 'No location'}</p>
+                <p className="text-sm text-gray-700">{user.location || t('noLocation')}</p>
               </div>
 
               {/* Stats */}
               <div className="flex gap-6 mb-4 text-sm">
                 <div>
                   <span className="font-semibold">{posts.length}</span>
-                  <span className="text-gray-500"> posts</span>
+                  <span className="text-gray-500"> {t('posts')}</span>
                 </div>
                 <button
                   onClick={() => navigate(`/user/${id}/friends`)}
                   className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer"
                 >
                   <span className="font-semibold">{friendsCount}</span>
-                  <span className="text-gray-500"> friends</span>
+                  <span className="text-gray-500"> {t('friends_count')}</span>
                 </button>
               </div>
 
@@ -144,18 +146,18 @@ export default function UserProfile() {
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
-                    alert('Profile link copied!');
+                    alert(t('profileLinkCopied'));
                   }}
                   className="flex-1 px-4 py-2 bg-gray-100 rounded font-semibold text-sm hover:bg-gray-200 transition flex items-center justify-center gap-2"
                 >
-                  <Share2 className="w-4 h-4" /> Share
+                  <Share2 className="w-4 h-4" /> {t('share')}
                 </button>
                 {status === 'none' && (
                   <button
                     onClick={handleSendRequest}
                     className="flex-1 px-4 py-2 bg-blue-500 text-white rounded font-semibold text-sm hover:bg-blue-600 transition"
                   >
-                    Add Friend
+                    {t('addFriend')}
                   </button>
                 )}
                 {status === 'sent' && (
@@ -163,7 +165,7 @@ export default function UserProfile() {
                     disabled
                     className="flex-1 px-4 py-2 bg-gray-400 text-white rounded font-semibold text-sm cursor-not-allowed"
                   >
-                    Request Sent
+                    {t('requestSent')}
                   </button>
                 )}
                 {status === 'friends' && (
@@ -172,7 +174,7 @@ export default function UserProfile() {
                     className="flex-1 px-4 py-2 bg-red-500 text-white rounded font-semibold text-sm hover:bg-red-600 transition flex items-center justify-center gap-2"
                   >
                     <UserX size={16} />
-                    Unfriend
+                    {t('unfriend')}
                   </button>
                 )}
               </div>
@@ -185,7 +187,7 @@ export default function UserProfile() {
               <h2 className="font-semibold text-sm uppercase tracking-wider border-t py-4">Posts</h2>
               <div className="grid grid-cols-3 gap-1 mt-4">
                 {posts.length === 0 ? (
-                  <div className="col-span-3 text-center text-gray-500 py-8">No posts yet.</div>
+                  <div className="col-span-3 text-center text-gray-500 py-8">{t('noPostsYet')}</div>
                 ) : (
                   posts.map((p) => (
                     <div
@@ -234,7 +236,7 @@ export default function UserProfile() {
 
           {user.privacy !== 'Public' && (
             <div className="mt-8 text-center py-8 text-gray-500">
-              <p>This user's posts are {user.privacy === 'Private' ? 'private' : 'friends only'}.</p>
+              <p>{user.privacy === 'Private' ? t('userPostsPrivate') : t('userPostsFriendsOnly')}</p>
             </div>
           )}
         </div>

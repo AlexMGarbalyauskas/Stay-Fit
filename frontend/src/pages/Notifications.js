@@ -6,8 +6,10 @@ import { API_BASE } from '../api';
 import { ArrowLeft, Users, UserX, MessageSquare, BellRing, Check, X as Close, Trash2, Bell, Dumbbell } from 'lucide-react';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Notifications({ onFriendUpdate }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const isAuthenticated = !!token;
@@ -20,11 +22,11 @@ export default function Notifications({ onFriendUpdate }) {
   const workoutTypes = useMemo(() => ['workout_invite', 'workout_canceled', 'workout_opt_out', 'workout_cancelled'], []);
 
   const tabs = useMemo(() => ([
-    { key: 'requests', label: 'Friend Requests', icon: Users, hint: 'Approve or decline new connections', tone: 'blue' },
-    { key: 'workout_invite', label: 'Workout Invites', icon: BellRing, hint: 'Accept or decline workout plans', tone: 'purple' },
-    { key: 'unfriended', label: 'Unfriended', icon: UserX, hint: 'People who removed you', tone: 'amber' },
-    { key: 'message', label: 'Messages', icon: MessageSquare, hint: 'Recent message pings', tone: 'emerald' },
-  ]), []);
+    { key: 'requests', label: t('friendRequests'), icon: Users, hint: t('approveDeclineNewConnections'), tone: 'blue' },
+    { key: 'workout_invite', label: t('workoutInvites'), icon: BellRing, hint: t('acceptDeclineWorkoutPlans'), tone: 'purple' },
+    { key: 'unfriended', label: t('unfriended'), icon: UserX, hint: t('peopleWhoRemovedYou'), tone: 'amber' },
+    { key: 'message', label: t('messageNotifications'), icon: MessageSquare, hint: t('recentMessagePings'), tone: 'emerald' },
+  ]), [t]);
 
   const toneClasses = {
     blue: {
@@ -75,7 +77,7 @@ export default function Notifications({ onFriendUpdate }) {
       return notifications;
     } catch (err) {
       console.error('Failed to load notifications', err);
-      setError(err?.response?.status === 404 ? 'Notifications service not found (restart backend)' : 'Failed to load notifications');
+      setError(err?.response?.status === 404 ? t('notificationsServiceMissing') : t('failedToLoad'));
       setItems([]);
       return [];
     } finally {
@@ -199,8 +201,8 @@ export default function Notifications({ onFriendUpdate }) {
               <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <Bell className="w-12 h-12 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">Notifications</h1>
-              <p className="text-gray-600 text-lg px-4">Please login to view your notifications, friend requests, and workout invites.</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('notifications')}</h1>
+              <p className="text-gray-600 text-lg px-4">{t('loginToViewNotifications')}</p>
             </div>
             
             <div className="flex flex-col gap-4 mt-12">
@@ -208,18 +210,18 @@ export default function Notifications({ onFriendUpdate }) {
                 onClick={() => navigate('/login')}
                 className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                Go to Login
+                {t('goToLogin')}
               </button>
               <button
                 onClick={() => navigate('/register')}
                 className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
               >
-                Create an Account
+                {t('createAnAccount')}
               </button>
             </div>
 
             <p className="text-xs text-gray-500 mt-8">
-              By continuing, you agree to our Terms of Service and Privacy Policy
+              {t('byJoining')}
             </p>
           </div>
         </div>
@@ -276,20 +278,20 @@ export default function Notifications({ onFriendUpdate }) {
         <div key={r.id} className={`flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 ${toneClasses.blue.glow}`}>
           <div>
             <p className="font-semibold text-slate-900">@{r.username}</p>
-            <p className="text-sm text-slate-500">sent you a friend request</p>
+            <p className="text-sm text-slate-500">{t('sentYouFriendRequest')}</p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => handleAccept(r.id, r.sender_id)}
               className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${toneClasses.emerald.button}`}
             >
-              <Check className="h-4 w-4" /> Accept
+              <Check className="h-4 w-4" /> {t('accept')}
             </button>
             <button
               onClick={() => handleReject(r.id)}
               className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${toneClasses.amber.button}`}
             >
-              <Close className="h-4 w-4" /> Reject
+              <Close className="h-4 w-4" /> {t('reject')}
             </button>
           </div>
         </div>
@@ -304,12 +306,12 @@ export default function Notifications({ onFriendUpdate }) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-semibold text-slate-900">@{n.data?.fromUsername || ('user #' + n.data?.byUserId)}</p>
-              <p className="text-sm text-slate-600">unfriended you</p>
+              <p className="text-sm text-slate-600">{t('unfriendedYou')}</p>
               <p className="text-xs text-slate-500">{new Date(n.created_at).toLocaleString()}</p>
             </div>
             <div className="flex items-center gap-2">
               {n.read === 0 && <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-700">NEW</span>}
-              <button onClick={() => { handleMarkRead(n.id); }} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200">Mark Read</button>
+              <button onClick={() => { handleMarkRead(n.id); }} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200">{t('markRead')}</button>
             </div>
           </div>
         </div>
@@ -324,18 +326,18 @@ export default function Notifications({ onFriendUpdate }) {
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <p className="font-semibold text-slate-900">@{n.data?.fromUsername || ('user #' + n.data?.fromUserId)}</p>
-              <p className="text-sm text-slate-600">{n.data?.content || 'You got a new message'}</p>
+              <p className="text-sm text-slate-600">{n.data?.content || t('newMessage')}</p>
               <p className="text-xs text-slate-500">{new Date(n.created_at).toLocaleString()}</p>
             </div>
             <div className="flex items-center gap-2">
               {n.read === 0 && <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold text-emerald-700">NEW</span>}
               <button onClick={() => { handleMarkRead(n.id); handleGoToChat(n.data?.fromUserId); }} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${toneClasses.emerald.button}`}>
-                Open Chat
+                {t('openChat')}
               </button>
               <button
                 onClick={() => handleDelete(n.id)}
                 className="rounded-full bg-red-50 hover:bg-red-100 p-2 text-red-600 transition"
-                title="Delete notification"
+                title={t('delete')}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -364,10 +366,10 @@ export default function Notifications({ onFriendUpdate }) {
           const isOptOut = n.type === 'workout_opt_out';
           const isCancelledByUser = n.type === 'workout_cancelled'; // User cancelled their own workout
           const label = (() => {
-            if (isCancelledByUser) return data.message || `You skipped your scheduled ${data.workoutName || 'workout'}`;
-            if (isCanceled) return `${data.creatorUsername || 'Your buddy'} canceled the workout.`;
-            if (isOptOut) return `${data.fromUsername || 'Your buddy'} opted out of the workout.`;
-            return `${data.creatorUsername || 'Unknown'} invited you to workout: ${data.workout || 'Workout'}`;
+            if (isCancelledByUser) return data.message || `${t('youSkipped')} ${data.workoutName || t('workout')}`;
+            if (isCanceled) return `${data.creatorUsername || t('yourBuddy')} ${t('workoutCanceled')}`;
+            if (isOptOut) return `${data.fromUsername || t('yourBuddy')} ${t('workoutOptedOut')}`;
+            return `${data.creatorUsername || t('yourBuddy')} ${t('workoutInvitedYou')} ${data.workout || t('workout')}`;
           })();
           
           return (
@@ -376,12 +378,12 @@ export default function Notifications({ onFriendUpdate }) {
                 <div className="flex-1">
                   {isCancelledByUser ? (
                     <>
-                      <p className="font-semibold text-slate-900">⏭️ Workout Skipped</p>
+                      <p className="font-semibold text-slate-900">⏭️ {t('workoutSkipped')}</p>
                       <p className="text-sm text-slate-600">{label}</p>
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-slate-900">@{data.creatorUsername || data.fromUsername || 'Unknown'}</p>
+                      <p className="font-semibold text-slate-900">@{data.creatorUsername || data.fromUsername || t('yourBuddy')}</p>
                       <p className="text-sm text-slate-600">{label}</p>
                     </>
                   )}
@@ -389,7 +391,7 @@ export default function Notifications({ onFriendUpdate }) {
                     {data.date && `📅 ${data.date}`} {data.time && `⏰ ${data.time}`}
                   </p>
                   {isOutdated && (
-                    <p className="text-xs text-amber-600 font-semibold mt-1">⚠️ Workout time has passed</p>
+                    <p className="text-xs text-amber-600 font-semibold mt-1">⚠️ {t('workoutTimeHasPassed')}</p>
                   )}
                   <p className="text-xs text-slate-400 mt-1">{new Date(n.created_at).toLocaleString()}</p>
                 </div>
@@ -400,7 +402,7 @@ export default function Notifications({ onFriendUpdate }) {
                       onClick={() => handleDelete(n.id)}
                       className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition bg-slate-200 text-slate-700 hover:bg-slate-300"
                     >
-                      <Trash2 className="h-3 w-3" /> Dismiss
+                      <Trash2 className="h-3 w-3" /> {t('dismiss')}
                     </button>
                   ) : (
                     <>
@@ -408,13 +410,13 @@ export default function Notifications({ onFriendUpdate }) {
                         onClick={() => handleAcceptWorkout(n.id, data.participantId, data)}
                         className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${toneClasses.emerald.button}`}
                       >
-                        <Check className="h-3 w-3" /> Accept
+                        <Check className="h-3 w-3" /> {t('accept')}
                       </button>
                       <button
                         onClick={() => handleDeclineWorkout(n.id, data.participantId)}
                         className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${toneClasses.amber.button}`}
                       >
-                        <Close className="h-3 w-3" /> Decline
+                        <Close className="h-3 w-3" /> {t('decline')}
                       </button>
                     </>
                   )}
@@ -432,7 +434,7 @@ export default function Notifications({ onFriendUpdate }) {
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-md shadow-slate-200 transition hover:bg-slate-50">
-            <ArrowLeft className="h-4 w-4" /> Back
+            <ArrowLeft className="h-4 w-4" /> {t('back')}
           </button>
           <div className="flex flex-wrap gap-2">
             {tabs.map(t => {
@@ -456,7 +458,7 @@ export default function Notifications({ onFriendUpdate }) {
         <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-wide text-slate-500">Stay Fit</p>
-            <h1 className="text-2xl font-bold text-slate-900">Notifications</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t('notifications')}</h1>
             <p className="text-sm text-slate-500">{tabs.find(t => t.key === tab)?.hint}</p>
           </div>
           <div className="flex gap-2">
@@ -464,7 +466,7 @@ export default function Notifications({ onFriendUpdate }) {
               onClick={() => markAllNotificationsRead().then(() => setItems(prev => prev.map(i => ({ ...i, read: 1 })))).catch(() => {})}
               className="rounded-full bg-white border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Mark all read
+              {t('markAllRead')}
             </button>
           </div>
         </div>
@@ -473,7 +475,7 @@ export default function Notifications({ onFriendUpdate }) {
         {!loading && error && (
           <p className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600">{error}</p>
         )}
-        {!loading && !error && items.length === 0 && renderEmptyState('All caught up', 'You have no notifications in this tab right now.')}
+        {!loading && !error && items.length === 0 && renderEmptyState(t('allCaughtUp'), t('noNotificationsInTab'))}
 
         {!loading && !error && tab === 'requests' && items.length > 0 && renderRequests()}
         {!loading && !error && tab === 'workout_invite' && items.length > 0 && renderWorkoutInvites()}

@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SocialLogin({ onLogin }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {

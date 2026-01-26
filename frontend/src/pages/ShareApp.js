@@ -3,14 +3,16 @@ import { ArrowLeft, Download, Share2, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ShareApp() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [appUrl, setAppUrl] = useState('');
 
   useEffect(() => {
-    // Get current URL or use deployed URL
-    const url = window.location.origin;
+    // Use deployed URL
+    const url = 'https://stay-fit-2.onrender.com/';
     setAppUrl(url);
   }, []);
 

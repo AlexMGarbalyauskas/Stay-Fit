@@ -2,8 +2,10 @@ import { Link, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { Dumbbell } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AuthRequired() {
+  const { t } = useLanguage();
   const location = useLocation();
 
   const path = location.pathname || '';

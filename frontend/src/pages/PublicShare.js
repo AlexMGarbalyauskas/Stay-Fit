@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Download, QrCode, ArrowRight } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import Navbar from '../components/Navbar';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function PublicShare() {
+  const { t } = useLanguage();
   const [appUrl, setAppUrl] = useState('');
 
   useEffect(() => {

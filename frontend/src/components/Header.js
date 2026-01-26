@@ -3,8 +3,10 @@ import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getNotifications, API_BASE } from '../api';
 import { io } from 'socket.io-client';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Header({ disableNotifications = false }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [hasUnread, setHasUnread] = useState(false);
   const socketRef = useRef(null);

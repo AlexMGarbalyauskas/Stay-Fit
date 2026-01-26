@@ -5,10 +5,12 @@ import { getFriends, unfriend, API_BASE } from '../api';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
+import { useLanguage } from '../context/LanguageContext';
 
 
 
 export default function Friends({ refreshTrigger }) {
+  const { t } = useLanguage();
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -55,8 +57,8 @@ export default function Friends({ refreshTrigger }) {
               <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-rose-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <Users className="w-12 h-12 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">Your Friends</h1>
-              <p className="text-gray-600 text-lg px-4">Please login to view your friends list and connect with your fitness community.</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('yourFriends')}</h1>
+              <p className="text-gray-600 text-lg px-4">{t('loginToViewFriends')}</p>
             </div>
             
             <div className="flex flex-col gap-4 mt-12">
@@ -64,13 +66,13 @@ export default function Friends({ refreshTrigger }) {
                 onClick={() => navigate('/login')}
                 className="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-pink-700 hover:to-rose-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                Go to Login
+                {t('goToLogin')}
               </button>
               <button
                 onClick={() => navigate('/register')}
                 className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
               >
-                Create an Account
+                {t('createAnAccount')}
               </button>
             </div>
 
@@ -84,7 +86,7 @@ export default function Friends({ refreshTrigger }) {
     );
   }
 
-  if (loading) return <p className="mt-20 text-center text-gray-500">Loading friends...</p>;
+  if (loading) return <p className="mt-20 text-center text-gray-500">{t('loadingFriends')}</p>;
 
   return (
     <>
@@ -94,20 +96,20 @@ export default function Friends({ refreshTrigger }) {
             onClick={() => navigate(-1)}
             className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-800"
           >
-            <ArrowLeft size={16} /> Go Back
+            <ArrowLeft size={16} /> {t('back')}
           </button>
           <h1 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5" /> Friends
+            <Users className="w-5 h-5" /> {t('friends')}
           </h1>
 
           {friends.length === 0 ? (
             <div className="bg-white rounded-lg p-6 text-center shadow">
-              <p className="text-gray-600 mb-4">You don’t have any friends yet.</p>
+              <p className="text-gray-600 mb-4">{t('noFriendsYet')}</p>
               <button
                 onClick={() => navigate('/find')}
                 className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
               >
-                Make friends
+                {t('findFriends')}
               </button>
             </div>
           ) : (
@@ -138,7 +140,7 @@ export default function Friends({ refreshTrigger }) {
                         openUnfriendModal(friend);
                       }} 
                       className="text-red-500 hover:text-red-700 ml-2" 
-                      title="Unfriend"
+                        title={t('unfriend')}
                     >
                       <UserX size={18} />
                     </button>
@@ -152,12 +154,12 @@ export default function Friends({ refreshTrigger }) {
 
       <ConfirmModal
         open={confirmOpen}
-        title="Remove Friend"
-        message={`Are you sure you want to remove <strong>@${confirmTarget?.username}</strong> from your friends?`}
+        title={t('removeFriend')}
+        message={`${t('removeFriendConfirm')} @${confirmTarget?.username}?`}
         onConfirm={handleUnfriend}
         onCancel={closeUnfriendModal}
-        confirmText="Yes"
-        cancelText="No"
+        confirmText={t('yes')}
+        cancelText={t('no')}
       />
 
       <Navbar />

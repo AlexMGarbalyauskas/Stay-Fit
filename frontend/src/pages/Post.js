@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import api, { createPost } from '../api';
+import { useLanguage } from '../context/LanguageContext';
+import { Upload, Camera, Video, Image as ImageIcon, Sparkles } from 'lucide-react';
 
 export default function Post() {
+  const { t } = useLanguage();
   const [mediaKind, setMediaKind] = useState('video'); // 'video' or 'image'
   const [source, setSource] = useState('upload'); // 'upload' or 'camera'
   const [composerOpen, setComposerOpen] = useState(false);
@@ -37,8 +40,144 @@ export default function Post() {
   const recordTimerRef = useRef(null);
   const cameraDebugTimerRef = useRef(null);
   const attachTimerRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const navigate = useNavigate();
+
+  // Canvas fireworks animation
+  useEffect(() => {
+    if (!celebrate || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const listFire = [];
+    const listFirework = [];
+    const fireNumber = 15;
+    const center = { x: canvas.width / 2, y: canvas.height / 2 };
+    const range = 150;
+
+    // Initialize rockets
+    for (let i = 0; i < fireNumber; i++) {
+      const fire = {
+        x: Math.random() * range / 2 - range / 4 + center.x,
+        y: Math.random() * range * 2 + canvas.height,
+        size: Math.random() + 1,
+        fill: '#fd1',
+        vx: Math.random() - 0.5,
+        vy: -(Math.random() + 5),
+        ax: Math.random() * 0.02 - 0.01,
+        far: Math.random() * range + (center.y - range)
+      };
+      fire.base = { x: fire.x, y: fire.y, vx: fire.vx };
+      listFire.push(fire);
+    }
+
+    const randColor = () => {
+      const r = Math.floor(Math.random() * 256);
+      const g = Math.floor(Math.random() * 256);
+      const b = Math.floor(Math.random() * 256);
+      return `rgb(${r}, ${g}, ${b})`;
+    };
+
+    const update = () => {
+      for (let i = 0; i < listFire.length; i++) {
+        const fire = listFire[i];
+        if (fire.y <= fire.far) {
+          const color = randColor();
+          for (let j = 0; j < fireNumber * 8; j++) {
+            const firework = {
+              x: fire.x,
+              y: fire.y,
+              size: Math.random() * 3 + 2.5,
+              fill: color,
+              vx: Math.random() * 8 - 4,
+              vy: Math.random() * -8 + 2,
+              ay: 0.04,
+              alpha: 1,
+              life: Math.round(Math.random() * range) + range
+            };
+            firework.base = { life: firework.life, size: firework.size };
+            listFirework.push(firework);
+          }
+          fire.y = fire.base.y;
+          fire.x = fire.base.x;
+          fire.vx = fire.base.vx;
+          fire.ax = Math.random() * 0.02 - 0.01;
+        }
+        fire.x += fire.vx;
+        fire.y += fire.vy;
+        fire.vx += fire.ax;
+      }
+
+      for (let i = listFirework.length - 1; i >= 0; i--) {
+        const firework = listFirework[i];
+        if (firework) {
+          firework.x += firework.vx;
+          firework.y += firework.vy;
+          firework.vy += firework.ay;
+          firework.alpha = firework.life / firework.base.life;
+          firework.size = firework.alpha * firework.base.size;
+          firework.alpha = firework.alpha > 0.6 ? 1 : firework.alpha;
+          firework.life--;
+          if (firework.life <= 0) {
+            listFirework.splice(i, 1);
+          }
+        }
+      }
+    };
+
+    const draw = () => {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.globalAlpha = 0.1;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 1;
+      for (let i = 0; i < listFire.length; i++) {
+        const fire = listFire[i];
+        ctx.beginPath();
+        ctx.arc(fire.x, fire.y, fire.size, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = fire.fill;
+        ctx.fill();
+      }
+
+      for (let i = 0; i < listFirework.length; i++) {
+        const firework = listFirework[i];
+        ctx.globalAlpha = firework.alpha;
+        ctx.beginPath();
+        ctx.arc(firework.x, firework.y, firework.size, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = firework.fill;
+        ctx.fill();
+      }
+    };
+
+    let animationId;
+    const loop = () => {
+      update();
+      draw();
+      animationId = requestAnimationFrame(loop);
+    };
+
+    loop();
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [celebrate]);
 
   // Retry attaching the stream to the video element a few times to combat blank preview
   useEffect(() => {
@@ -311,7 +450,7 @@ export default function Post() {
       console.log('Upload success:', res.data);
       setUploading(false);
       setCelebrate(true);
-      await new Promise(resolve => setTimeout(resolve, 2200));
+      await new Promise(resolve => setTimeout(resolve, 4500));
       navigate('/home');
     } catch (err) {
       console.error('Upload error:', err);
@@ -325,44 +464,124 @@ export default function Post() {
     <>
       <Header />
 
-      <main className="min-h-screen bg-gray-100 pt-16 pb-16 flex flex-col items-center">
-        <div className="bg-white rounded-md shadow-md p-6 w-full max-w-md mt-8">
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16 pb-16 flex flex-col items-center px-4">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-lg mt-12 border border-white/20">
           {!composerOpen ? (
-            <div className="text-center space-y-4">
-              <h2 className="text-xl font-bold">Let's make a post</h2>
-              <p className="text-sm text-gray-600">Pick how you want to add your media.</p>
-              <div className="flex flex-col gap-2">
+            <div className="text-center space-y-6">
+              {/* Icon header */}
+              <div className="flex justify-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-xl opacity-60 animate-pulse"></div>
+                  <div className="relative bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-full">
+                    <Sparkles className="w-10 h-10 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-widest">
+                  {t('chooseMediaType')}
+                </h2>
+                <p className="text-gray-600 text-lg">{t('chooseSource')}</p>
+              </div>
+
+              <div className="flex flex-col gap-4 pt-2">
                 <button
                   onClick={() => { setSource('upload'); setComposerOpen(true); }}
-                  className="px-4 py-2 rounded bg-blue-600 text-white"
+                  className="group relative overflow-hidden px-6 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
-                  Upload from device
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <div className="relative flex items-center justify-center gap-3">
+                    <Upload className="w-5 h-5" />
+                    <span className="font-semibold">{t('uploadFromDevice')}</span>
+                  </div>
                 </button>
+                
                 <button
                   onClick={() => { setSource('camera'); setComposerOpen(true); startCamera(); }}
-                  className="px-4 py-2 rounded bg-green-600 text-white"
+                  className="group relative overflow-hidden px-6 py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
-                  Use camera (fullscreen)
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <div className="relative flex items-center justify-center gap-3">
+                    <Camera className="w-5 h-5" />
+                    <span className="font-semibold">{t('useCamera')}</span>
+                  </div>
                 </button>
+              </div>
+
+              <div className="pt-4 text-xs text-gray-500 flex items-center justify-center gap-2">
+                <Video className="w-4 h-4" />
+                <span>Share videos (5-60s) or photos</span>
               </div>
             </div>
           ) : (
             <>
-              <h2 className="text-xl font-bold mb-4">Create Post</h2>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('createPost')}</h2>
+              </div>
 
-              <div className="flex gap-2 mb-3">
-                <button onClick={() => setMediaKind('video')} className={`px-3 py-1 rounded ${mediaKind === 'video' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>Video</button>
-                <button onClick={() => setMediaKind('image')} className={`px-3 py-1 rounded ${mediaKind === 'image' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>Photo</button>
+              <div className="flex gap-2 mb-4 flex-wrap">
+                <button 
+                  onClick={() => setMediaKind('video')} 
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${mediaKind === 'video' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                  <Video className="w-4 h-4" />
+                  {t('video')}
+                </button>
+                <button 
+                  onClick={() => setMediaKind('image')} 
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${mediaKind === 'image' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  {t('photo')}
+                </button>
                 <div className="ml-auto flex gap-2">
-                  <button onClick={() => setSource('upload')} className={`px-3 py-1 rounded ${source === 'upload' ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>Upload</button>
-                  <button onClick={() => { setSource('camera'); startCamera(); }} className={`px-3 py-1 rounded ${source === 'camera' ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>Camera</button>
+                  <button 
+                    onClick={() => setSource('upload')} 
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${source === 'upload' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  >
+                    <Upload className="w-4 h-4" />
+                    {t('upload')}
+                  </button>
+                  <button 
+                    onClick={() => { setSource('camera'); startCamera(); }} 
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${source === 'camera' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  >
+                    <Camera className="w-4 h-4" />
+                    {t('camera')}
+                  </button>
                 </div>
               </div>
 
               {source === 'upload' ? (
-                <input type="file" accept={mediaKind === 'video' ? 'video/*' : 'image/*'} onChange={handleFileChange} />
+                <div className="mb-4">
+                  <label className="block w-full">
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer">
+                      <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm text-gray-600 mb-1">Click to select {mediaKind === 'video' ? 'video' : 'photo'}</p>
+                      <p className="text-xs text-gray-400">or drag and drop here</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept={mediaKind === 'video' ? 'video/*' : 'image/*'} 
+                      onChange={handleFileChange} 
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               ) : (
-                <div className="text-sm text-gray-600">Camera opens full screen when started.</div>
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <Camera className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-gray-700">
+                      <p className="font-medium text-green-700 mb-1">Camera mode active</p>
+                      <p className="text-gray-600">Full-screen camera will open when you're ready to capture.</p>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {local && (
@@ -373,12 +592,12 @@ export default function Post() {
                     <video ref={videoRef} src={local.url} controls onLoadedMetadata={onLoadedMetadata} className="w-full rounded" />
                   ) : null}
 
-                  {local.duration !== null && <p className="text-sm text-gray-600 mt-2">Duration: {local.duration}s</p>}
+                  {local.duration !== null && <p className="text-sm text-gray-600 mt-2">{t('duration')}: {local.duration}s</p>}
 
                   <div className="mt-3 flex gap-2">
-                    <button onClick={discardMedia} className="px-3 py-2 rounded bg-gray-200">Discard</button>
+                    <button onClick={discardMedia} className="px-3 py-2 rounded bg-gray-200">{t('discard')}</button>
                     {source === 'camera' && (
-                      <button onClick={startCamera} className="px-3 py-2 rounded bg-blue-500 text-white">Retake</button>
+                      <button onClick={startCamera} className="px-3 py-2 rounded bg-blue-500 text-white">{t('retake')}</button>
                     )}
                   </div>
                 </div>
@@ -386,14 +605,14 @@ export default function Post() {
 
               <input
                 type="text"
-                placeholder="Title (optional)"
+                placeholder={t('title')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full mt-4 border rounded px-3 py-2 text-sm"
               />
 
               <textarea
-                placeholder="Write a caption..."
+                placeholder={t('writeCaption')}
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 className="w-full mt-4 border rounded px-3 py-2 text-sm"
@@ -401,9 +620,21 @@ export default function Post() {
 
               {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
-              <div className="flex gap-2 mt-4">
-                <button onClick={handleUpload} disabled={uploading} className="bg-green-500 text-white px-4 py-2 rounded">
-                  {uploading ? 'Uploading…' : 'Upload'}
+              <div className="flex gap-3 mt-6">
+                <button 
+                  onClick={handleUpload} 
+                  disabled={uploading} 
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all"
+                >
+                  {uploading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {t('uploading')}
+                    </span>
+                  ) : t('upload')}
                 </button>
                 <button
                   onClick={() => {
@@ -413,9 +644,9 @@ export default function Post() {
                     setComposerOpen(false);
                     setSource('upload');
                   }}
-                  className="bg-gray-200 px-4 py-2 rounded"
+                  className="px-6 py-3 rounded-xl font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
               </div>
             </>
@@ -517,82 +748,19 @@ export default function Post() {
 
       <Navbar />
       {celebrate && (
-        <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden flex items-center justify-center">
-          <style>{`
-            @keyframes glitterFall { 0% {transform: translate3d(var(--x), -10%, 0) rotate(0deg);} 100% {transform: translate3d(calc(var(--x) + 10px), 110%, 0) rotate(340deg);} }
-            @keyframes glitterPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-            @keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-            @keyframes fireworkLaunch { 0% { transform: translateY(100%) scale(0.4); opacity: 0; } 40% { opacity: 1; } 70% { transform: translateY(-20%) scale(1); opacity: 1; } 100% { transform: translateY(-120%) scale(1.05); opacity: 0; } }
-            @keyframes fireworkBurst { 0% { transform: scale(0); opacity: 1; } 60% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
-            @keyframes spark { 0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0; } }
-          `}</style>
-          <div className="absolute inset-0">
-            {[...Array(90)].map((_, i) => {
-              const left = Math.random() * 100;
-              const size = 6 + Math.random() * 6;
-              const duration = 1 + Math.random();
-              const delay = Math.random() * 0.5;
-              const colors = ['#fbbf24', '#f472b6', '#60a5fa', '#34d399', '#c084fc'];
-              const color = colors[i % colors.length];
-              return (
-                <span
-                  key={i}
-                  style={{
-                    '--x': `${left}%`,
-                    left: `${left}%`,
-                    width: `${size}px`,
-                    height: `${size}px`,
-                    background: color,
-                    opacity: 0.9,
-                    position: 'absolute',
-                    top: '-5%',
-                    borderRadius: '9999px',
-                    animation: `glitterFall ${duration}s ease-in forwards, glitterPulse 1s ease-in-out ${delay}s infinite`,
-                  }}
-                />
-              );
-            })}
-          </div>
-          {[{ left: '38%' }, { left: '52%' }, { left: '66%' }].map((pos, idx) => (
-            <div key={idx} className="absolute bottom-0" style={{ left: pos.left, width: '6px', height: '200px' }}>
-              <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2"
-                style={{ width: '8px', height: '80px', background: '#fbbf24', borderRadius: '9999px', animation: 'fireworkLaunch 1s ease-out' }}
-              />
-              <div
-                className="absolute"
-                style={{
-                  top: '-60px', left: '-60px', width: '120px', height: '120px',
-                  borderRadius: '9999px',
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.95), rgba(251,191,36,0.6), rgba(244,114,182,0.3))',
-                  animation: 'fireworkBurst 1.1s ease-out',
-                }}
-              />
-              {[...Array(10)].map((_, sIdx) => {
-                const angle = (sIdx / 10) * Math.PI * 2;
-                const dist = 45;
-                return (
-                  <span
-                    key={sIdx}
-                    style={{
-                      position: 'absolute',
-                      top: '-10px',
-                      left: '-10px',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      background: '#ffffff',
-                      transformOrigin: 'center',
-                      transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`,
-                      animation: 'spark 1.1s ease-out',
-                    }}
-                  />
-                );
-              })}
+        <div className="pointer-events-none fixed inset-0 z-50">
+          <canvas 
+            ref={canvasRef} 
+            className="absolute inset-0 w-full h-full"
+            style={{ display: 'block' }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full text-2xl font-bold shadow-2xl" style={{ animation: 'popIn 0.5s ease-out', textShadow: '0 0 20px rgba(0,0,0,0.5)' }}>
+              <style>{`
+                @keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+              `}</style>
+              Post uploaded!
             </div>
-          ))}
-          <div className="relative bg-black/80 text-white px-6 py-3 rounded-full text-lg font-semibold shadow-lg" style={{ animation: 'popIn 0.3s ease-out' }}>
-            Post uploaded! 🎆
           </div>
         </div>
       )}

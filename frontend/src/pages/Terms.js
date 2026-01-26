@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Terms() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [acceptedAt, setAcceptedAt] = useState(() => localStorage.getItem('tosAcceptedAt'));
 

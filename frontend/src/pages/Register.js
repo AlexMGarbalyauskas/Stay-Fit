@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { register, API_BASE } from '../api';
 import { useNavigate, Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Register() {
+  const { t } = useLanguage();
   const DRAFT_KEY = 'register_form_draft';
 
   const loadDraft = () => {
@@ -81,19 +83,19 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">{t('register')}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Username"
+            placeholder={t('username')}
             value={username}
             onChange={e => setUsername(e.target.value)}
           />
 
           <input
             className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Email"
+            placeholder={t('email')}
             value={email}
             onChange={e => setEmail(e.target.value)}
           />
@@ -101,7 +103,7 @@ export default function Register() {
           <input
             className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
-            placeholder="Password"
+            placeholder={t('password')}
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
@@ -109,18 +111,18 @@ export default function Register() {
           <input
             className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
-            placeholder="Confirm Password"
+            placeholder={t('confirmPassword')}
             value={passwordConfirm}
             onChange={e => setPasswordConfirm(e.target.value)}
           />
 
           {/* Terms of Service gate */}
           <div className="text-sm text-gray-700 bg-gray-50 border rounded-xl p-3">
-            <p className="mb-2">You must read and accept our <Link className="text-blue-600 underline" to="/terms">Terms of Service</Link> before creating an account.</p>
+            <p className="mb-2">{t('readTerms')} <Link className="text-blue-600 underline" to="/terms">Terms of Service</Link>.</p>
             <div className="flex items-center gap-2">
               <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
-              <span>I have read and accept the Terms of Service</span>
-              <span className={`ml-auto text-xs ${tosRead ? 'text-green-600' : 'text-red-500'}`}>{tosRead ? 'Terms read' : 'Please read terms'}</span>
+              <span>{t('acceptTerms')}</span>
+              <span className={`ml-auto text-xs ${tosRead ? 'text-green-600' : 'text-red-500'}`}>{tosRead ? t('loading') : 'Please read terms'}</span>
             </div>
           </div>
 
@@ -129,7 +131,7 @@ export default function Register() {
             type="submit"
             disabled={!agree || !tosRead}
           >
-            Register
+            {t('register')}
           </button>
 
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
@@ -150,14 +152,14 @@ export default function Register() {
               className="w-6 h-6 mr-2"
               loading="lazy"
             />
-            Continue with Google
+            {t('registerWithGoogle')}
           </button>
         </div>
 
         <p className="mt-4 text-center text-gray-600">
-          Already have an account?{' '}
+          {t('alreadyHaveAccount')}{' '}
           <Link className="text-blue-500 hover:underline" to="/login">
-            Login here
+            {t('login')}
           </Link>
         </p>
       </div>

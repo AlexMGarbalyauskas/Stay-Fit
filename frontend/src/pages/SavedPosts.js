@@ -4,8 +4,10 @@ import { Heart, Bookmark, Share2, ArrowLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import ProfileHeader from '../components/ProfileHeader';
 import { getSavedPosts, toggleLike, toggleSave } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SavedPosts() {
+  const { t } = useLanguage();
   const [savedPosts, setSavedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 

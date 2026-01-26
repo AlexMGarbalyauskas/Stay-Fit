@@ -9,8 +9,10 @@ import EmojiPickerModal from '../components/EmojiPickerModal';
 import dayjs from 'dayjs';
 import { User, Image as ImageIcon, Search, ChevronDown, Lock, MessageCircle, Dumbbell } from 'lucide-react';
 import { encryptMessage, decryptMessage, isEncryptionReady } from '../utils/crypto';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ChatPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   let currentUser = null;
   try {
@@ -287,7 +289,7 @@ export default function ChatPage() {
   if (!currentUser || !token) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-500 text-lg">Please log in to access chat.</p>
+        <p className="text-gray-500 text-lg">{t('pleaseLogin')}</p>
       </div>
     );
   }
@@ -324,7 +326,7 @@ export default function ChatPage() {
         <div className="flex-1 flex flex-col">
           {!activeFriend ? (
             <div className="flex items-center justify-center h-full text-gray-400">
-              Select a friend to start chatting
+              {t('selectFriendToChat')}
             </div>
           ) : (
             <>
@@ -338,7 +340,7 @@ export default function ChatPage() {
                   title="End-to-end encrypted - Messages are secure"
                 >
                   <Lock className="w-4 h-4" />
-                  <span className="hidden sm:inline">Encrypted</span>
+                  <span className="hidden sm:inline">{t('encrypted')}</span>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -405,7 +407,7 @@ export default function ChatPage() {
                   value={text}
                   onChange={e => setText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                  placeholder="Type a message..."
+                  placeholder={t('typeMessage')}
                   className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 min-w-[150px]"
                 />
                 <button
@@ -416,7 +418,7 @@ export default function ChatPage() {
                   <ImageIcon className="h-5 w-5 text-blue-600" />
                 </button>
                 <button onClick={sendMessage} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-                  Send
+                  {t('send')}
                 </button>
               </div>
 
@@ -427,7 +429,7 @@ export default function ChatPage() {
                     <input
                       value={gifQuery}
                       onChange={handleGifQueryChange}
-                      placeholder="Search GIFs..."
+                      placeholder={t('searchGif')}
                       autoFocus
                       className="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-blue-300"
                     />

@@ -4,8 +4,10 @@ import { getPost, getComments, createComment, toggleLike, toggleSave, deleteComm
 import { Heart, Bookmark, ArrowLeft, User as UserIcon, ChevronDown, ChevronUp, Smile, Image as ImageIcon } from 'lucide-react';
 import { API_BASE } from '../api';
 import EmojiPickerModal from '../components/EmojiPickerModal';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function PostComments() {
+  const { t } = useLanguage();
   const { id } = useParams();
   const postId = Number(id);
   const navigate = useNavigate();
@@ -93,10 +95,10 @@ export default function PostComments() {
         console.error(err);
         if (err?.response?.status === 404) {
           try { window.dispatchEvent(new CustomEvent('post:deleted', { detail: { postId } })); } catch (e) {}
-          alert('Post not found (it may have been deleted)');
+          alert(t('postNotFoundMaybeDeleted'));
           navigate('/home');
         } else {
-          alert(err?.response?.data?.error || 'Failed to load post');
+          alert(err?.response?.data?.error || t('failedToLoadPost'));
           navigate('/home');
         }
       } finally {
@@ -146,12 +148,12 @@ export default function PostComments() {
       window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: { postId, commentsCount } }));
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.error || 'Failed to create comment');
+      alert(err?.response?.data?.error || t('failedToCreateComment'));
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Delete this comment?')) return;
+    if (!window.confirm(t('confirmDeleteComment'))) return;
     try {
       const res = await deleteComment(postId, commentId);
       setComments(prev => prev.filter(c => c.id !== commentId));
@@ -159,12 +161,12 @@ export default function PostComments() {
       window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: { postId, commentsCount: res.data.comments_count } }));
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.error || 'Failed to delete comment');
+      alert(err?.response?.data?.error || t('failedToDeleteComment'));
     }
   };
 
   const handleDeleteReply = async (parentId, replyId) => {
-    if (!window.confirm('Delete this reply?')) return;
+    if (!window.confirm(t('confirmDeleteReply'))) return;
     try {
       const res = await deleteComment(postId, replyId);
       setComments(prev => prev.map(c => {
@@ -180,7 +182,7 @@ export default function PostComments() {
       window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: { postId, commentsCount: res.data.comments_count } }));
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.error || 'Failed to delete reply');
+      alert(err?.response?.data?.error || t('failedToDeleteReply'));
     }
   };
 
@@ -205,7 +207,7 @@ export default function PostComments() {
       }));
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.error || 'Failed to like comment');
+      alert(err?.response?.data?.error || t('failedToLikeComment'));
     }
   };
 
@@ -247,7 +249,7 @@ export default function PostComments() {
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium">{comment.nickname || comment.username}</div>
           {comment.nickname && <span className="text-xs text-gray-400">@{comment.username}</span>}
-          {isReply && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">reply</span>}
+          {isReply && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{t('reply')}</span>}
         </div>
         <div className="text-sm text-gray-700 mt-1">
           {textContent && <p>{textContent}</p>}
@@ -266,7 +268,7 @@ export default function PostComments() {
               onClick={() => setReplyingTo(comment.id)}
               className="text-xs text-gray-400 hover:text-blue-600"
             >
-              Reply
+              {t('reply')}
             </button>
           )}
           <span className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString()}</span>
@@ -276,15 +278,15 @@ export default function PostComments() {
     );
   };
 
-  if (loading) return <p className="text-center mt-20 text-gray-500">Loading…</p>;
-  if (!post) return <p className="text-center mt-20 text-gray-500">Post not found</p>;
+  if (loading) return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
+  if (!post) return <p className="text-center mt-20 text-gray-500">{t('postNotFound')}</p>;
 
   return (
     <div className="min-h-screen bg-gray-100 pt-16 pb-16">
       <div className="max-w-2xl mx-auto p-4">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-700 mb-4 hover:text-blue-600">
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Profile</span>
+          <span>{t('backToProfile')}</span>
         </button>
 
         <div className="bg-white rounded shadow p-4">
@@ -323,15 +325,15 @@ export default function PostComments() {
               console.error(err);
               if (err?.response?.status === 404) {
                 try { window.dispatchEvent(new CustomEvent('post:deleted', { detail: { postId } })); } catch(e) {}
-                alert('Post not found (it may have been deleted)');
+                alert(t('postNotFoundMaybeDeleted'));
                 navigate('/home');
-              } else alert(err?.response?.data?.error || 'Failed to like');
+              } else alert(err?.response?.data?.error || t('failedToLikePost'));
             })} className={`flex items-center gap-1 text-sm ${post.liked ? 'text-red-500' : 'text-gray-600'}`}><Heart className="w-4 h-4"/> {post.likes_count || 0}</button>
             <button className="flex items-center gap-1 text-sm text-gray-600"><Bookmark className="w-4 h-4"/> {post.saves_count || 0}</button>
           </div>
 
           <div className="border-t pt-2">
-            <h3 className="font-medium mb-2">Comments ({post.comments_count || 0})</h3>
+            <h3 className="font-medium mb-2">{t('comments')} ({post.comments_count || 0})</h3>
 
             <div className="space-y-3">
               {comments.map(c => (
@@ -348,12 +350,12 @@ export default function PostComments() {
                         {expandedReplies.has(c.id) ? (
                           <>
                             <ChevronUp className="w-4 h-4" />
-                            Hide replies ({c.replies.length})
+                            {t('hideReplies')} ({c.replies.length})
                           </>
                         ) : (
                           <>
                             <ChevronDown className="w-4 h-4" />
-                            Show {c.replies.length} {c.replies.length === 1 ? 'reply' : 'replies'}
+                            {t('showReplies')} {c.replies.length} {c.replies.length === 1 ? t('reply') : t('replies')}
                           </>
                         )}
                       </button>
@@ -386,7 +388,7 @@ export default function PostComments() {
                     }}
                     className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
                   >
-                    Reply
+                    {t('reply')}
                   </button>
                 )}
                 <button
@@ -401,7 +403,7 @@ export default function PostComments() {
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
-                  Delete
+                  {t('delete')}
                 </button>
               </div>
             )}
@@ -409,7 +411,7 @@ export default function PostComments() {
             {/* Reply indicator */}
             {replyingTo && (
               <div className="mt-3 p-2 bg-blue-50 border-l-4 border-blue-500 text-sm text-blue-800 flex justify-between items-center">
-                <span>Replying to: <strong>{comments.find(c => c.id === replyingTo)?.nickname || comments.find(c => c.id === replyingTo)?.username}</strong></span>
+                <span>{t('replyingTo')}: <strong>{comments.find(c => c.id === replyingTo)?.nickname || comments.find(c => c.id === replyingTo)?.username}</strong></span>
                 <button onClick={() => setReplyingTo(null)} className="text-blue-600 hover:text-blue-800 font-semibold">×</button>
               </div>
             )}
@@ -434,10 +436,10 @@ export default function PostComments() {
                   type="text"
                   value={gifQuery}
                   onChange={handleGifQueryChange}
-                  placeholder="Search GIFs..."
+                  placeholder={t('searchGifsPlaceholder')}
                   className="w-full p-2 border rounded mb-2"
                 />
-                {gifLoading && <p className="text-sm text-gray-500">Searching...</p>}
+                {gifLoading && <p className="text-sm text-gray-500">{t('searching')}</p>}
                 {gifResults.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                     {gifResults.map((gif) => (
@@ -452,7 +454,7 @@ export default function PostComments() {
                   </div>
                 )}
                 {!gifLoading && gifResults.length === 0 && gifQuery && (
-                  <p className="text-sm text-gray-500">No GIFs found</p>
+                  <p className="text-sm text-gray-500">{t('noGifsFound')}</p>
                 )}
               </div>
             )}
@@ -463,13 +465,13 @@ export default function PostComments() {
                   value={newComment} 
                   onChange={e => setNewComment(e.target.value)} 
                   className="flex-1 p-2 border rounded" 
-                  placeholder={replyingTo ? "Write your reply..." : "Write a comment..."} 
+                  placeholder={replyingTo ? t('writeYourReply') : t('writeCommentPlaceholder')} 
                 />
                 <button
                   type="button"
                   onClick={() => setPickerOpen(true)}
                   className="p-2 border rounded hover:bg-gray-100"
-                  title="Add emoji"
+                  title={t('addEmoji')}
                 >
                   <Smile className="w-5 h-5 text-gray-600" />
                 </button>
@@ -477,11 +479,11 @@ export default function PostComments() {
                   type="button"
                   onClick={() => setGifPanelOpen(!gifPanelOpen)}
                   className="p-2 border rounded hover:bg-gray-100"
-                  title="Add GIF"
+                  title={t('addGif')}
                 >
                   <ImageIcon className="w-5 h-5 text-gray-600" />
                 </button>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Post</button>
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">{t('post')}</button>
               </div>
             </form>
 

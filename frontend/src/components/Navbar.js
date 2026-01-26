@@ -6,8 +6,10 @@ import {
   MessageCircle,
   User
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Navbar() {
+  const { t } = useLanguage();
   const baseClass =
     'flex flex-col items-center text-xs gap-1 transition-colors';
 
@@ -24,7 +26,7 @@ export default function Navbar() {
           }
         >
           <Home size={22} />
-          Home
+          {t('home')}
         </NavLink>
 
         <NavLink
@@ -34,7 +36,7 @@ export default function Navbar() {
           }
         >
           <Search size={22} />
-          Find
+          {t('findFriends')}
         </NavLink>
 
         <NavLink
@@ -44,7 +46,7 @@ export default function Navbar() {
           }
         >
           <PlusSquare size={26} />
-          Post
+          {t('post')}
         </NavLink>
 
         <NavLink
@@ -54,7 +56,7 @@ export default function Navbar() {
           }
         >
           <MessageCircle size={22} />
-          Chat
+          {t('messages')}
         </NavLink>
 
         <NavLink
@@ -64,7 +66,7 @@ export default function Navbar() {
           }
         >
           <User size={22} />
-          Profile
+          {t('profile')}
         </NavLink>
       </div>
     </nav>

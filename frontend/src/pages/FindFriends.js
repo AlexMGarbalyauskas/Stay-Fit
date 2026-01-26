@@ -5,8 +5,10 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
 import { getUsers, getFriendStatus, sendFriendRequest, unfriend, getMe } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function FindFriends({ onFriendUpdate }) {
+  const { t } = useLanguage();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [search, setSearch] = useState('');
@@ -140,8 +142,8 @@ export default function FindFriends({ onFriendUpdate }) {
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <UserPlus className="w-12 h-12 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">Find Fitness Friends</h1>
-              <p className="text-gray-600 text-lg px-4">Please login to discover and connect with new fitness buddies in your area.</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('findFitnessFriends')}</h1>
+              <p className="text-gray-600 text-lg px-4">{t('discoverConnectFitnessbuddies')}</p>
             </div>
             
             <div className="flex flex-col gap-4 mt-12">
@@ -149,18 +151,18 @@ export default function FindFriends({ onFriendUpdate }) {
                 onClick={() => navigate('/login')}
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                Go to Login
+                {t('goToLogin')}
               </button>
               <button
                 onClick={() => navigate('/register')}
                 className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
               >
-                Create an Account
+                {t('createAnAccount')}
               </button>
             </div>
 
             <p className="text-xs text-gray-500 mt-8">
-              By continuing, you agree to our Terms of Service and Privacy Policy
+              {t('byJoining')}
             </p>
           </div>
         </div>
@@ -171,15 +173,15 @@ export default function FindFriends({ onFriendUpdate }) {
 
   return (
     <div className="min-h-screen pt-20 pb-20 bg-gray-100">
-      <Header title="Find Friends" showBack />
+      <Header title={t('findFriends')} showBack />
       <div className="max-w-md mx-auto px-4 mt-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-3">Find Friends</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-3">{t('findFriends')}</h2>
         
         {/* Username Search */}
         <div className="flex gap-2 mb-3">
           <input
             type="text"
-            placeholder="Enter username..."
+            placeholder={t('enterUsername')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') setSearchTerm(search.trim().replace(/^@/, '')); }}
@@ -189,7 +191,7 @@ export default function FindFriends({ onFriendUpdate }) {
             onClick={() => setSearchTerm(search.trim().replace(/^@/, ''))}
             className="px-4 py-2 bg-blue-500 text-white rounded"
           >
-            Search
+            {t('search')}
           </button>
         </div>
 
@@ -197,13 +199,13 @@ export default function FindFriends({ onFriendUpdate }) {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Filter by location (e.g., New York)..."
+            placeholder={t('filterByLocation')}
             value={locationFilter}
             onChange={e => setLocationFilter(e.target.value)}
             className="w-full p-2 border rounded focus:outline-none focus:ring text-sm"
           />
           {me?.location && (
-            <p className="text-xs text-gray-500 mt-1">Your location: <strong>{me.location}</strong></p>
+            <p className="text-xs text-gray-500 mt-1">{t('yourLocation')} <strong>{me.location}</strong></p>
           )}
         </div>
 
@@ -227,11 +229,11 @@ export default function FindFriends({ onFriendUpdate }) {
                 )}
                 <div>
                   <p className="text-gray-800 font-medium">@{me.username}</p>
-                  <p className="text-xs text-gray-500">{me.nickname ? me.nickname : 'You'}</p>
+                  <p className="text-xs text-gray-500">{me.nickname ? me.nickname : t('youText')}</p>
                 </div>
               </div>
 
-              <div className="text-sm text-gray-500">View Profile</div>
+              <div className="text-sm text-gray-500">{t('viewProfile')}</div>
             </div>
           </div>
         )}
@@ -261,19 +263,19 @@ export default function FindFriends({ onFriendUpdate }) {
                       onClick={e => { e.preventDefault(); handleAddFriend(user.id); }}
                       className="px-3 py-1 bg-blue-500 text-white rounded"
                     >
-                      Add
+                      {t('addFriend')}
                     </button>
                   )}
                   {statuses[user.id] === 'sent' && (
                     <button disabled className="px-3 py-1 bg-gray-400 text-white rounded">
-                      Sent
+                      {t('pending')}
                     </button>
                   )}
                   {statuses[user.id] === 'friends' && (
                     <button
                       onClick={e => { e.preventDefault(); openUnfriendModal(user.id, user.username); }}
                       className="px-2 py-1 bg-red-500 text-white rounded-full"
-                      aria-label="Unfriend"
+                      aria-label={t('unfriend')}
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -287,12 +289,12 @@ export default function FindFriends({ onFriendUpdate }) {
 
       <ConfirmModal
         open={confirmOpen}
-        title="Remove Friend"
-        message={`Are you sure you want to remove <strong>@${confirmTarget?.username}</strong> from your friends?`}
+        title={t('removeFriend')}
+        message={`${t('areYouSureRemove')} <strong>@${confirmTarget?.username}</strong> ${t('fromYourFriends')}?`}
         onConfirm={confirmUnfriend}
         onCancel={closeUnfriendModal}
-        confirmText="Yes"
-        cancelText="No"
+        confirmText={t('yes')}
+        cancelText={t('no')}
       />
 
       <Navbar />
