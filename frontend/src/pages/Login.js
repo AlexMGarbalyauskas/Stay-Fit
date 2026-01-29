@@ -6,8 +6,16 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function Login({ onLogin }) {
   const { t } = useLanguage();
-  const [theme] = useState(localStorage.getItem('theme') || 'light');
-  const isDark = theme === 'dark';
+  const [isDark, setIsDark] = useState(localStorage.getItem('theme') === 'dark');
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      setIsDark(localStorage.getItem('theme') === 'dark');
+    };
+    window.addEventListener('storage', handleThemeChange);
+    return () => window.removeEventListener('storage', handleThemeChange);
+  }, []);
+
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -58,19 +66,19 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-slate-800'}`}>
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center" style={{ wordSpacing: '0.15em' }}>{t('login')}</h2>
+    <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800' : 'bg-gray-100'}`}>
+      <div className={`w-full max-w-md p-8 rounded-2xl shadow-md ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
+        <h2 className={`text-2xl font-bold mb-6 text-center ${isDark ? 'text-gray-100' : 'text-gray-900'}`} style={{ wordSpacing: '0.15em' }}>{t('login')}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' : 'border-gray-300 text-gray-900'}`}
             placeholder={t('usernameOrEmail')}
             value={identifier}
             onChange={e => setIdentifier(e.target.value)}
           />
           <input
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' : 'border-gray-300 text-gray-900'}`}
             type="password"
             placeholder={t('password')}
             value={password}
@@ -88,7 +96,7 @@ export default function Login({ onLogin }) {
         <div className="mt-6">
           <button
             onClick={handleGoogleLogin}
-            className="w-full border border-gray-300 p-3 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className={`w-full border p-3 rounded-xl flex items-center justify-center transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800 text-gray-200' : 'border-gray-300 hover:bg-gray-50 text-gray-900'}`}
           >
             <img
               src="https://www.gstatic.com/images/branding/googleg/1x/googleg_standard_color_48dp.png"
@@ -100,7 +108,7 @@ export default function Login({ onLogin }) {
           </button>
         </div>
 
-        <p className="mt-4 text-center text-gray-600">
+        <p className={`mt-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
           {t('dontHaveAccount')}{' '}
           <Link className="text-blue-500 hover:underline" to="/register">
             {t('register')}

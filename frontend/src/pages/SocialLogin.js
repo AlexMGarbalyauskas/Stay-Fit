@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function SocialLogin({ onLogin }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [isDark] = useState(localStorage.getItem('theme') === 'dark');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -24,5 +25,7 @@ export default function SocialLogin({ onLogin }) {
     }
   }, [navigate, onLogin]);
 
-  return <p className="text-center mt-20 text-gray-500">Logging you in...</p>;
+  return <p className={`text-center mt-20 ${
+    isDark ? 'text-gray-400' : 'text-gray-500'
+  }`}>Logging you in...</p>;
 } 

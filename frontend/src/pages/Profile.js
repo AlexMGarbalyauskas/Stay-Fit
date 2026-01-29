@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Heart, Bookmark, Edit2, Check, Share2, UsersIcon, Trash2 } from 'lucide-react';
+import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import ProfileHeader from '../components/ProfileHeader';
 import axios from 'axios';
@@ -9,8 +10,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function Profile() {
   const { t } = useLanguage();
-  const [theme] = useState(localStorage.getItem('theme') || 'light');
-  const isDark = theme === 'dark';
+  const isDark = document.documentElement.classList.contains('dark');
   const [user, setUser] = useState(null);
   const [friendsCount, setFriendsCount] = useState(0);
   const [posts, setPosts] = useState([]);
@@ -32,6 +32,7 @@ export default function Profile() {
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
   // Fetch profile info
@@ -143,8 +144,52 @@ export default function Profile() {
 
   const navigate = useNavigate();
 
+  // Auth guard render
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header disableNotifications />
+        <div className={`min-h-screen bg-gradient-to-br pb-24 pt-20 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800' : 'from-slate-50 via-white to-slate-100'}`}>
+          <div className="px-4 max-w-md mx-auto text-center mt-20">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <User className="w-12 h-12 text-white" />
+              </div>
+              <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('yourProfile')}</h1>
+              <p className={`text-lg px-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Please login to view and edit your profile.</p>
+            </div>
+            
+            <div className="flex flex-col gap-4 mt-12">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                {t('goToLogin')}
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all shadow-md ${
+                  isDark 
+                    ? 'bg-gray-800 border-2 border-gray-700 text-gray-200 hover:bg-gray-700 hover:border-gray-600' 
+                    : 'bg-white border-2 border-gray-200 text-gray-800 hover:bg-gray-50 hover:border-gray-300'
+                }`}
+              >
+                {t('createAnAccount')}
+              </button>
+            </div>
+
+            <p className={`text-xs mt-8 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              {t('byJoining')}
+            </p>
+          </div>
+        </div>
+        <Navbar />
+      </>
+    );
+  }
+
   if (!user) {
-    return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+    return <p className={`text-center mt-20 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Loading...</p>;
   }
 
   const displayPosts = showSaved ? savedPosts : posts;

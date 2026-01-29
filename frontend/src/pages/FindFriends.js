@@ -9,8 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function FindFriends({ onFriendUpdate }) {
   const { t } = useLanguage();
-  const [theme] = useState(localStorage.getItem('theme') || 'light');
-  const isDark = theme === 'dark';
+  const isDark = document.documentElement.classList.contains('dark');
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [search, setSearch] = useState('');
@@ -152,14 +151,14 @@ export default function FindFriends({ onFriendUpdate }) {
     return (
       <>
         <Header disableNotifications />
-        <div className={`min-h-screen bg-gradient-to-br pb-24 pt-20 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
+        <div className={`min-h-screen bg-gradient-to-br pb-24 pt-20 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800' : 'from-slate-50 via-white to-slate-100'}`}>
           <div className="px-4 max-w-md mx-auto text-center mt-20">
             <div className="mb-8">
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <UserPlus className="w-12 h-12 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('findFitnessFriends')}</h1>
-              <p className="text-gray-600 text-lg px-4">{t('discoverConnectFitnessbuddies')}</p>
+              <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('findFitnessFriends')}</h1>
+              <p className={`text-lg px-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t('discoverConnectFitnessbuddies')}</p>
             </div>
             
             <div className="flex flex-col gap-4 mt-12">
@@ -171,13 +170,17 @@ export default function FindFriends({ onFriendUpdate }) {
               </button>
               <button
                 onClick={() => navigate('/register')}
-                className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-md"
+                className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all shadow-md ${
+                  isDark 
+                    ? 'bg-gray-800 border-2 border-gray-700 text-gray-200 hover:bg-gray-700 hover:border-gray-600' 
+                    : 'bg-white border-2 border-gray-200 text-gray-800 hover:bg-gray-50 hover:border-gray-300'
+                }`}
               >
                 {t('createAnAccount')}
               </button>
             </div>
 
-            <p className="text-xs text-gray-500 mt-8">
+            <p className={`text-xs mt-8 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               {t('byJoining')}
             </p>
           </div>

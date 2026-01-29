@@ -5,6 +5,16 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function Register() {
   const { t } = useLanguage();
+  const [isDark, setIsDark] = useState(localStorage.getItem('theme') === 'dark');
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      setIsDark(localStorage.getItem('theme') === 'dark');
+    };
+    window.addEventListener('storage', handleThemeChange);
+    return () => window.removeEventListener('storage', handleThemeChange);
+  }, []);
+
   const DRAFT_KEY = 'register_form_draft';
 
   const loadDraft = () => {
@@ -81,27 +91,27 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">{t('register')}</h2>
+    <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800' : 'bg-gray-100'}`}>
+      <div className={`w-full max-w-md p-8 rounded-2xl shadow-md ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
+        <h2 className={`text-2xl font-bold mb-6 text-center ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('register')}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' : 'border-gray-300 text-gray-900'}`}
             placeholder={t('username')}
             value={username}
             onChange={e => setUsername(e.target.value)}
           />
 
           <input
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' : 'border-gray-300 text-gray-900'}`}
             placeholder={t('email')}
             value={email}
             onChange={e => setEmail(e.target.value)}
           />
 
           <input
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' : 'border-gray-300 text-gray-900'}`}
             type="password"
             placeholder={t('password')}
             value={password}
@@ -109,7 +119,7 @@ export default function Register() {
           />
 
           <input
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' : 'border-gray-300 text-gray-900'}`}
             type="password"
             placeholder={t('confirmPassword')}
             value={passwordConfirm}
@@ -117,7 +127,7 @@ export default function Register() {
           />
 
           {/* Terms of Service gate */}
-          <div className="text-sm text-gray-700 bg-gray-50 border rounded-xl p-3">
+          <div className={`text-sm border rounded-xl p-3 ${isDark ? 'text-gray-300 bg-gray-800 border-gray-700' : 'text-gray-700 bg-gray-50 border-gray-200'}`}>
             <p className="mb-2">{t('readTerms')} <Link className="text-blue-600 underline" to="/terms">Terms of Service</Link>.</p>
             <div className="flex items-center gap-2">
               <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
@@ -144,7 +154,7 @@ export default function Register() {
               if (!agree) { alert('Please accept the Terms of Service.'); return; }
               handleGoogleRegister();
             }}
-            className="w-full border border-gray-300 p-3 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className={`w-full border p-3 rounded-xl flex items-center justify-center transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800 text-gray-200' : 'border-gray-300 hover:bg-gray-50 text-gray-900'}`}
           >
             <img
               src="https://www.gstatic.com/images/branding/googleg/1x/googleg_standard_color_48dp.png"
@@ -156,7 +166,7 @@ export default function Register() {
           </button>
         </div>
 
-        <p className="mt-4 text-center text-gray-600">
+        <p className={`mt-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
           {t('alreadyHaveAccount')}{' '}
           <Link className="text-blue-500 hover:underline" to="/login">
             {t('login')}

@@ -4,12 +4,16 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import api, { createPost } from '../api';
 import { useLanguage } from '../context/LanguageContext';
-import { Upload, Camera, Video, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Upload, Camera, Video, Image as ImageIcon, Sparkles, Dumbbell } from 'lucide-react';
 
 export default function Post() {
   const { t } = useLanguage();
-  const [theme] = useState(localStorage.getItem('theme') || 'light');
-  const isDark = theme === 'dark';
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
+  const isDark = document.documentElement.classList.contains('dark');
+  
+  // All state declarations must come before early returns
   const [mediaKind, setMediaKind] = useState('video'); // 'video' or 'image'
   const [source, setSource] = useState('upload'); // 'upload' or 'camera'
   const [composerOpen, setComposerOpen] = useState(false);
@@ -26,6 +30,7 @@ export default function Post() {
   const [error, setError] = useState(null);
   const [cameraOverlay, setCameraOverlay] = useState(false); // full-screen camera UI
   const [countdown, setCountdown] = useState(null); // null or number for countdown display
+  
   const filterStyles = {
     none: 'none',
     vivid: 'saturate(1.25) contrast(1.05)',
@@ -35,6 +40,7 @@ export default function Post() {
   };
   const appliedFilter = filterStyles[cameraFilter] || 'none';
 
+  // All ref declarations before hooks
   const videoRef = useRef(); // preview playback
   const cameraVideoRef = useRef(); // dedicated to live camera stream
   const attachAttemptsRef = useRef(0);
@@ -45,8 +51,6 @@ export default function Post() {
   const cameraDebugTimerRef = useRef(null);
   const attachTimerRef = useRef(null);
   const canvasRef = useRef(null);
-
-  const navigate = useNavigate();
 
   // Canvas fireworks animation
   useEffect(() => {
@@ -490,6 +494,50 @@ export default function Post() {
       setUploading(false);
     }
   };
+
+  // Auth guard - after all hooks
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header disableNotifications />
+        <div className={`min-h-screen bg-gradient-to-br pb-24 pt-20 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800' : 'from-slate-50 via-white to-slate-100'}`}>
+          <div className="px-4 max-w-md mx-auto text-center mt-20">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <Dumbbell className="w-12 h-12 text-white" />
+              </div>
+              <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Share Your Fitness Journey</h1>
+              <p className={`text-lg px-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Please login to create posts and share your workouts with friends.</p>
+            </div>
+            
+            <div className="flex flex-col gap-4 mt-12">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Go to Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all shadow-md ${
+                  isDark 
+                    ? 'bg-gray-800 border-2 border-gray-700 text-gray-200 hover:bg-gray-700 hover:border-gray-600' 
+                    : 'bg-white border-2 border-gray-200 text-gray-800 hover:bg-gray-50 hover:border-gray-300'
+                }`}
+              >
+                Create an Account
+              </button>
+            </div>
+
+            <p className={`text-xs mt-8 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              By joining, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
+        </div>
+        <Navbar />
+      </>
+    );
+  }
 
   return (
     <>
