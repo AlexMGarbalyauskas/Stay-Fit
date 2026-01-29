@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, Palette } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -18,30 +18,10 @@ export default function Settings() {
   const [showTimezoneModal, setShowTimezoneModal] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  const [greenStyle, setGreenStyle] = useState(localStorage.getItem('greenStyle') === 'true');
   const [showShareNotification, setShowShareNotification] = useState(false);
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
-
-  const handleGreenStyleToggle = () => {
-    const newGreenStyle = !greenStyle;
-    setGreenStyle(newGreenStyle);
-    localStorage.setItem('greenStyle', newGreenStyle);
-    if (newGreenStyle) {
-      document.documentElement.classList.add('green-style');
-    } else {
-      document.documentElement.classList.remove('green-style');
-    }
-  };
-
-  useEffect(() => {
-    if (greenStyle) {
-      document.documentElement.classList.add('green-style');
-    } else {
-      document.documentElement.classList.remove('green-style');
-    }
-  }, [greenStyle]);
 
   const privacyLabel = (value) => {
     if (value === 'Public') return t('public');
@@ -264,21 +244,7 @@ export default function Settings() {
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
           </div>
-          {/* Green Style Mode */}
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center gap-2">
-              <Palette size={20} className={greenStyle ? 'text-green-600' : (isDark ? 'text-gray-200' : 'text-gray-700')} />
-              <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Green Style Mode</span>
-            </div>
-            <button
-              onClick={handleGreenStyleToggle}
-              className={greenStyle ? 'bg-green-500 hover:bg-green-600 text-white rounded-full p-2 transition' : (isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-100 rounded-full p-2 transition' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full p-2 transition')}
-              title={(greenStyle ? 'Disable' : 'Enable') + ' green style mode'}
-            >
-              <Palette size={16} />
-            </button>
-          </div>
-          {/* Language */}
+
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               <Languages size={20} />
