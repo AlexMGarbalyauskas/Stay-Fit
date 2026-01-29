@@ -446,11 +446,14 @@ function App() {
   }
 
   function SplashLoader() {
+    const [theme] = useState(localStorage.getItem('theme') || 'light');
+    const isDark = theme === 'dark';
+    
     return (
-      <div className="loader-overlay">
+      <div className={`loader-overlay ${isDark ? 'dark-mode' : ''}`}>
         <div className="loader-container">
           <div className="loader-icon">
-            <Dumbbell className="w-16 h-16 text-white" />
+            <Dumbbell className={`w-16 h-16 ${isDark ? 'text-gray-900' : 'text-white'}`} />
           </div>
           <div className="loader-swirl">
             <span className="dot dot-a" />

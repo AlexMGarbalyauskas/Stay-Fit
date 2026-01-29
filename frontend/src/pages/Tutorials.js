@@ -18,7 +18,7 @@ const EXERCISE_TUTORIALS = {
       'Push through your palms to return to starting position',
       'Repeat for desired number of reps'
     ],
-    videoUrl: 'https://www.youtube.com/embed/IODxDxX7oi4'
+    videoUrl: '' // Add your video link here
   },
   'Squats': {
     description: 'Strengthen your legs and glutes with this fundamental exercise',
@@ -31,7 +31,7 @@ const EXERCISE_TUTORIALS = {
       'Lower until thighs are parallel to ground',
       'Push through heels to return to standing'
     ],
-    videoUrl: 'https://www.youtube.com/embed/aclHkVaku9U'
+    videoUrl: '' // Add your video link here
   },
   'Deadlifts': {
     description: 'Full body strength training exercise',
@@ -44,7 +44,7 @@ const EXERCISE_TUTORIALS = {
       'Drive through heels to stand up',
       'Lower bar back to ground with control'
     ],
-    videoUrl: 'https://www.youtube.com/embed/r4MzxtBKyNE'
+    videoUrl: '' // Add your video link here
   },
   'Pull-ups': {
     description: 'Build back and arm strength',
@@ -57,7 +57,7 @@ const EXERCISE_TUTORIALS = {
       'Lower body with control',
       'Repeat for desired reps'
     ],
-    videoUrl: 'https://www.youtube.com/embed/eGo4IYlbE5g'
+    videoUrl: '' // Add your video link here
   },
   'Bench Press': {
     description: 'Develop chest, shoulders, and triceps',
@@ -70,7 +70,7 @@ const EXERCISE_TUTORIALS = {
       'Keep elbows at 45-degree angle',
       'Press bar back up to starting position'
     ],
-    videoUrl: 'https://www.youtube.com/embed/4y2ZtYc9_5s'
+    videoUrl: '' // Add your video link here
   },
   'Plank': {
     description: 'Core strengthening exercise',
@@ -83,7 +83,7 @@ const EXERCISE_TUTORIALS = {
       'Hold position for desired time',
       'Rest and repeat'
     ],
-    videoUrl: 'https://www.youtube.com/embed/YBvzNVEz-Gg'
+    videoUrl: '' // Add your video link here
   },
   'Dumbbell Curls': {
     description: 'Bicep isolation exercise',
@@ -96,7 +96,7 @@ const EXERCISE_TUTORIALS = {
       'Lower weights back down with control',
       'Repeat for desired reps'
     ],
-    videoUrl: 'https://www.youtube.com/embed/ykJmrZ5v0Oo'
+    videoUrl: '' // Add your video link here
   },
   'Lunges': {
     description: 'Leg strengthening and balance exercise',
@@ -109,11 +109,76 @@ const EXERCISE_TUTORIALS = {
       'Push back to starting position',
       'Alternate legs for desired reps'
     ],
-    videoUrl: 'https://www.youtube.com/embed/QOVaHwm-Q6U'
+    videoUrl: '' // Add your video link here
+  },
+  'Chest Press': {
+    description: 'Chest and triceps strengthening exercise',
+    duration: '3:15',
+    difficulty: 'Beginner',
+    instructions: [
+      'Lie on bench with feet on ground',
+      'Hold dumbbells at shoulder height',
+      'Press dumbbells upward',
+      'Lower dumbbells back to chest',
+      'Repeat for desired reps'
+    ],
+    videoUrl: '' // Add your video link here
+  },
+  'Back Rows': {
+    description: 'Back and biceps strengthening exercise',
+    duration: '3:30',
+    difficulty: 'Intermediate',
+    instructions: [
+      'Bend forward with knees slightly bent',
+      'Hold dumbbells with arms hanging down',
+      'Pull dumbbells up to chest',
+      'Lower dumbbells back down',
+      'Repeat for desired reps'
+    ],
+    videoUrl: '' // Add your video link here
+  },
+  'Shoulder Press': {
+    description: 'Shoulder and upper body strength exercise',
+    duration: '3:00',
+    difficulty: 'Intermediate',
+    instructions: [
+      'Stand with feet shoulder-width apart',
+      'Hold dumbbells at shoulder height',
+      'Press dumbbells overhead',
+      'Lower back to shoulder height',
+      'Repeat for desired reps'
+    ],
+    videoUrl: '' // Add your video link here
+  },
+  'Bicep Curls': {
+    description: 'Arm and bicep isolation exercise',
+    duration: '2:45',
+    difficulty: 'Beginner',
+    instructions: [
+      'Stand with dumbbells at sides, palms facing forward',
+      'Bend elbows to curl weights to shoulders',
+      'Keep elbows stationary at sides',
+      'Lower weights back down with control',
+      'Repeat for desired reps'
+    ],
+    videoUrl: '' // Add your video link here
+  },
+  'Tricep Dips': {
+    description: 'Tricep strengthening bodyweight exercise',
+    duration: '2:30',
+    difficulty: 'Intermediate',
+    instructions: [
+      'Use a bench or chair behind you',
+      'Lower body by bending elbows',
+      'Keep elbows close to body',
+      'Push back up to starting position',
+      'Repeat for desired reps'
+    ],
+    videoUrl: '' // Add your video link here
   }
 };
 
-// Extract unique exercises from plans
+// Extract unique exercises from plans - if empty, show all exercises
 const getExercisesFromWorkouts = (plans) => {
   const exercises = new Set();
   
@@ -150,7 +215,9 @@ export default function Tutorials({ isAuthenticated }) {
     try {
       const stored = localStorage.getItem('workout-plans');
       const plans = stored ? JSON.parse(stored) : {};
-      return getExercisesFromWorkouts(plans);
+      const exercises = getExercisesFromWorkouts(plans);
+      // If no exercises from plans, show all available exercises
+      return exercises.length > 0 ? exercises : Object.keys(EXERCISE_TUTORIALS);
     } catch (e) {
       console.error('Failed to load exercises:', e);
       return Object.keys(EXERCISE_TUTORIALS);
@@ -185,15 +252,19 @@ export default function Tutorials({ isAuthenticated }) {
   return (
     <div className={isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} style={{ minHeight: '100vh' }}>
       <Header />
-      <main className="max-w-6xl mx-auto px-4 py-8 pb-24">
+      <main className="max-w-6xl mx-auto px-4 py-8 pb-24 pt-20">
         {!selectedTutorial ? (
           <>
             <div className="mb-8">
               <button
                 onClick={() => navigate(-1)}
-                className={`flex items-center gap-2 mb-4 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${
+                  isDark
+                    ? 'bg-gray-800 text-gray-300 shadow-gray-800 hover:bg-gray-700'
+                    : 'bg-white text-slate-700 shadow-slate-200 hover:bg-slate-50'
+                }`}
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="h-4 w-4" />
                 Back
               </button>
 
@@ -291,17 +362,21 @@ export default function Tutorials({ isAuthenticated }) {
           <div>
             <button
               onClick={() => setSelectedExercise(null)}
-              className={`flex items-center gap-2 mb-6 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${
+                isDark
+                  ? 'bg-gray-800 text-gray-300 shadow-gray-800 hover:bg-gray-700'
+                  : 'bg-white text-slate-700 shadow-slate-200 hover:bg-slate-50'
+              }`}
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="h-4 w-4" />
               Back to Tutorials
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Video Section */}
               <div className="lg:col-span-2">
-                <div className={`rounded-xl overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                  <div className="aspect-video">
+                <div className={`rounded-xl overflow-hidden aspect-video ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                  {selectedTutorial?.videoUrl ? (
                     <iframe
                       width="100%"
                       height="100%"
@@ -311,7 +386,7 @@ export default function Tutorials({ isAuthenticated }) {
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     ></iframe>
-                  </div>
+                  ) : null}
                 </div>
 
                 <div className="mt-6">

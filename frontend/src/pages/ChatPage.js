@@ -335,68 +335,101 @@ export default function ChatPage() {
               <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
                 <div>
                   <div className="font-semibold text-lg">{activeFriend.nickname || activeFriend.username}</div>
-                  {activeFriend.nickname && <div className="text-xs text-gray-500">@{activeFriend.username}</div>}
+                  <div className="text-xs text-gray-500">@{activeFriend.username}</div>
                 </div>
                 <div
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm bg-green-100 text-green-700"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+                    isDark
+                      ? 'bg-green-900/30 text-green-400 border border-green-700'
+                      : 'bg-green-100 text-green-700'
+                  }`}
                   title="End-to-end encrypted - Messages are secure"
                 >
                   <Lock className="w-4 h-4" />
                   <span className="hidden sm:inline">{t('encrypted')}</span>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.map((msg, idx) => {
                   const isMine = Number(msg.sender_id) === Number(currentUser.id);
                   const isGif = msg.message_type === 'gif' || msg.media_url;
                   const reactions = reactionsMap[msg.id] || [];
-                  const bubbleBase = 'max-w-xs break-words rounded-lg shadow';
-                  const bubbleStyle = isGif
-                    ? (isDark ? 'bg-gray-900 text-gray-200 border border-gray-700 p-2' : 'bg-white text-gray-800 border border-gray-200 p-2')
-                    : `${isMine ? 'bg-blue-600 text-white' : 'bg-green-500 text-white'} px-4 py-2`;
-                  const timeColor = isGif ? (isDark ? 'text-gray-400' : 'text-gray-500') : 'text-gray-100';
+                  const senderProfilePic = isMine ? currentUser.profile_picture : activeFriend.profile_picture;
+                  const profilePicSrc = senderProfilePic?.startsWith('http') ? senderProfilePic : senderProfilePic ? `${API_BASE}${senderProfilePic}` : null;
 
                   return (
-                    <div key={msg.id + '-' + idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                      <div
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setContextMenu({ open: true, x: e.clientX, y: e.clientY, messageId: msg.id, isMine: Number(msg.sender_id) === Number(currentUser.id) });
-                        }}
-                        className={`${bubbleBase} ${bubbleStyle}`}
-                      >
-                        {isGif ? (
-                          <div className="space-y-2">
-                            {msg.content && msg.content !== '[gif]' && <p>{msg.content}</p>}
-                            {msg.media_url && (
-                              <img
-                                src={msg.media_url}
-                                alt="GIF"
-                                className="max-h-72 rounded-lg object-contain"
-                              />
-                            )}
-                          </div>
+                    <div key={msg.id + '-' + idx} className={`flex gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                      {/* Profile Picture */}
+                      <div className="flex-shrink-0 self-end">
+                        {profilePicSrc ? (
+                          <img
+                            src={profilePicSrc}
+                            alt={isMine ? 'You' : activeFriend.username}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
                         ) : (
-                          <p>{msg.content}</p>
+                          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                            <User className="w-4 h-4 text-gray-600" />
+                          </div>
                         )}
-                        <span className={`text-xs mt-1 block text-right ${timeColor}`}>
-                          {dayjs(msg.created_at).format('HH:mm, DD MMM')}
-                        </span>
+                      </div>
 
-                        {/* Reactions row */}
-                        <div className="flex gap-2 mt-2">
-                          {reactions.map(r => (
-                            <button
-                              key={r.emoji}
-                              onClick={() => toggleMessageReaction(msg.id, r.emoji).catch(() => alert('Failed to toggle reaction'))}
-                              className={`px-2 py-0.5 rounded-full border ${r.reacted_by_me ? (isDark ? 'bg-gray-900 text-gray-100 border-gray-700' : 'bg-white text-black') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700' : 'bg-white text-gray-700')}`}
-                            >
-                              {r.emoji} <span className="ml-1 text-xs">{r.count}</span>
-                            </button>
-                          ))}
+                      {/* Message Bubble */}
+                      <div className="max-w-xs">
+                        <div
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setContextMenu({ open: true, x: e.clientX, y: e.clientY, messageId: msg.id, isMine: Number(msg.sender_id) === Number(currentUser.id) });
+                          }}
+                          className={`rounded-2xl px-4 py-2 shadow-sm break-words inline-block ${
+                            isMine
+                              ? 'bg-blue-600 text-white rounded-br-none'
+                              : isDark
+                              ? 'bg-gray-800 text-gray-100 rounded-bl-none border border-gray-700'
+                              : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                          }`}
+                        >
+                          {isGif ? (
+                            <div className="space-y-2">
+                              {msg.content && msg.content !== '[gif]' && <p>{msg.content}</p>}
+                              {msg.media_url && (
+                                <img
+                                  src={msg.media_url}
+                                  alt="GIF"
+                                  className="max-h-72 rounded-lg object-contain"
+                                />
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-sm">{msg.content}</p>
+                          )}
+                          <span className={`text-xs mt-1 block text-right opacity-70`}>
+                            {dayjs(msg.created_at).format('HH:mm')}
+                          </span>
 
+                          {/* Reactions row */}
+                          {reactions.length > 0 && (
+                            <div className="flex gap-1 mt-2 flex-wrap">
+                              {reactions.map(r => (
+                                <button
+                                  key={r.emoji}
+                                  onClick={() => toggleMessageReaction(msg.id, r.emoji).catch(() => alert('Failed to toggle reaction'))}
+                                  className={`px-2 py-0.5 rounded-full text-xs border transition ${
+                                    r.reacted_by_me
+                                      ? 'bg-white/30 border-white/50'
+                                      : isMine
+                                      ? 'bg-blue-700/50 border-blue-500/50'
+                                      : isDark
+                                      ? 'bg-gray-700 border-gray-600'
+                                      : 'bg-gray-200 border-gray-300'
+                                  }`}
+                                >
+                                  {r.emoji} {r.count}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
-
                       </div>
                     </div>
                   );

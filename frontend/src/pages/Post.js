@@ -727,18 +727,22 @@ export default function Post() {
 
               {/* Loading States */}
               {!streamRef.current && (
-                <div className="absolute inset-0 flex items-center justify-center text-white text-sm bg-black/60 backdrop-blur-sm rounded-2xl">
+                <div className={`absolute inset-0 flex items-center justify-center text-sm ${isDark ? 'bg-black/60' : 'bg-white/60'} backdrop-blur-sm rounded-2xl`}>
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Starting camera…</span>
+                    <div className={`w-8 h-8 border-2 rounded-full animate-spin ${
+                      isDark ? 'border-white/30 border-t-white' : 'border-gray-400/50 border-t-gray-700'
+                    }`} />
+                    <span className={isDark ? 'text-white' : 'text-gray-700'}>Starting camera…</span>
                   </div>
                 </div>
               )}
               {streamRef.current && cameraVideoRef.current && cameraVideoRef.current.readyState < 2 && (
-                <div className="absolute inset-0 flex items-center justify-center text-white text-sm bg-black/60 backdrop-blur-sm rounded-2xl">
+                <div className={`absolute inset-0 flex items-center justify-center text-sm ${isDark ? 'bg-black/60' : 'bg-white/60'} backdrop-blur-sm rounded-2xl`}>
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Loading…</span>
+                    <div className={`w-8 h-8 border-2 rounded-full animate-spin ${
+                      isDark ? 'border-white/30 border-t-white' : 'border-gray-400/50 border-t-gray-700'
+                    }`} />
+                    <span className={isDark ? 'text-white' : 'text-gray-700'}>Loading…</span>
                   </div>
                 </div>
               )}
