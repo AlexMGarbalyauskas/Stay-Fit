@@ -45,9 +45,10 @@ export default function FindFriends({ onFriendUpdate }) {
       .catch(console.error);
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, [isAuthenticated]);
+  // Don't auto-fetch users on load - only after search
+  // useEffect(() => {
+  //   fetchUsers();
+  // }, [isAuthenticated]);
 
   // Fetch current user (me)
   useEffect(() => {
@@ -79,9 +80,22 @@ export default function FindFriends({ onFriendUpdate }) {
     });
   }, [users, me]);
 
-  // Re-filter when search term or location changes
+  // Fetch and filter users when search is performed
   useEffect(() => {
     if (!isAuthenticated) return;
+    
+    // Only fetch users if there's a search term or location filter
+    if (!searchTerm && !locationFilter.trim()) {
+      setFilteredUsers([]);
+      return;
+    }
+    
+    // Fetch users if not already loaded
+    if (users.length === 0) {
+      fetchUsers();
+      return;
+    }
+    
     let result = users;
     
     // Filter by username search
@@ -95,7 +109,7 @@ export default function FindFriends({ onFriendUpdate }) {
     }
     
     setFilteredUsers(result);
-  }, [searchTerm, locationFilter, users]);
+  }, [searchTerm, locationFilter, users, isAuthenticated]);
 
   const handleAddFriend = id =>
     sendFriendRequest(id)
@@ -241,6 +255,18 @@ export default function FindFriends({ onFriendUpdate }) {
         )}
 
         <div className="space-y-2 mt-3">
+          {filteredUsers.length === 0 && !searchTerm && !locationFilter.trim() && (
+            <div className={`text-center py-12 px-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} shadow`}>
+              <Dumbbell className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Search to find friends</h3>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Enter a username or location to discover fitness buddies</p>
+            </div>
+          )}
+          {filteredUsers.length === 0 && (searchTerm || locationFilter.trim()) && (
+            <div className={`text-center py-12 px-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} shadow`}>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No users found matching your search</p>
+            </div>
+          )}
           {filteredUsers.filter(u => u.id !== me?.id).map(user => (
             <Link to={`/users/${user.id}`} key={user.id} className="block">
               <div className="flex items-center justify-between bg-white p-3 rounded shadow hover:shadow-md transition">

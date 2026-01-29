@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getNotifications, API_BASE } from '../api';
 import { io } from 'socket.io-client';
@@ -53,11 +53,19 @@ export default function Header({ disableNotifications = false }) {
           Stay Fit
         </h1>
 
-        {/* Notification Icon (far right) */}
+        {/* Tutorials and Notification Icons (far right) */}
+        <button
+          onClick={() => navigate('/tutorials')}
+          className="ml-auto p-2 rounded-full transition hover:bg-gray-100"
+          title="Exercise Tutorials"
+        >
+          <BookOpen className="w-6 h-6 text-gray-700" />
+        </button>
+
         <button
           onClick={handleNotificationsClick}
           disabled={disableNotifications}
-          className={`ml-auto relative p-2 rounded-full transition ${
+          className={`relative p-2 rounded-full transition ${
             disableNotifications ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'
           }`}
         >

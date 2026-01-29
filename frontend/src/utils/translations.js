@@ -1329,3 +1329,4 @@ export const translations = {
 export const getTranslation = (lang, key) => {
   return translations[lang]?.[key] || translations['en'][key] || key;
 };
+

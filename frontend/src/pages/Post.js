@@ -14,6 +14,7 @@ export default function Post() {
   const [source, setSource] = useState('upload'); // 'upload' or 'camera'
   const [composerOpen, setComposerOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0); // duration in seconds
   const [cameraFilter, setCameraFilter] = useState('none');
   const [celebrate, setCelebrate] = useState(false);
   const [cameraStats, setCameraStats] = useState(null);
@@ -24,6 +25,7 @@ export default function Post() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [cameraOverlay, setCameraOverlay] = useState(false); // full-screen camera UI
+  const [countdown, setCountdown] = useState(null); // null or number for countdown display
   const filterStyles = {
     none: 'none',
     vivid: 'saturate(1.25) contrast(1.05)',
@@ -317,23 +319,49 @@ export default function Post() {
   const startRecording = () => {
     if (!streamRef.current) return setError('Camera not started');
     try {
-      recordedChunksRef.current = [];
-      const options = { mimeType: 'video/webm;codecs=vp9' };
-      const mr = new MediaRecorder(streamRef.current, options);
-      recorderRef.current = mr;
-      mr.ondataavailable = (e) => { if (e.data && e.data.size) recordedChunksRef.current.push(e.data); };
-      mr.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        const file = new File([blob], `recording_${Date.now()}.webm`, { type: 'video/webm' });
-        const url = URL.createObjectURL(file);
-        setLocal({ file, url, duration: null });
-        stopStream();
-        setCameraOverlay(false);
-        setIsRecording(false);
-      };
-      mr.start();
-      setIsRecording(true);
-      recordTimerRef.current = setTimeout(() => stopRecording(), 60000);
+      // Start countdown animation
+      let count = 3;
+      setCountdown(count);
+      
+      const countdownInterval = setInterval(() => {
+        count -= 1;
+        if (count > 0) {
+          setCountdown(count);
+        } else {
+          clearInterval(countdownInterval);
+          setCountdown(null);
+          
+          // Now start the actual recording
+          recordedChunksRef.current = [];
+          const options = { mimeType: 'video/webm;codecs=vp9' };
+          const mr = new MediaRecorder(streamRef.current, options);
+          recorderRef.current = mr;
+          mr.ondataavailable = (e) => { if (e.data && e.data.size) recordedChunksRef.current.push(e.data); };
+          mr.onstop = () => {
+            const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+            const file = new File([blob], `recording_${Date.now()}.webm`, { type: 'video/webm' });
+            const url = URL.createObjectURL(file);
+            setLocal({ file, url, duration: null });
+            setIsRecording(false);
+            setRecordingDuration(0);
+          };
+          mr.start();
+          setIsRecording(true);
+          setRecordingDuration(0);
+          
+          // Start duration timer
+          let seconds = 0;
+          const durationInterval = setInterval(() => {
+            seconds += 1;
+            setRecordingDuration(seconds);
+            if (seconds >= 60) {
+              clearInterval(durationInterval);
+              stopRecording();
+            }
+          }, 1000);
+          recordTimerRef.current = durationInterval;
+        }
+      }, 1000);
     } catch (err) {
       console.error('Record error', err);
       setError('Could not start recording.');
@@ -342,7 +370,7 @@ export default function Post() {
   };
 
   const stopRecording = () => {
-    try { clearTimeout(recordTimerRef.current); } catch (e) {}
+    try { clearInterval(recordTimerRef.current); } catch (e) {}
     try {
       if (recorderRef.current && recorderRef.current.state !== 'inactive') {
         recorderRef.current.stop();
@@ -352,6 +380,7 @@ export default function Post() {
       }
     } catch (e) {}
     setIsRecording(false);
+    setRecordingDuration(0);
   };
 
   const capturePhoto = () => {
@@ -659,92 +688,192 @@ export default function Post() {
       {/* Fullscreen Camera Overlay */}
       {cameraOverlay && (
         <div
-          className="fixed inset-0 bg-black z-50 flex flex-col overflow-y-auto p-2 md:p-4"
+          className="fixed inset-0 bg-black z-50 flex flex-col overflow-y-auto"
           style={{ overscrollBehaviorY: 'contain', WebkitOverflowScrolling: 'touch' }}
         >
-          <div className="relative bg-black w-full max-w-4xl mx-auto flex items-center justify-center aspect-[3/4] max-h-[55vh] min-h-[240px] px-4 pt-6 overflow-hidden rounded-md">
-            <video
-              ref={cameraVideoRef}
-              className="w-full h-full object-contain"
-              autoPlay
-              playsInline
-              muted
-              controls={false}
-              style={{ filter: appliedFilter }}
-            />
-            <div className="absolute top-3 left-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs">
-              {isRecording ? 'Recording…' : 'Ready'}
+          {/* Camera Feed Container - Full remaining height */}
+          <div className="flex flex-col items-center justify-center px-2 py-1 md:px-4">
+            <div className="relative bg-black w-full max-w-4xl aspect-[3/4] max-h-[40vh] flex items-center justify-center overflow-hidden rounded-2xl shadow-2xl border border-gray-800">
+              <video
+                ref={cameraVideoRef}
+                className="w-full h-full object-contain"
+                autoPlay
+                playsInline
+                muted
+                controls={false}
+                style={{ filter: appliedFilter }}
+              />
+              {/* Status Badge */}
+              <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium border border-white/20">
+                {isRecording ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    Recording
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+                    Ready
+                  </span>
+                )}
+              </div>
+
+              {/* Timer Display */}
+              {isRecording && (
+                <div className="absolute top-4 right-4 bg-red-600/90 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm font-mono font-bold border border-red-400/50 shadow-lg">
+                  {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, '0')}
+                </div>
+              )}
+
+              {/* Loading States */}
+              {!streamRef.current && (
+                <div className="absolute inset-0 flex items-center justify-center text-white text-sm bg-black/60 backdrop-blur-sm rounded-2xl">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Starting camera…</span>
+                  </div>
+                </div>
+              )}
+              {streamRef.current && cameraVideoRef.current && cameraVideoRef.current.readyState < 2 && (
+                <div className="absolute inset-0 flex items-center justify-center text-white text-sm bg-black/60 backdrop-blur-sm rounded-2xl">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Loading…</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Countdown Animation */}
+              {countdown !== null && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-2xl">
+                  <div className="text-white text-9xl font-bold" style={{
+                    textShadow: '0 0 50px rgba(255, 255, 255, 0.6), 0 0 100px rgba(59, 130, 246, 0.4)',
+                    animation: 'countdownPulse 1s ease-out infinite'
+                  }}>
+                    {countdown}
+                  </div>
+                </div>
+              )}
             </div>
-            {!streamRef.current && (
-              <div className="absolute inset-0 flex items-center justify-center text-white text-sm bg-black/60">
-                Starting camera…
-              </div>
-            )}
-            {streamRef.current && cameraVideoRef.current && cameraVideoRef.current.readyState < 2 && (
-              <div className="absolute inset-0 flex items-center justify-center text-white text-sm bg-black/40">
-                Loading preview…
-              </div>
-            )}
-            {cameraStats && (
-              <div className="absolute bottom-3 left-3 bg-black/60 text-white text-[11px] px-2 py-1 rounded">
-                rs:{cameraStats.readyState} {cameraStats.videoWidth}x{cameraStats.videoHeight} {cameraStats.paused ? 'paused' : 'playing'}
-              </div>
-            )}
-            {isRecording && (
-              <div className="absolute top-3 right-3 flex items-center gap-2 bg-red-600/80 text-white px-3 py-1 rounded-full text-xs">
-                <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
-                REC
-              </div>
-            )}
           </div>
 
-          <div className="bg-black/80 text-white p-4 space-y-4 shadow-inner mt-3 rounded-md">
-            <div className="flex justify-center gap-2 flex-wrap">
+          {/* Controls Panel - Compact bottom bar */}
+          <div className="bg-gradient-to-b from-black/50 to-black px-4 py-2 space-y-2">
+            {/* Filter Row */}
+            <div>
+              <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-2 px-1">Filters</p>
+              <div className="flex justify-center gap-2 flex-wrap">
               {['none', 'vivid', 'mono', 'warm', 'cool'].map((f) => (
                 <button
                   key={f}
                   onClick={() => setCameraFilter(f)}
-                  className={`px-3 py-1 rounded-full text-xs border ${cameraFilter === f ? 'bg-white text-black border-white' : 'border-white/40'}`}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 border ${
+                    cameraFilter === f
+                      ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/50'
+                      : 'bg-white/10 text-white/70 border-white/30 hover:bg-white/20'
+                  }`}
                 >
-                  {f === 'none' ? 'No filter' : f}
+                  {f === 'none' ? '✓ None' : f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
             </div>
+            </div>
 
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <button
-                onClick={() => setMediaKind('image')}
-                className={`px-3 py-1 rounded-full text-sm ${mediaKind === 'image' ? 'bg-white text-black' : 'bg-white/10'}`}
-              >
-                Photo
-              </button>
+            {/* Main Controls */}
+            <div className="flex items-center justify-center gap-6 py-1">
+              {/* Photo/Video Toggle */}
+              <div className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-full p-1.5 border border-white/20">
+                <button
+                  onClick={() => setMediaKind('image')}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    mediaKind === 'image'
+                      ? 'bg-white text-black shadow-lg'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  📷 Photo
+                </button>
+                <button
+                  onClick={() => setMediaKind('video')}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    mediaKind === 'video'
+                      ? 'bg-white text-black shadow-lg'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  🎥 Video
+                </button>
+              </div>
+            </div>
+
+            {/* Capture Button */}
+            <div className="flex items-center justify-center py-1">
               {mediaKind === 'video' ? (
                 <button
                   onClick={isRecording ? stopRecording : startRecording}
-                  className={`w-16 h-16 rounded-full border-4 ${isRecording ? 'border-red-500 bg-red-500/80' : 'border-white bg-white/10'}`}
+                  className={`w-20 h-20 rounded-full border-4 shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                    isRecording
+                      ? 'border-red-500 bg-gradient-to-br from-red-600 to-red-700 shadow-red-500/50'
+                      : 'border-white/80 bg-gradient-to-br from-white/20 to-white/10 hover:border-white'
+                  }`}
+                  title={isRecording ? 'Stop recording' : 'Start recording'}
                 />
               ) : (
                 <button
                   onClick={capturePhoto}
-                  className="w-16 h-16 rounded-full border-4 border-white bg-white/10"
+                  className="w-20 h-20 rounded-full border-4 border-white/80 bg-gradient-to-br from-white/20 to-white/10 shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 hover:border-white"
+                  title="Capture photo"
                 />
               )}
-              <button
-                onClick={() => setMediaKind('video')}
-                className={`px-3 py-1 rounded-full text-sm ${mediaKind === 'video' ? 'bg-white text-black' : 'bg-white/10'}`}
-              >
-                Video
-              </button>
             </div>
 
-            <div className="flex justify-center gap-2 flex-wrap">
-              <button onClick={handleStop} className="px-4 py-2 rounded bg-gray-700">Close</button>
-              {!isRecording && (
-                <button onClick={startCamera} className="px-4 py-2 rounded bg-blue-600">Restart camera</button>
+            {/* Action Buttons Row */}
+            <div className="flex justify-center gap-3 pt-1">
+              {!(local && local.file) && (
+                <>
+                  <button
+                    onClick={handleStop}
+                    className="px-6 py-2.5 rounded-full text-sm font-semibold bg-red-600/80 text-white border border-red-500/50 hover:bg-red-700 transition-all hover:shadow-lg"
+                  >
+                    ✕ Cancel
+                  </button>
+                  <button
+                    onClick={startCamera}
+                    className="px-6 py-2.5 rounded-full text-sm font-semibold bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-all hover:shadow-lg"
+                  >
+                    ↻ Retake
+                  </button>
+                </>
+              )}
+              {local && local.file && (
+                <>
+                  <button
+                    onClick={startCamera}
+                    className="px-6 py-2.5 rounded-full text-sm font-semibold bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-all hover:shadow-lg"
+                  >
+                    ↻ Retake
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCameraOverlay(false);
+                      stopStream();
+                    }}
+                    className="px-6 py-2.5 rounded-full text-sm font-semibold bg-green-600 text-white hover:bg-green-700 transition-all hover:shadow-lg shadow-green-500/50"
+                  >
+                    ✓ Submit
+                  </button>
+                </>
               )}
             </div>
-            <div className="text-center text-xs text-white/70 select-none">Scroll to reach controls if hidden</div>
           </div>
+
+          <style>{`
+            @keyframes countdownPulse {
+              0% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.1); }
+              100% { transform: scale(0.95); opacity: 0.8; }
+            }
+          `}</style>
         </div>
       )}
 

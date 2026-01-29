@@ -14,6 +14,7 @@ export default function Home({ onLogout, isAuthenticated }) {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [commentsForPost, setCommentsForPost] = useState(null);
+  const [sharePost, setSharePost] = useState(null);
   const [countdown, setCountdown] = useState('');
   const [todayWorkout, setTodayWorkout] = useState(null);
   const navigate = useNavigate();
@@ -272,7 +273,7 @@ export default function Home({ onLogout, isAuthenticated }) {
 
                   <button onClick={() => navigate(`/posts/${post.id}/comments`)} className="flex items-center gap-1 text-sm text-gray-600"><MessageCircle className="w-4 h-4" /> {post.comments_count || 0} {t('comments')}</button>
 
-                  <button onClick={() => { navigator.clipboard.writeText(window.location.href + `#post-${post.id}`); alert('Link copied'); }} className="flex items-center gap-1 text-sm text-gray-600"><Share2 className="w-4 h-4" /> Share</button>
+                  <button onClick={() => setSharePost(post)} className="flex items-center gap-1 text-sm text-gray-600"><Share2 className="w-4 h-4" /> Share</button>
 
                   <button onClick={() => toggleSave(post.id).then(res => setPosts(prev => prev.map(p => p.id === post.id ? { ...p, saved: res.data.saved, saves_count: res.data.count } : p))).catch(err => { console.error(err); if (err?.response?.status === 404) { alert('Post not found (may have been deleted)'); setPosts(prev => prev.filter(p => p.id !== post.id)); } else alert(err?.response?.data?.error || 'Failed to save'); })} className={`flex items-center gap-1 text-sm ${post.saved ? 'text-blue-600' : 'text-gray-600'}`}>
                     <Bookmark className="w-4 h-4" /> {post.saves_count ? post.saves_count : ''}
@@ -285,6 +286,40 @@ export default function Home({ onLogout, isAuthenticated }) {
           </div>
         </div>
       </main>
+
+      {/* Share Modal */}
+      {sharePost && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSharePost(null)}>
+          <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 max-w-md w-full shadow-2xl`} onClick={(e) => e.stopPropagation()}>
+            <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Share Post</h3>
+            
+            <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-3 mb-4`}>
+              <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>Post Link:</p>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} break-all font-mono`}>
+                {window.location.origin}/posts/{sharePost.id}
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/posts/${sharePost.id}`);
+                alert('Link copied to clipboard!');
+                setSharePost(null);
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-medium transition-colors mb-3"
+            >
+              Copy Link
+            </button>
+
+            <button
+              onClick={() => setSharePost(null)}
+              className={`w-full ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} rounded-lg py-3 font-medium transition-colors`}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <Navbar />
     </>

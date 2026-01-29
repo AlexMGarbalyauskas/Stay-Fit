@@ -25,6 +25,7 @@ import Friends from './pages/Friends';
 import ChatPage from './pages/ChatPage';
 import { clearEncryption } from './utils/crypto';
 import CalendarPage from './pages/Calendar';
+import Tutorials from './pages/Tutorials';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import DebugOverlay from './components/DebugOverlay';
@@ -107,6 +108,7 @@ function App() {
         <Route path="/chat" element={requireAuth(<ChatPage />)} />
         <Route path="/chat/:id" element={requireAuth(<ChatPage />)} />
         <Route path="/calendar" element={requireAuth(<CalendarPage />)} />
+        <Route path="/tutorials" element={requireAuth(<Tutorials isAuthenticated={isAuthenticated} />)} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
 
