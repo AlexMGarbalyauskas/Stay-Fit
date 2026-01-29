@@ -33,6 +33,7 @@ import { WorkoutReminderProvider, useWorkoutReminder } from './context/WorkoutRe
 import { LanguageProvider } from './context/LanguageContext';
 import { io } from 'socket.io-client';
 import { API_BASE } from './api';
+import { SOCKET_BASE, getSocketOptions } from './utils/socket';
 import { Dumbbell, X as Close } from 'lucide-react';
 
 function App() {
@@ -143,6 +144,8 @@ function App() {
   function GlobalWorkoutPrompt() {
     const { showWorkoutPrompt, todayWorkout, closePrompt, dismissPrompt } = useWorkoutReminder();
     const navigate = useNavigate();
+    const [theme] = useState(localStorage.getItem('theme') || 'light');
+    const isDark = theme === 'dark';
 
     console.log('🏋️ GlobalWorkoutPrompt state:', { showWorkoutPrompt, todayWorkout });
 
@@ -280,8 +283,8 @@ function App() {
     };
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+        <div className={`rounded-2xl shadow-2xl max-w-md w-full p-6 ${isDark ? 'bg-gray-900 border border-gray-700' : 'bg-white border border-gray-200'}`}>
           <div className="text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600">
               <Dumbbell className="h-8 w-8 text-white" />
@@ -289,18 +292,18 @@ function App() {
             
             {todayWorkout.isInvite ? (
               <>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Workout Invite! 🎉</h2>
-                <p className="text-lg text-gray-700 mb-1">
-                  <span className="font-bold text-blue-600">{todayWorkout.creatorUsername}</span> invited you to a <span className="font-bold text-blue-600">{todayWorkout.workout}</span> workout
+                <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Workout Invite! 🎉</h2>
+                <p className={`text-lg mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <span className="font-bold text-blue-400">{todayWorkout.creatorUsername}</span> invited you to a <span className="font-bold text-blue-400">{todayWorkout.workout}</span> workout
                 </p>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   {todayWorkout.date && `📅 ${todayWorkout.date}`} {todayWorkout.time && `⏰ ${todayWorkout.time}`}
                 </p>
                 
                 <div className="flex gap-3">
                   <button
                     onClick={handleDeclineInvite}
-                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
+                    className={`flex-1 px-6 py-3 border-2 rounded-xl font-semibold transition ${isDark ? 'border-gray-600 text-gray-200 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                   >
                     Maybe Later
                   </button>
@@ -314,14 +317,14 @@ function App() {
               </>
             ) : (
               <>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Workout Time! 🏋️</h2>
-                <p className="text-lg text-gray-700 mb-1">It's time for your <span className="font-bold text-blue-600">{todayWorkout.workout}</span> workout!</p>
-                <p className="text-sm text-gray-500 mb-6">Ready to post your workout video?</p>
+                <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Workout Time! 🏋️</h2>
+                <p className={`text-lg mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>It's time for your <span className="font-bold text-blue-400">{todayWorkout.workout}</span> workout!</p>
+                <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Ready to post your workout video?</p>
                 
                 <div className="flex gap-3">
                   <button
                     onClick={handleSkipWorkout}
-                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
+                    className={`flex-1 px-6 py-3 border-2 rounded-xl font-semibold transition ${isDark ? 'border-gray-600 text-gray-200 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                   >
                     Not Now
                   </button>
@@ -340,93 +343,49 @@ function App() {
     );
   }
 
-  return (
-    <Router>
-      <WorkoutReminderProvider>
-        {booting && <SplashLoader />}
-        <Routes>
-          <Route path="/" element={requireAuth(<Home onLogout={handleLogout} />)} />
-          <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
-          <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
-          <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
-          <Route path="/download" element={<PublicShare />} />
-
-          <Route path="/home" element={requireAuth(<Home onLogout={handleLogout} />)} />
-          <Route path="/profile" element={requireAuth(<Profile />)} />
-          <Route path="/saved-posts" element={requireAuth(<SavedPosts />)} />
-          <Route path="/post" element={requireAuth(<Post />)} />
-          <Route path="/posts/:id/comments" element={requireAuth(<PostComments />)} />
-          <Route path="/settings" element={requireAuth(<Settings />)} />
-          <Route path="/settings/other" element={requireAuth(<OtherSettings />)} />
-          <Route path="/settings/about" element={requireAuth(<AboutSettings />)} />
-          <Route path="/share" element={requireAuth(<ShareApp />)} />
-          <Route path="/chat" element={requireAuth(<ChatPage />)} />
-          <Route path="/chat/:id" element={requireAuth(<ChatPage />)} />
-          <Route path="/calendar" element={requireAuth(<CalendarPage />)} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-
-          <Route
-            path="/find"
-            element={requireAuth(<FindFriends onFriendUpdate={triggerFriendRefresh} />)}
-          />
-          <Route
-            path="/friend-requests"
-            element={requireAuth(<FriendRequests onFriendUpdate={triggerFriendRefresh} />)}
-          />
-          <Route
-            path="/friends"
-            element={requireAuth(<Friends refreshTrigger={refreshFriends} />)}
-          />
-          <Route path="/users/:id" element={requireAuth(<UserProfile />)} />
-          <Route path="/notifications" element={requireAuth(<Notifications />)} />
-          <Route path="/user/:id/friends" element={requireAuth(<UserFriends />)} />
-        </Routes>
-
-        {/* Global Workout Prompt Modal */}
-        <GlobalWorkoutPrompt />
-
-        {/* Global notification toast rendered inside Router so it can navigate */}
-        <NotificationToast />
-      </WorkoutReminderProvider>
-    </Router>
-  );
-
-  // Notification toast component
   function NotificationToast() {
-    const [toast, setToast] = useState(null);
     const navigate = useNavigate();
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
       const token = localStorage.getItem('token');
-      if (!token) return;
-      const socket = io(API_BASE.replace('/api',''), { auth: { token } });
-      socket.on('notification:new', (data) => {
-        setToast({ data });
-        // auto-hide
-        setTimeout(() => setToast(null), 5000);
-        // If it's a post notification, trigger a feed refresh
-        try {
-          if (data?.type === 'post') {
-            window.dispatchEvent(new CustomEvent('feed:refresh', { detail: { fromUserId: data.fromUserId, postId: data.postId } }));
+      if (!token) return undefined;
+
+      const socket = io(SOCKET_BASE, getSocketOptions(token));
+
+      const handleNotification = (data) => {
+        if (!data) return;
+        let payload = data.data || {};
+        if (typeof payload === 'string') {
+          try {
+            payload = JSON.parse(payload);
+          } catch {
+            payload = { content: payload };
           }
-        } catch (e) {}
-      });
-      // forward post comments updates to pages
-      socket.on('post:commentsUpdated', (data) => {
-        try { window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: data })); } catch (e) {}
-      });
-      // Listen for explicit post:new to refresh feed
-      socket.on('post:new', (data) => {
-        try { window.dispatchEvent(new CustomEvent('feed:refresh', { detail: data })); } catch (e) {}
-      });
-      return () => socket.disconnect();
+        }
+        setToast({ type: data.type || 'notification', payload });
+      };
+
+      socket.on('notification:new', handleNotification);
+
+      return () => {
+        try {
+          socket.off('notification:new', handleNotification);
+          socket.disconnect();
+        } catch (err) {
+          console.error('Failed to disconnect notification socket:', err);
+        }
+      };
     }, []);
 
-    if (!toast) return null;
+    useEffect(() => {
+      if (!toast) return undefined;
+      const timer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(timer);
+    }, [toast]);
 
-    const payload = toast.data;
-    const type = payload.type;
+    if (!toast) return null;
+    const { type, payload } = toast;
 
     const onClick = () => {
       setToast(null);
@@ -440,7 +399,11 @@ function App() {
     return (
       <div onClick={onClick} className="fixed right-4 top-4 z-50 bg-white shadow-lg rounded p-3 cursor-pointer">
         <div className="font-medium">You got a new {type === 'message' ? 'message' : type}</div>
-        {type === 'message' && payload?.content && <div className="text-sm text-gray-600 mt-1 truncate" style={{maxWidth: 220}}>{payload.content}</div>}
+        {type === 'message' && payload?.content && (
+          <div className="text-sm text-gray-600 mt-1 truncate" style={{ maxWidth: 220 }}>
+            {payload.content}
+          </div>
+        )}
       </div>
     );
   }

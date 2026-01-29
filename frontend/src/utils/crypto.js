@@ -4,6 +4,7 @@
 const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 const IV_LENGTH = 12; // 96 bits recommended for AES-GCM
+const SHARED_CONVERSATION_SEED = 'stay-fit-shared-conversation-seed-v2';
 
 /**
  * Generate a cryptographic key from a password using PBKDF2
@@ -60,13 +61,19 @@ function getConversationKey(userId1, userId2) {
  */
 async function getOrCreateConversationKey(currentUserId, otherUserId) {
   const conversationId = getConversationKey(currentUserId, otherUserId);
-  
-  // In a real app, you'd retrieve this from secure storage
-  // For now, derive from conversation ID + user credentials
-  // This means both users can independently derive the same key
-  const masterPassword = localStorage.getItem('encryption_seed') || 'stay-fit-default-seed';
-  
-  return await deriveKey(masterPassword, conversationId);
+
+  // Use a shared seed so both users derive the same conversation key
+  // (not per-user), otherwise decryption will fail across accounts.
+  const sharedSeed = localStorage.getItem('conversation_seed') || SHARED_CONVERSATION_SEED;
+
+  return await deriveKey(sharedSeed, conversationId);
+}
+
+async function getLegacyConversationKey(currentUserId, otherUserId) {
+  const conversationId = getConversationKey(currentUserId, otherUserId);
+  const legacySeed = localStorage.getItem('encryption_seed');
+  if (!legacySeed) return null;
+  return await deriveKey(legacySeed, conversationId);
 }
 
 /**
@@ -147,9 +154,28 @@ export async function decryptMessage(encryptedBase64, ivBase64, senderId, receiv
     const decoder = new TextDecoder();
     return decoder.decode(decryptedBuffer);
   } catch (error) {
-    console.error('Decryption failed:', error);
-    // Return placeholder for failed decryptions
-    return '[Unable to decrypt message]';
+    try {
+      const legacyKey = await getLegacyConversationKey(senderId, receiverId);
+      if (!legacyKey) throw error;
+
+      const encrypted = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+      const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+
+      const decryptedBuffer = await window.crypto.subtle.decrypt(
+        {
+          name: ALGORITHM,
+          iv: iv
+        },
+        legacyKey,
+        encrypted
+      );
+
+      const decoder = new TextDecoder();
+      return decoder.decode(decryptedBuffer);
+    } catch (legacyError) {
+      // Return placeholder for failed decryptions
+      return '[Unable to decrypt message]';
+    }
   }
 }
 

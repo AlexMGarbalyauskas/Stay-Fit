@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getNotifications, API_BASE } from '../api';
+import { getNotifications } from '../api';
 import { io } from 'socket.io-client';
+import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Header({ disableNotifications = false }) {
@@ -29,7 +30,7 @@ export default function Header({ disableNotifications = false }) {
 
     const token = localStorage.getItem('token');
     if (token) {
-      socketRef.current = io(API_BASE.replace('/api', ''), { auth: { token } });
+      socketRef.current = io(SOCKET_BASE, getSocketOptions(token));
       socketRef.current.on('notification:new', () => refreshUnread());
     }
 

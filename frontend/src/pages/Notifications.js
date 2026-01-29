@@ -2,11 +2,11 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { getFriendRequests, acceptFriendRequest, rejectFriendRequest, getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, respondToWorkoutInvite } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { API_BASE } from '../api';
 import { ArrowLeft, Users, UserX, MessageSquare, BellRing, Check, X as Close, Trash2, Bell, Dumbbell } from 'lucide-react';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import { useLanguage } from '../context/LanguageContext';
+import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 
 export default function Notifications({ onFriendUpdate }) {
   const { t } = useLanguage();
@@ -108,7 +108,7 @@ export default function Notifications({ onFriendUpdate }) {
     // Socket listener for new notifications
     const token = localStorage.getItem('token');
     if (token) {
-      socketRef.current = io(API_BASE.replace('/api',''), { auth: { token } });
+      socketRef.current = io(SOCKET_BASE, getSocketOptions(token));
       socketRef.current.on('notification:new', (data) => {
         // Refresh current tab when a relevant notification arrives
         const isWorkoutNotification = workoutTypes.includes(data.type);

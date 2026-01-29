@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../api';
+import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 
 const WorkoutReminderContext = createContext();
 
@@ -99,13 +100,7 @@ export function WorkoutReminderProvider({ children }) {
     if (!token) return;
 
     try {
-      const socket = io(API_BASE.replace('/api', ''), { 
-        auth: { token },
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
-        reconnectionAttempts: 5
-      });
+      const socket = io(SOCKET_BASE, getSocketOptions(token));
       
       socket.on('connect', () => {
         console.log('🏋️ Socket connected for workout reminders');

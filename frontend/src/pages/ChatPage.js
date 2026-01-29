@@ -7,8 +7,9 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import EmojiPickerModal from '../components/EmojiPickerModal';
 import dayjs from 'dayjs';
-import { User, Image as ImageIcon, Search, ChevronDown, Lock, MessageCircle, Dumbbell } from 'lucide-react';
+import { User, Image as ImageIcon, Search, ChevronDown, Lock, MessageCircle, Dumbbell, Smile } from 'lucide-react';
 import { encryptMessage, decryptMessage, isEncryptionReady } from '../utils/crypto';
+import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function ChatPage() {
@@ -32,6 +33,7 @@ export default function ChatPage() {
   const [selectedGifId, setSelectedGifId] = useState(null);
   const [lastGifQuery, setLastGifQuery] = useState('');
   const [gifPanelOpen, setGifPanelOpen] = useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const [reactionsMap, setReactionsMap] = useState({}); // { messageId: [{emoji,count,reacted_by_me}] }
   const gifSearchTimeoutRef = useRef(null);
   const [pickerOpenFor, setPickerOpenFor] = useState(null);
@@ -46,7 +48,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    socketRef.current = io(API_BASE.replace('/api',''), { auth: { token } });
+    socketRef.current = io(SOCKET_BASE, getSocketOptions(token));
     const s = socketRef.current;
 
     s.on('connect_error', (err) => console.error('Socket connect error:', err));
@@ -56,6 +58,7 @@ export default function ChatPage() {
         // Decrypt message if encrypted
         if (msg.is_encrypted && msg.encrypted_content && msg.iv) {
           try {
+            const originalContent = msg.content;
             const decrypted = await decryptMessage(
               msg.encrypted_content,
               msg.iv,
@@ -63,6 +66,9 @@ export default function ChatPage() {
               msg.receiver_id
             );
             msg.content = decrypted;
+            if (decrypted === '[Unable to decrypt message]' && originalContent && originalContent !== '[Encrypted]') {
+              msg.content = originalContent;
+            }
           } catch (error) {
             console.error('Failed to decrypt message:', error);
             msg.content = '[Encrypted message - unable to decrypt]';
@@ -124,13 +130,17 @@ export default function ChatPage() {
           msgs.map(async (msg) => {
             if (msg.is_encrypted && msg.encrypted_content && msg.iv) {
               try {
+                const originalContent = msg.content;
                 const decrypted = await decryptMessage(
                   msg.encrypted_content,
                   msg.iv,
                   msg.sender_id,
                   msg.receiver_id
                 );
-                return { ...msg, content: decrypted };
+                const content = (decrypted === '[Unable to decrypt message]' && originalContent && originalContent !== '[Encrypted]')
+                  ? originalContent
+                  : decrypted;
+                return { ...msg, content };
               } catch (error) {
                 console.error('Failed to decrypt message:', error);
                 return { ...msg, content: '[Encrypted message - unable to decrypt]' };
@@ -205,7 +215,7 @@ export default function ChatPage() {
         );
         const messageData = {
           receiverId: activeFriend.id,
-          content: '[Encrypted]', // Placeholder for non-encrypted viewers
+          content: text.trim(),
           messageType: 'text',
           mediaUrl: null,
           encrypted: encrypted.encrypted,
@@ -445,6 +455,13 @@ export default function ChatPage() {
                   className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 min-w-[150px]"
                 />
                 <button
+                  onClick={() => setEmojiPickerOpen(true)}
+                  className={`inline-flex items-center gap-1 p-2 rounded transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'}`}
+                  title="Add emoji"
+                >
+                  <Smile className="h-5 w-5 text-yellow-500" />
+                </button>
+                <button
                   onClick={() => setGifPanelOpen(!gifPanelOpen)}
                   className={`inline-flex items-center gap-1 p-2 rounded transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'}`}
                   title="Toggle GIF search"
@@ -519,6 +536,18 @@ export default function ChatPage() {
                     } finally {
                       setPickerOpenFor(null);
                     }
+                  }}
+                />
+              )}
+
+              {/* Emoji picker for composing */}
+              {emojiPickerOpen && (
+                <EmojiPickerModal
+                  open={emojiPickerOpen}
+                  onClose={() => setEmojiPickerOpen(false)}
+                  onSelect={(emoji) => {
+                    setText(prev => `${prev}${emoji}`);
+                    setEmojiPickerOpen(false);
                   }}
                 />
               )}

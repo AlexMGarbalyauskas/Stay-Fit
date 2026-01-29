@@ -1,23 +1,46 @@
 {
   "short_name": "StayFit",
-  "name": "StayFit App",
+  "name": "StayFit - Fitness Social Network",
   "icons": [
     {
       "src": "logofit.png",
       "type": "image/png",
-      "sizes": "192x192 512x512",
-      "purpose": "any maskable"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
-      "src": "dumbbell-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "logofit.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "logofit.png",
+      "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any"
+    },
+    {
+      "src": "logofit.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
   "start_url": "/",
   "display": "standalone",
+  "scope": "/",
   "theme_color": "#16a34a",
-  "background_color": "#f8fafc",
-  "description": "StayFit mobile experience with quick access from your home screen."
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "description": "Connect with fitness enthusiasts, share workouts, and achieve your goals together.",
+  "screenshots": [
+    {
+      "src": "logofit.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "prefer_related_applications": false
 }
