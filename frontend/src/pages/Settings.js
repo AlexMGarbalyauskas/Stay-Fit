@@ -105,7 +105,7 @@ export default function Settings() {
   };
 
   const handleRateApp = () => {
-    alert(t('rateApp'));
+    window.open('https://alexmgarbalyauskas.github.io/Rating-Webpage-/', '_blank');
   };
 
   const handlePrivacyChange = (newPrivacy) => {
