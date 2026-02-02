@@ -21,11 +21,25 @@ export const register = (username, email, password) =>
 export const login = (login, password) =>
   api.post('/api/auth/login', { login, password });
 
+export const verifyEmailToken = (token, userId) =>
+  api.post('/api/auth/verify-email-token', { token, userId });
+
+export const verifyEmailCode = (code, userId) =>
+  api.post('/api/auth/verify-email-code', { code, userId });
+
+export const verifyEmail = () => api.post('/api/auth/verify-email');
+
+export const getVerificationStatus = () => api.get('/api/auth/verification-status');
+
 // USERS
 export const getUsers = () => api.get('/api/users');
 export const getUser = id => api.get(`/api/users/${id}`);
 export const getMe = () => api.get('/api/me');
 export const updateMe = (data) => api.put('/api/me', data);
+export const getTotalUsersCount = async () => {
+  const res = await api.get('/api/users');
+  return res.data.users?.length || 0;
+};
 
 // FRIENDS
 export const sendFriendRequest = receiverId => api.post('/api/friends/request', { receiverId });
@@ -50,32 +64,44 @@ export const markAllNotificationsRead = () => api.post('/api/notifications/mark-
 export const deleteNotification = (id) => api.delete(`/api/notifications/${id}`);
 
 // WORKOUT SCHEDULES
-export const respondToWorkoutInvite = (participantId, status) => 
+export const respondToWorkoutInvite = (participantId, status) =>
   api.post(`/api/workout-schedules/invites/${participantId}/respond`, { status });
 
 // POSTS
 export const getPosts = () => api.get('/api/posts');
+export const getPost = (postId) => api.get(`/api/posts/${postId}`);
 export const getMyPosts = () => api.get('/api/posts/me');
+export const getSavedPosts = () => api.get('/api/posts/saved');
 export const getUserPosts = (userId) => api.get(`/api/posts/user/${userId}`);
 export const createPost = (formData) => api.post('/api/posts', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const updatePost = (postId, data) => api.put(`/api/posts/${postId}`, data);
 export const deletePost = (postId) => api.delete(`/api/posts/${postId}`);
 export const exportMyPosts = () => api.get('/api/posts/mine/export');
-
-// LIKES & SAVES
-export const getPostLikes = (postId) => api.get(`/api/posts/${postId}/likes`);
+export const likePost = (postId) => api.post(`/api/posts/${postId}/like`);
+export const unlikePost = (postId) => api.delete(`/api/posts/${postId}/like`);
+export const savePost = (postId) => api.post(`/api/posts/${postId}/save`);
+export const unsavePost = (postId) => api.delete(`/api/posts/${postId}/save`);
 export const toggleLike = (postId) => api.post(`/api/posts/${postId}/like`);
-export const getPostSaves = (postId) => api.get(`/api/posts/${postId}/saves`);
 export const toggleSave = (postId) => api.post(`/api/posts/${postId}/save`);
 
 // COMMENTS
 export const getComments = (postId) => api.get(`/api/posts/${postId}/comments`);
-export const createComment = (postId, content, parentCommentId) => 
-  api.post(`/api/posts/${postId}/comments`, { content, parent_comment_id: parentCommentId });
+export const createComment = (postId, comment) => api.post(`/api/posts/${postId}/comments`, { comment });
 export const deleteComment = (postId, commentId) => api.delete(`/api/posts/${postId}/comments/${commentId}`);
+export const likeComment = (postId, commentId) => api.post(`/api/posts/${postId}/comments/${commentId}/like`);
+export const unlikeComment = (postId, commentId) => api.delete(`/api/posts/${postId}/comments/${commentId}/like`);
 export const toggleCommentLike = (postId, commentId) => api.post(`/api/posts/${postId}/comments/${commentId}/like`);
-export const getPost = (postId) => api.get(`/api/posts/${postId}`);
-export const getSavedPosts = () => api.get('/api/posts/saved');
+
+// NESTED COMMENTS
+export const getNestedComments = (postId, commentId) => api.get(`/api/posts/${postId}/comments/${commentId}/replies`);
+export const createNestedComment = (postId, commentId, comment) =>
+  api.post(`/api/posts/${postId}/comments/${commentId}/replies`, { comment });
+export const deleteNestedComment = (postId, commentId, nestedCommentId) =>
+  api.delete(`/api/posts/${postId}/comments/${commentId}/replies/${nestedCommentId}`);
+export const likeNestedComment = (postId, commentId, nestedCommentId) =>
+  api.post(`/api/posts/${postId}/comments/${commentId}/replies/${nestedCommentId}/like`);
+export const unlikeNestedComment = (postId, commentId, nestedCommentId) =>
+  api.delete(`/api/posts/${postId}/comments/${commentId}/replies/${nestedCommentId}/like`);
 
 // ACCOUNT
 export const deleteAccount = (password) => api.delete('/api/me/delete', { data: { password } });

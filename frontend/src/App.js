@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import SocialLogin from './pages/SocialLogin';
+import VerifyEmail from './pages/VerifyEmail';
+import VerifyEmailToken from './pages/VerifyEmailToken';
 import Profile from './pages/Profile';
 import SavedPosts from './pages/SavedPosts';
 import Settings from './pages/Settings';
@@ -95,6 +97,8 @@ function App() {
         <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
         <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/verify-email-token" element={<VerifyEmailToken />} />
         <Route path="/download" element={<PublicShare />} />
 
         <Route path="/home" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
@@ -126,6 +130,7 @@ function App() {
           element={requireAuth(<Friends refreshTrigger={refreshFriends} />)}
         />
         <Route path="/users/:id" element={requireAuth(<UserProfile />)} />
+        <Route path="/user/:id" element={requireAuth(<UserProfile />)} />
         <Route path="/notifications" element={requireAuth(<Notifications />)} />
         <Route path="/user/:id/friends" element={requireAuth(<UserFriends />)} />
       </Routes>

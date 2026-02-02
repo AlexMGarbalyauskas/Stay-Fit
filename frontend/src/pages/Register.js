@@ -87,7 +87,7 @@ export default function Register() {
   };
 
   const handleGoogleRegister = () => {
-    window.location.href = `${API_BASE}/api/auth/google`;
+    window.location.href = `${API_BASE}/api/auth/google/register`;
   };
 
   return (

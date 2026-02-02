@@ -289,6 +289,7 @@ export const translations = {
     workoutShoulders: 'Shoulders',
     workoutCardio: 'Cardio',
     workoutCore: 'Core',
+    beTheFirst: 'No posts yet — be the first!',
   },
   
   es: {

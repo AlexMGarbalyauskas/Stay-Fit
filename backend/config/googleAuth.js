@@ -17,21 +17,20 @@ passport.use(
 
         db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
           if (err) return done(err);
-          if (user) return done(null, user);
+          if (user) {
+            // User exists, return them with isNewUser flag = false
+            user.isNewUser = false;
+            return done(null, user);
+          }
 
-          const dummyPassword = 'google_' + Date.now();
-          const passwordHash = await bcrypt.hash(dummyPassword, 10);
-
-          db.run(
-            'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-            [username, email, passwordHash],
-            function (err) {
-              if (err) return done(err);
-              db.get('SELECT * FROM users WHERE id = ?', [this.lastID], (err, newUser) => {
-                return done(err, newUser);
-              });
-            }
-          );
+          // This is a new user trying to login - don't auto-create
+          // Return user object with isNewUser flag = true but don't save to DB
+          const newUserData = {
+            email,
+            username,
+            isNewUser: true,
+          };
+          return done(null, newUserData);
         });
       } catch (err) {
         done(err);

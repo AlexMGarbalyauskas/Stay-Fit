@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getUser, getFriendStatus, sendFriendRequest, unfriend } from '../api';
-import { User, UserX, ArrowLeft, Heart, Share2 } from 'lucide-react';
+import { User, UserX, ArrowLeft, Heart, Share2, MessageCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -154,6 +154,14 @@ export default function UserProfile() {
                 >
                   <Share2 className="w-4 h-4" /> {t('share')}
                 </button>
+                {status === 'friends' && (
+                  <button
+                    onClick={() => navigate(`/chat?friend=${id}`)}
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded font-semibold text-sm hover:bg-blue-600 transition flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle className="w-4 h-4" /> {t('message')}
+                  </button>
+                )}
                 {status === 'none' && (
                   <button
                     onClick={handleSendRequest}

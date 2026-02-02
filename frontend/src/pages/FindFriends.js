@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
-import { getUsers, getFriendStatus, sendFriendRequest, unfriend, getMe } from '../api';
+import { getUsers, getFriendStatus, sendFriendRequest, unfriend, getMe, getTotalUsersCount } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function FindFriends({ onFriendUpdate }) {
@@ -17,6 +17,7 @@ export default function FindFriends({ onFriendUpdate }) {
   const [locationFilter, setLocationFilter] = useState('');
   const [statuses, setStatuses] = useState({});
   const [me, setMe] = useState(null);
+  const [totalUsersCount, setTotalUsersCount] = useState(0);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const navigate = useNavigate();
@@ -67,6 +68,14 @@ export default function FindFriends({ onFriendUpdate }) {
       })
       .catch(() => setMe(null));
   }, []);
+
+  // Fetch total users count
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    getTotalUsersCount()
+      .then(count => setTotalUsersCount(count))
+      .catch(() => setTotalUsersCount(0));
+  }, [isAuthenticated]);
 
   // When users or me change, fetch friend statuses for other users
   useEffect(() => {
@@ -194,6 +203,7 @@ export default function FindFriends({ onFriendUpdate }) {
     <div className={`min-h-screen pt-20 pb-20 ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-slate-800'}`}>
       <Header title={t('findFriends')} showBack />
       <div className="max-w-md mx-auto px-4 mt-4">
+        <p className="text-xs text-gray-500 mb-2">up to {totalUsersCount} {totalUsersCount === 1 ? 'person' : 'people'} registered</p>
         <h2 className="text-xl font-bold text-gray-800 mb-3">{t('findFriends')}</h2>
         
         {/* Username Search */}
@@ -252,7 +262,7 @@ export default function FindFriends({ onFriendUpdate }) {
                 </div>
               </div>
 
-              <div className="text-sm text-gray-500">{t('viewProfile')}</div>
+              <div className="text-sm text-gray-500">Your Profile</div>
             </div>
           </div>
         )}

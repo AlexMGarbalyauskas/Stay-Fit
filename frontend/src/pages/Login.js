@@ -26,6 +26,15 @@ export default function Login({ onLogin }) {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
     const userParam = params.get('user');
+    const errorParam = params.get('error');
+    const emailParam = params.get('email');
+    
+    // Check for errors from Google OAuth
+    if (errorParam === 'please_register') {
+      setError(`This email is not registered. Please sign up first using "Register with Google".`);
+      return;
+    }
+    
     if (token) {
       localStorage.setItem('token', token);
       if (userParam) {
@@ -62,7 +71,7 @@ export default function Login({ onLogin }) {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/api/auth/google`;
+    window.location.href = `${API_BASE}/api/auth/google/login`;
   };
 
   return (

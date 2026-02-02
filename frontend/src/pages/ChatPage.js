@@ -370,17 +370,23 @@ export default function ChatPage() {
                     <div key={msg.id + '-' + idx} className={`flex gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
                       {/* Profile Picture */}
                       <div className="flex-shrink-0 self-end">
-                        {profilePicSrc ? (
-                          <img
-                            src={profilePicSrc}
-                            alt={isMine ? 'You' : activeFriend.username}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                            <User className="w-4 h-4 text-gray-600" />
-                          </div>
-                        )}
+                        <button
+                          onClick={() => navigate(`/user/${isMine ? currentUser.id : activeFriend.id}`)}
+                          className="hover:opacity-80 transition"
+                          title={isMine ? 'Your Profile' : activeFriend.username}
+                        >
+                          {profilePicSrc ? (
+                            <img
+                              src={profilePicSrc}
+                              alt={isMine ? 'You' : activeFriend.username}
+                              className="w-8 h-8 rounded-full object-cover cursor-pointer"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center cursor-pointer">
+                              <User className="w-4 h-4 text-gray-600" />
+                            </div>
+                          )}
+                        </button>
                       </div>
 
                       {/* Message Bubble */}

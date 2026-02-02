@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
@@ -44,6 +45,213 @@ router.post('/login', (req, res) => {
     const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
   });
+});
+
+// VERIFY EMAIL TOKEN (from email link)
+router.post('/verify-email-token', (req, res) => {
+  const { token, userId } = req.body;
+  
+  console.log('🔍 Verify email token request:', { token: token?.substring(0, 10) + '...', userId });
+  
+  if (!token || !userId) {
+    return res.status(400).json({ error: 'Token and userId are required' });
+  }
+
+  // Check if token exists
+  db.get(
+    'SELECT * FROM email_verification_tokens WHERE token = ? AND user_id = ?',
+    [token, userId],
+    (err, tokenRecord) => {
+      if (err) {
+        console.error('❌ DB error finding token:', err);
+        return res.status(500).json({ error: 'DB error' });
+      }
+      if (!tokenRecord) {
+        console.log('❌ No token found for:', { token: token?.substring(0, 10) + '...', userId });
+        return res.status(400).json({ error: 'Invalid verification token' });
+      }
+
+      console.log('✅ Token found:', { id: tokenRecord.id, expires_at: tokenRecord.expires_at });
+
+      // Validate expiration in JS for reliability
+      const expiresAt = tokenRecord.expires_at ? new Date(tokenRecord.expires_at) : null;
+      if (expiresAt && Number.isFinite(expiresAt.getTime()) && expiresAt.getTime() < Date.now()) {
+        console.log('❌ Token expired:', { expiresAt, now: new Date() });
+        return res.status(400).json({ error: 'Verification token expired' });
+      }
+
+      console.log('✅ Token valid, updating user...');
+
+      // Mark email as verified
+      db.run(
+        'UPDATE users SET email_verified = 1 WHERE id = ?',
+        [userId],
+        function(err) {
+          if (err) {
+            console.error('❌ DB error updating user:', err);
+            return res.status(500).json({ error: 'DB error' });
+          }
+
+          console.log('✅ User updated, rows changed:', this.changes);
+
+          // Delete the used token
+          db.run(
+            'DELETE FROM email_verification_tokens WHERE id = ?',
+            [tokenRecord.id],
+            () => {
+              console.log('✅ Token deleted');
+              
+              // Create JWT token for login
+              db.get(
+                'SELECT id, username, email FROM users WHERE id = ?',
+                [userId],
+                (err, user) => {
+                  if (err) {
+                    console.error('❌ DB error fetching user:', err);
+                    return res.status(500).json({ error: 'DB error' });
+                  }
+                  if (!user) {
+                    console.log('❌ User not found after update');
+                    return res.status(404).json({ error: 'User not found' });
+                  }
+
+                  const jwtToken = jwt.sign(
+                    { id: user.id, username: user.username, email: user.email },
+                    JWT_SECRET,
+                    { expiresIn: '7d' }
+                  );
+
+                  console.log('✅ Email verified successfully for user:', user.email);
+
+                  res.json({
+                    message: 'Email verified successfully',
+                    user: { id: user.id, username: user.username, email: user.email },
+                    token: jwtToken
+                  });
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+// VERIFY EMAIL CODE (from email)
+router.post('/verify-email-code', (req, res) => {
+  const { code, userId } = req.body;
+  
+  console.log('🔍 Verify email code request:', { code, userId });
+  
+  if (!code || !userId) {
+    return res.status(400).json({ error: 'Code and userId are required' });
+  }
+
+  // Check if code exists and matches
+  db.get(
+    'SELECT * FROM email_verification_tokens WHERE token = ? AND user_id = ?',
+    [code, userId],
+    (err, tokenRecord) => {
+      if (err) {
+        console.error('❌ DB error finding code:', err);
+        return res.status(500).json({ error: 'DB error' });
+      }
+      if (!tokenRecord) {
+        console.log('❌ No code found for:', { code, userId });
+        return res.status(400).json({ error: 'Invalid verification code' });
+      }
+
+      console.log('✅ Code found:', { id: tokenRecord.id, expires_at: tokenRecord.expires_at });
+
+      // Validate expiration in JS for reliability
+      const expiresAt = tokenRecord.expires_at ? new Date(tokenRecord.expires_at) : null;
+      if (expiresAt && Number.isFinite(expiresAt.getTime()) && expiresAt.getTime() < Date.now()) {
+        console.log('❌ Code expired:', { expiresAt, now: new Date() });
+        return res.status(400).json({ error: 'Verification code expired' });
+      }
+
+      console.log('✅ Code valid, updating user...');
+
+      // Mark email as verified
+      db.run(
+        'UPDATE users SET email_verified = 1 WHERE id = ?',
+        [userId],
+        function(err) {
+          if (err) {
+            console.error('❌ DB error updating user:', err);
+            return res.status(500).json({ error: 'DB error' });
+          }
+
+          console.log('✅ User updated, rows changed:', this.changes);
+
+          // Delete all used codes for this user
+          db.run(
+            'DELETE FROM email_verification_tokens WHERE user_id = ?',
+            [userId],
+            () => {
+              console.log('✅ Codes deleted for user');
+              
+              // Create JWT token for login
+              db.get(
+                'SELECT id, username, email FROM users WHERE id = ?',
+                [userId],
+                (err, user) => {
+                  if (err) {
+                    console.error('❌ DB error fetching user:', err);
+                    return res.status(500).json({ error: 'DB error' });
+                  }
+                  if (!user) {
+                    console.log('❌ User not found after update');
+                    return res.status(404).json({ error: 'User not found' });
+                  }
+
+                  const jwtToken = jwt.sign(
+                    { id: user.id, username: user.username, email: user.email },
+                    JWT_SECRET,
+                    { expiresIn: '7d' }
+                  );
+
+                  console.log('✅ Email verified successfully for user:', user.email);
+
+                  res.json({
+                    message: 'Email verified successfully',
+                    user: { id: user.id, username: user.username, email: user.email },
+                    token: jwtToken
+                  });
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+// VERIFY EMAIL (mark email as verified for authenticated users)
+router.post('/verify-email', auth, (req, res) => {
+  db.run(
+    'UPDATE users SET email_verified = 1 WHERE id = ?',
+    [req.user.id],
+    (err) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
+      res.json({ message: 'Email verified successfully' });
+    }
+  );
+});
+
+// GET EMAIL VERIFICATION STATUS
+router.get('/verification-status', auth, (req, res) => {
+  db.get(
+    'SELECT email_verified FROM users WHERE id = ?',
+    [req.user.id],
+    (err, user) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      res.json({ email_verified: !!user.email_verified });
+    }
+  );
 });
 
 module.exports = router;

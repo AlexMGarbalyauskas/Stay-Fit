@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, FileText, Shield, Info, Github } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
@@ -31,10 +31,26 @@ export default function AboutSettings() {
 
           <button
             onClick={() => navigate('/privacy')}
-            className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 text-gray-900 px-3 py-3 rounded"
+            className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 text-gray-900 px-3 py-3 rounded mb-3"
           >
             <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Privacy Policy</span>
             <span className="text-sm text-gray-600">View</span>
+          </button>
+
+          <button
+            onClick={() => window.open('https://alexmgarbalyauskas.github.io/info-page-/', '_blank')}
+            className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 text-gray-900 px-3 py-3 rounded mb-3"
+          >
+            <span className="flex items-center gap-2"><Info className="w-4 h-4" /> About Project</span>
+            <span className="text-sm text-gray-600">Read</span>
+          </button>
+
+          <button
+            onClick={() => window.open('https://github.com/AlexMGarbalyauskas/Stay-Fit', '_blank')}
+            className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 text-gray-900 px-3 py-3 rounded"
+          >
+            <span className="flex items-center gap-2"><Github className="w-4 h-4" /> Open Source Code</span>
+            <span className="text-sm text-gray-600">GitHub</span>
           </button>
         </div>
       </div>
