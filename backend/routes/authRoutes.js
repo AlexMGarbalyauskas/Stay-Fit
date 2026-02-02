@@ -3,9 +3,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const auth = require('../middleware/auth');
+const { sendVerificationEmail } = require('../utils/email');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 // REGISTER
 router.post('/register', async (req, res) => {
@@ -227,6 +232,34 @@ router.post('/verify-email-code', (req, res) => {
       );
     }
   );
+});
+
+// RESEND VERIFICATION CODE
+router.post('/resend-verification-code', (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  db.get('SELECT id, username, email FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const verificationCode = generateVerificationCode();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    db.run(
+      'INSERT INTO email_verification_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+      [user.id, verificationCode, expiresAt.toISOString()],
+      async (insertErr) => {
+        if (insertErr) return res.status(500).json({ error: 'DB error' });
+
+        const emailSent = await sendVerificationEmail(user.email, user.username, verificationCode);
+        res.json({ emailSent });
+      }
+    );
+  });
 });
 
 // VERIFY EMAIL (mark email as verified for authenticated users)

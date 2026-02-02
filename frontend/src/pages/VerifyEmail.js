@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Loader } from 'lucide-react';
-import { verifyEmailCode } from '../api';
+import { resendVerificationCode, verifyEmailCode } from '../api';
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
@@ -11,6 +11,8 @@ export default function VerifyEmail() {
   const [code, setCode] = useState('');
   const [emailSent, setEmailSent] = useState(true);
   const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -59,6 +61,27 @@ export default function VerifyEmail() {
     }
   };
 
+  const handleResend = async () => {
+    if (!userId) return;
+    setResendMessage('');
+    setError('');
+    setResending(true);
+
+    try {
+      const response = await resendVerificationCode(userId);
+      if (response.data.emailSent) {
+        setEmailSent(true);
+        setResendMessage('A new verification code has been sent.');
+      } else {
+        setResendMessage('We could not send the email. Please try again later.');
+      }
+    } catch (err) {
+      setResendMessage(err.response?.data?.error || 'Failed to resend code. Please try again.');
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
@@ -75,7 +98,7 @@ export default function VerifyEmail() {
         </p>
         {!emailSent && (
           <p className="text-sm text-red-500 text-center mb-4">
-            We couldn't send the email. Check your email settings and try Google signup again.
+            We couldn't send the email. Click resend or check your email settings.
           </p>
         )}
         <p className="text-sm text-gray-500 text-center mb-6">
@@ -99,6 +122,10 @@ export default function VerifyEmail() {
             <p className="text-sm text-red-500 text-center">{error}</p>
           )}
 
+          {resendMessage && (
+            <p className="text-sm text-gray-600 text-center">{resendMessage}</p>
+          )}
+
           <button
             type="submit"
             disabled={verifying || code.length !== 6}
@@ -112,6 +139,15 @@ export default function VerifyEmail() {
             ) : (
               'Verify Email'
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resending}
+            className="w-full border-2 border-blue-300 text-blue-700 py-3 rounded-lg font-semibold hover:border-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {resending ? 'Resending...' : 'Resend Code'}
           </button>
 
           <button

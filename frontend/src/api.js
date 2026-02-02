@@ -27,6 +27,9 @@ export const verifyEmailToken = (token, userId) =>
 export const verifyEmailCode = (code, userId) =>
   api.post('/api/auth/verify-email-code', { code, userId });
 
+export const resendVerificationCode = (userId) =>
+  api.post('/api/auth/resend-verification-code', { userId });
+
 export const verifyEmail = () => api.post('/api/auth/verify-email');
 
 export const getVerificationStatus = () => api.get('/api/auth/verification-status');
