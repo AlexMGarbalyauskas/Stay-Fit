@@ -1,6 +1,10 @@
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Create a transporter using Gmail or your email service
+const useResend = !!process.env.RESEND_API_KEY;
+const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
+
+// SMTP transporter (fallback for local/dev)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -21,11 +25,9 @@ const transporter = nodemailer.createTransport({
 
 async function sendVerificationEmail(email, username, verificationCode) {
   try {
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-      to: email,
-      subject: 'Verify Your Stay Fit Account',
-      html: `
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'onboarding@resend.dev';
+    const subject = 'Verify Your Stay Fit Account';
+    const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
             <h1 style="color: white; margin: 0;">Stay Fit</h1>
@@ -53,10 +55,24 @@ async function sendVerificationEmail(email, username, verificationCode) {
             </p>
           </div>
         </div>
-      `,
-    };
+      `;
 
-    await transporter.sendMail(mailOptions);
+    if (useResend) {
+      await resend.emails.send({
+        from: fromAddress,
+        to: email,
+        subject,
+        html,
+      });
+    } else {
+      const mailOptions = {
+        from: fromAddress,
+        to: email,
+        subject,
+        html,
+      };
+      await transporter.sendMail(mailOptions);
+    }
     console.log(`Verification email sent to ${email}`);
     return true;
   } catch (error) {
