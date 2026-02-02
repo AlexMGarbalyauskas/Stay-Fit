@@ -1,7 +1,14 @@
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const { Resend } = require('resend');
 
-const useResend = !!process.env.RESEND_API_KEY;
+const useSendGrid = !!process.env.SENDGRID_API_KEY;
+const useResend = !!process.env.RESEND_API_KEY && !useSendGrid;
+
+if (useSendGrid) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // SMTP transporter (fallback for local/dev)
@@ -57,7 +64,16 @@ async function sendVerificationEmail(email, username, verificationCode) {
         </div>
       `;
 
-    if (useResend) {
+    if (useSendGrid) {
+      console.log(`📧 Sending email via SendGrid to ${email} from ${fromAddress}`);
+      const response = await sgMail.send({
+        to: email,
+        from: fromAddress,
+        subject,
+        html,
+      });
+      console.log('✅ SendGrid response:', response?.[0]?.statusCode || 'ok');
+    } else if (useResend) {
       console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);
       const response = await resend.emails.send({
         from: fromAddress,
@@ -65,7 +81,7 @@ async function sendVerificationEmail(email, username, verificationCode) {
         subject,
         html,
       });
-      console.log(`✅ Resend response:`, response);
+      console.log('✅ Resend response:', response);
     } else {
       console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
       const mailOptions = {
