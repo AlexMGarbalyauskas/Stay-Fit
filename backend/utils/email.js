@@ -58,13 +58,16 @@ async function sendVerificationEmail(email, username, verificationCode) {
       `;
 
     if (useResend) {
-      await resend.emails.send({
+      console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);
+      const response = await resend.emails.send({
         from: fromAddress,
         to: email,
         subject,
         html,
       });
+      console.log(`✅ Resend response:`, response);
     } else {
+      console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
       const mailOptions = {
         from: fromAddress,
         to: email,
@@ -73,10 +76,10 @@ async function sendVerificationEmail(email, username, verificationCode) {
       };
       await transporter.sendMail(mailOptions);
     }
-    console.log(`Verification email sent to ${email}`);
+    console.log(`✅ Verification email sent to ${email}`);
     return true;
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    console.error(`❌ Error sending verification email to ${email}:`, error.message, error);
     return false;
   }
 }
