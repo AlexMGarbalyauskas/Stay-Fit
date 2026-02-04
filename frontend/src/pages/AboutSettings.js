@@ -14,42 +14,42 @@ export default function AboutSettings() {
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-700 mb-4 hover:text-gray-900"
         >
-          <ArrowLeft className="w-5 h-5" /> Back to Settings
+          <ArrowLeft className="w-5 h-5" /> {t('backToSettings')}
         </button>
 
         <div className="bg-white p-4 rounded shadow">
-          <h1 className="text-lg font-semibold text-gray-900 mb-3">About</h1>
-          <p className="text-sm text-gray-700 mb-4">Manage your legal docs and learn about how we handle your data.</p>
+          <h1 className="text-lg font-semibold text-gray-900 mb-3">{t('about')}</h1>
+          <p className="text-sm text-gray-700 mb-4">{t('aboutDesc')}</p>
 
           <button
             onClick={() => navigate('/terms')}
             className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 text-gray-900 px-3 py-3 rounded mb-3"
           >
-            <span className="flex items-center gap-2"><FileText className="w-4 h-4" /> Terms of Service</span>
-            <span className="text-sm text-gray-600">View</span>
+            <span className="flex items-center gap-2"><FileText className="w-4 h-4" /> {t('termsOfService')}</span>
+            <span className="text-sm text-gray-600">{t('view')}</span>
           </button>
 
           <button
             onClick={() => navigate('/privacy')}
             className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 text-gray-900 px-3 py-3 rounded mb-3"
           >
-            <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Privacy Policy</span>
-            <span className="text-sm text-gray-600">View</span>
+            <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> {t('privacyPolicy')}</span>
+            <span className="text-sm text-gray-600">{t('view')}</span>
           </button>
 
           <button
             onClick={() => window.open('https://alexmgarbalyauskas.github.io/info-page-/', '_blank')}
             className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 text-gray-900 px-3 py-3 rounded mb-3"
           >
-            <span className="flex items-center gap-2"><Info className="w-4 h-4" /> About Project</span>
-            <span className="text-sm text-gray-600">Read</span>
+            <span className="flex items-center gap-2"><Info className="w-4 h-4" /> {t('aboutProject')}</span>
+            <span className="text-sm text-gray-600">{t('read')}</span>
           </button>
 
           <button
             onClick={() => window.open('https://github.com/AlexMGarbalyauskas/Stay-Fit', '_blank')}
             className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 text-gray-900 px-3 py-3 rounded"
           >
-            <span className="flex items-center gap-2"><Github className="w-4 h-4" /> Open Source Code</span>
+            <span className="flex items-center gap-2"><Github className="w-4 h-4" /> {t('openSourceCode')}</span>
             <span className="text-sm text-gray-600">GitHub</span>
           </button>
         </div>

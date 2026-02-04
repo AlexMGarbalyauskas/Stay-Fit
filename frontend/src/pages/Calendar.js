@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Dumbbell, Save, Clock, Users, Bell, X as Close } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Dumbbell, Save, Clock, Users, Bell, X as Close, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { startReminderService } from '../utils/workoutReminders';
@@ -33,10 +33,61 @@ export default function CalendarPage() {
   const [availableBuddies, setAvailableBuddies] = useState([]);
   const [selectedBuddies, setSelectedBuddies] = useState([]);
   const [showCamera, setShowCamera] = useState(false);
+  const [postDates, setPostDates] = useState(new Set()); // Set of dates with posts
+  const [currentStreak, setCurrentStreak] = useState(0); // Current posting streak
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+
+  // Fetch user's posts to track posting dates
+  useEffect(() => {
+    const fetchPostDates = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/posts/mine/export`, authHeaders);
+        const posts = response.data.posts || [];
+        
+        // Extract unique dates from posts
+        const dates = new Set();
+        posts.forEach(post => {
+          if (post.created_at) {
+            const date = new Date(post.created_at);
+            const key = dateKey(date.getFullYear(), date.getMonth(), date.getDate());
+            dates.add(key);
+          }
+        });
+        
+        setPostDates(dates);
+        
+        // Calculate current streak
+        const calculateStreak = () => {
+          let streak = 0;
+          const currentDate = new Date();
+          
+          for (let i = 0; i < 365; i++) {
+            const checkDate = new Date(currentDate);
+            checkDate.setDate(checkDate.getDate() - i);
+            const key = dateKey(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+            
+            if (dates.has(key)) {
+              streak++;
+            } else if (i > 0) {
+              // Allow missing today but count streak
+              break;
+            }
+          }
+          
+          return streak;
+        };
+        
+        setCurrentStreak(calculateStreak());
+      } catch (error) {
+        console.error('Failed to fetch posts:', error);
+      }
+    };
+
+    fetchPostDates();
+  }, []);
 
   // Load saved plans from localStorage
   useEffect(() => {
@@ -236,6 +287,11 @@ export default function CalendarPage() {
     return !!plans[dateKey(y, m, d)];
   };
 
+  const hasPost = (y, m, d) => {
+    if (!d) return false;
+    return postDates.has(dateKey(y, m, d));
+  };
+
   const handleSelectDay = (y, m, d) => {
     if (!d) return;
     const key = dateKey(y, m, d);
@@ -256,6 +312,20 @@ export default function CalendarPage() {
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-white text-slate-800'}`}>
       <div className="mx-auto max-w-6xl px-4 py-6">
+        {/* Posting Streak Display */}
+        {currentStreak > 0 && (
+          <div className="mb-4 rounded-xl bg-gradient-to-r from-orange-400 to-red-500 p-4 text-white shadow-lg">
+            <div className="flex items-center justify-center gap-3">
+              <Flame className="w-8 h-8 fill-white" />
+              <div className="text-center">
+                <p className="text-sm font-semibold uppercase tracking-wide">Posting Streak</p>
+                <p className="text-3xl font-bold">{currentStreak} {currentStreak === 1 ? 'day' : 'days'}</p>
+              </div>
+              <Flame className="w-8 h-8 fill-white" />
+            </div>
+          </div>
+        )}
+
         {/* Countdown Timer Display */}
         {countdown && (
           <div className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white shadow-lg">
@@ -317,17 +387,20 @@ export default function CalendarPage() {
                     {week.map((day, di) => {
                       const active = day && selected.key === dateKey(year, idx, day);
                       const planned = hasPlan(year, idx, day);
+                      const posted = hasPost(year, idx, day);
                       return (
                         <button
                           key={di}
                           onClick={() => handleSelectDay(year, idx, day)}
-                          className={`h-9 rounded-md text-center transition ${day ? 'hover:bg-blue-50' : ''} ${active ? 'bg-blue-100 text-blue-700 font-semibold' : ''}`}
+                          className={`h-9 rounded-md text-center transition relative ${day ? 'hover:bg-blue-50' : ''} ${active ? 'bg-blue-100 text-blue-700 font-semibold' : ''}`}
                           disabled={!day}
+                          title={posted ? 'Posted today!' : ''}
                         >
-                          <div className={`flex items-center justify-center gap-1 ${!day ? 'text-transparent' : ''}`}>
+                          <div className={`flex items-center justify-center gap-0.5 relative ${!day ? 'text-transparent' : ''}`}>
                             <span className="leading-none">{day || ''}</span>
-                            {planned && <span className="h-2 w-2 rounded-full bg-emerald-500"></span>}
-                            {isToday(year, idx, day) && <span className="h-2 w-2 rounded-full bg-blue-500"></span>}
+                            {posted && <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />}
+                            {planned && !posted && <span className="h-2 w-2 rounded-full bg-emerald-500"></span>}
+                            {isToday(year, idx, day) && !posted && <span className="h-2 w-2 rounded-full bg-blue-500"></span>}
                           </div>
                         </button>
                       );

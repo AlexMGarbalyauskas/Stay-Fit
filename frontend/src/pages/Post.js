@@ -438,6 +438,7 @@ export default function Post() {
 
   const handleUpload = async () => {
     if (!local || !local.file) return setError('No media selected');
+    if (!title.trim()) return setError('Title is required');
     console.log('Uploading file:', local.file.name, 'Type:', local.file.type, 'Size:', local.file.size);
     
     if (mediaKind === 'video') {
@@ -682,13 +683,17 @@ export default function Post() {
                 </div>
               )}
 
-              <input
-                type="text"
-                placeholder={t('title')}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full mt-4 border rounded px-3 py-2 text-sm"
-              />
+              <div className="mb-4">
+                <label className="text-sm font-semibold text-gray-700">{t('title')} <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  placeholder={t('titlePlaceholder')}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full mt-2 border rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                  maxLength={100}
+                />
+              </div>
 
               <textarea
                 placeholder={t('writeCaption')}

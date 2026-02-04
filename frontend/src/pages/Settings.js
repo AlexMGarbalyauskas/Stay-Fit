@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, BarChart3 } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -332,6 +332,17 @@ export default function Settings() {
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
             <Wrench size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('other')}
+          </button>
+        </div>
+
+        {/* Statistics Section */}
+        <div className={`mt-4 p-4 rounded shadow ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
+          <h3 className={`font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Statistics</h3>
+          <button
+            onClick={() => navigate('/settings/stats')}
+            className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
+          >
+            <BarChart3 size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> View Your Stats
           </button>
         </div>
 

@@ -13,6 +13,7 @@ import SavedPosts from './pages/SavedPosts';
 import Settings from './pages/Settings';
 import OtherSettings from './pages/OtherSettings';
 import AboutSettings from './pages/AboutSettings';
+import StatsSettings from './pages/StatsSettings';
 import ShareApp from './pages/ShareApp';
 import PublicShare from './pages/PublicShare';
 import AuthRequired from './pages/AuthRequired';
@@ -109,6 +110,7 @@ function App() {
         <Route path="/settings" element={requireAuth(<Settings />)} />
         <Route path="/settings/other" element={requireAuth(<OtherSettings />)} />
         <Route path="/settings/about" element={requireAuth(<AboutSettings />)} />
+        <Route path="/settings/stats" element={requireAuth(<StatsSettings />)} />
         <Route path="/share" element={requireAuth(<ShareApp />)} />
         <Route path="/chat" element={requireAuth(<ChatPage />)} />
         <Route path="/chat/:id" element={requireAuth(<ChatPage />)} />
