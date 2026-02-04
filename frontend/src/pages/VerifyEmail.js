@@ -101,9 +101,14 @@ export default function VerifyEmail() {
             We couldn't send the email. Click resend or check your email settings.
           </p>
         )}
-        <p className="text-sm text-gray-500 text-center mb-6">
+        <p className="text-sm text-gray-500 text-center mb-3">
           Enter the code below to verify your account.
         </p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+          <p className="text-sm text-yellow-800 text-center font-medium">
+            💡 Don't see the email? Check your spam/junk folder.
+          </p>
+        </div>
 
         <form onSubmit={handleVerify} className="space-y-4">
           <div>

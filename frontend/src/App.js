@@ -36,7 +36,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { io } from 'socket.io-client';
 import { API_BASE } from './api';
 import { SOCKET_BASE, getSocketOptions } from './utils/socket';
-import { Dumbbell, X as Close } from 'lucide-react';
+import { Dumbbell, X as Close, BellRing } from 'lucide-react';
 
 function App() {
   const [refreshFriends, setRefreshFriends] = useState(0);
@@ -402,14 +402,32 @@ function App() {
     };
 
     return (
-      <div onClick={onClick} className="fixed right-4 top-4 z-50 bg-white shadow-lg rounded p-3 cursor-pointer">
-        <div className="font-medium">You got a new {type === 'message' ? 'message' : type}</div>
-        {type === 'message' && payload?.content && (
-          <div className="text-sm text-gray-600 mt-1 truncate" style={{ maxWidth: 220 }}>
-            {payload.content}
+      <>
+        <div onClick={onClick} className="fixed top-20 right-4 z-50 animate-slideDown cursor-pointer">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <BellRing className="w-5 h-5" />
+            <div>
+              <span className="font-semibold">New {type === 'message' ? 'message' : type}!</span>
+              {type === 'message' && payload?.content && (
+                <div className="text-sm text-green-50 mt-0.5 truncate" style={{ maxWidth: 220 }}>
+                  {payload.content}
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+        <style>{`
+          @keyframes slideDown {
+            0% { transform: translateY(-100%); opacity: 0; }
+            10% { transform: translateY(0); opacity: 1; }
+            90% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(20px); opacity: 0; }
+          }
+          .animate-slideDown {
+            animation: slideDown 3s ease-out forwards;
+          }
+        `}</style>
+      </>
     );
   }
 

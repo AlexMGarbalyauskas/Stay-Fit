@@ -31,6 +31,24 @@
 - **ORM**: Raw SQL queries using `sqlite3` npm package
 - **Migration System**: SQL migration files in `backend/migrations/`
 - **Schema Evolution**: Incremental migrations for version control
+- **Migration Runner**: `run-migration.js` applies migrations on server start
+
+### Migration Files
+Located in `backend/migrations/`:
+- `init.sql`: Initial database schema
+- `posts.sql`: Posts and media tables
+- `comments.sql`: Comment system
+- `nested_comments.sql`: Comment threading
+- `likes_and_saves.sql`: Post engagement
+- `encrypted_messages.sql`: Message encryption
+- `message_reactions.sql`: Message reactions
+- `notifications.sql`: Notification system
+- `notification_settings.sql`: User notification preferences
+- `email_verification.sql`: Email verification tokens
+- `user_nicknames.sql`: Custom friend nicknames
+- `user_timezone.sql`: User timezone settings
+- `privacy_settings.sql`: Privacy controls
+- `workout_schedules.sql`: Workout planning and invitations
 
 ### Key Database Tables
 
@@ -42,23 +60,51 @@
 - password_hash (bcrypt hashed)
 - profile_picture
 - bio, location, nickname
+- timezone (user's timezone)
+- email_verified (boolean, 0/1)
+- verification_code (6-digit code)
+- verification_token (JWT token)
+- verification_expires (timestamp)
 - created_at (timestamp)
 ```
 
 #### Social Features Tables
-- **friends**: Many-to-many user relationships
+- **friends**: Many-to-many user relationships with status
 - **friend_requests**: Pending/accepted friend requests with status tracking
 - **messages**: Direct messaging between users with encryption support
-- **notifications**: User notification system
+  - encrypted_content, iv, is_encrypted fields
+  - message_type (text/gif/image)
+  - media_url for attachments
+- **message_reactions**: Emoji reactions on messages
+- **notifications**: User notification system with type categorization
+- **notification_settings**: User notification preferences
+- **user_nicknames**: Custom nicknames for friends
 
 #### Content Tables
 - **posts**: User workout posts with media support
+  - media_type, media_url, video_duration
+  - caption, created_at
 - **comments**: Nested comment system with reply support
+  - parent_comment_id for threading
+- **nested_comments**: Advanced comment threading
 - **likes**: Post engagement tracking
 - **saves**: Saved posts functionality
 
-#### Fitness Features
+#### Fitness Features Tables
 - **workout_schedules**: User workout planning and calendar integration
+  - workout type, date, time
+  - buddies (JSON array of user IDs)
+  - created_by user_id
+- **workout_participants**: Invitation tracking system
+  - schedule_id, user_id
+  - status (pending/accepted/declined)
+  - response_at timestamp
+
+#### Privacy & Settings Tables
+- **privacy_settings**: User privacy configurations
+  - profile_visibility
+  - friend_list_visibility
+  - online_status_visibility
 
 ### Data Storage Strategy
 - **User Files**: `backend/uploads/` directory structure
@@ -178,11 +224,19 @@ Key Derivation: PBKDF2 with 100,000 iterations
   "sqlite3": "^5.1.7",          // Database driver
   "jsonwebtoken": "^9.0.3",     // JWT auth
   "bcrypt": "^6.0.0",           // Password hashing
+  "bcryptjs": "^3.0.3",         // Alternative password hashing
   "passport": "^0.7.0",         // OAuth middleware
+  "passport-google-oauth20": "^2.0.0", // Google OAuth strategy
   "multer": "^2.0.2",           // File uploads
   "helmet": "^8.1.0",           // Security headers
   "cors": "^2.8.5",             // Cross-origin requests
-  "dotenv": "^17.2.3"           // Environment variables
+  "dotenv": "^17.2.3",          // Environment variables
+  "@sendgrid/mail": "^8.1.4",   // Email service
+  "resend": "^4.0.0",           // Email service alternative
+  "nodemailer": "^7.0.13",      // Email sending
+  "get-video-duration": "^3.0.0", // Video metadata
+  "express-session": "^1.18.2", // Session management
+  "cookie-session": "^2.1.1"    // Cookie-based sessions
 }
 ```
 
@@ -215,6 +269,7 @@ API endpoint organization by feature:
 
 #### Utilities Layer (`backend/utils/`)
 - **timezone.js**: User timezone handling for scheduling
+- **email.js**: Email service abstraction (SendGrid/Nodemailer/Resend)
 
 ### File Upload System
 **Technology**: Multer (multipart/form-data parser)
@@ -282,19 +337,31 @@ Route-level components:
 |------|-------|-------------|
 | Login.js | `/login` | Authentication entry |
 | Register.js | `/register` | User signup |
+| SocialLogin.js | `/social-login` | OAuth login flow |
+| VerifyEmail.js | `/verify-email` | Email verification (6-digit code) |
+| VerifyEmailToken.js | `/verify-email-token` | Email verification (link) |
 | Home.js | `/` | Main feed (posts) |
 | Profile.js | `/profile` | Current user profile |
 | UserProfile.js | `/user/:id` | Other user profiles |
+| UserFriends.js | `/user/:id/friends` | User's friend list |
 | ChatPage.js | `/chat/:id` | Messaging interface |
 | Calendar.js | `/calendar` | Workout schedule |
 | FindFriends.js | `/find-friends` | User discovery |
 | FriendRequests.js | `/friend-requests` | Pending requests |
 | Friends.js | `/friends` | Friends list |
-| Notifications.js | `/notifications` | Activity feed |
+| Notifications.js | `/notifications` | Activity feed with tabs |
 | SavedPosts.js | `/saved` | Bookmarked content |
-| Settings.js | `/settings` | Account settings |
+| Settings.js | `/settings` | Account settings hub |
+| OtherSettings.js | `/settings/other` | Additional settings |
+| AboutSettings.js | `/settings/about` | App information |
+| Privacy.js | `/privacy` | Privacy policy |
+| Terms.js | `/terms` | Terms of service |
+| ShareApp.js | `/share` | App sharing page |
+| PublicShare.js | `/share/:username` | Public profile sharing |
+| Tutorials.js | `/tutorials` | Help and tutorials |
 | Post.js | `/post/:id` | Single post view |
 | PostComments.js | `/post/:id/comments` | Comment thread |
+| AuthRequired.js | `/auth-required` | Authentication prompt |
 
 #### Components Layer (`frontend/src/components/`)
 Reusable UI components:
@@ -320,10 +387,11 @@ Global state management:
 - Reminder scheduling
 
 #### Utilities Layer (`frontend/src/utils/`)
-- **crypto.js**: End-to-end encryption functions
-- **translations.js**: Language translation mappings
-- **workoutReminders.js**: Notification helpers
-- **api.js**: Axios instance configuration
+- **crypto.js**: End-to-end encryption functions (AES-GCM, PBKDF2)
+- **translations.js**: Language translation mappings (multi-language support)
+- **workoutReminders.js**: Notification helpers and reminder logic
+- **socket.js**: Socket.IO client configuration and utilities
+- **api.js**: Axios instance configuration with interceptors
 
 ### State Management Strategy
 **Approach**: React Context + Local State
@@ -339,12 +407,22 @@ Global state management:
 - Custom theme colors
 - Dark mode support (`class` strategy)
 - Responsive breakpoints
-- Custom animations
+- Custom animations (slideDown, fadeIn, etc.)
+- Extended color palette
 
 **Dark Mode Implementation:**
 - Theme toggled via `document.documentElement.classList`
 - Preference stored in localStorage
-- System-wide consistency
+- System-wide consistency across all pages
+- Smooth transitions between themes
+- Color scheme adjustments for readability
+
+**Custom Animations:**
+- Slide-down notifications
+- Fade transitions
+- Hover effects
+- Loading spinners
+- Gradient animations
 
 ---
 
@@ -388,7 +466,8 @@ io.use((socket, next) => {
 1. Sender emits message with encryption
 2. Server validates and stores in database
 3. Server emits to recipient's room
-4. Recipient receives and decrypts
+4. Server creates notification for recipient
+5. Recipient receives and decrypts
 
 **Payload:**
 ```javascript
@@ -403,27 +482,48 @@ io.use((socket, next) => {
 }
 ```
 
+**Message Storage:**
+- Encrypted messages stored with IV (initialization vector)
+- Message type tracking (text/gif/image)
+- Timestamp for chronological ordering
+- Media URLs for attachments
+
 #### 2. Message Reactions
 **Events:**
 - `add_reaction`: React to message
 - `reaction_added`: Broadcast reaction
+- `remove_reaction`: Remove reaction
 
 **Emoji Support**: Full emoji set via emoji-picker-react
 
-#### 3. Notifications
+**Features:**
+- Multiple reactions per message
+- Real-time reaction updates
+- Reaction removal
+- Emoji picker integration
+
+#### 3. Real-Time Notifications
 **Events:**
-- `notification`: Server → User (new notification)
+- `notification:new`: Server → User (new notification)
 
 **Notification Types:**
-- Friend requests
-- Post likes/comments
-- New messages
-- Workout reminders
+- `friend_request`: New friend request
+- `friend_accepted`: Friend request accepted
+- `unfriended`: User unfriended you
+- `message`: New direct message
+- `workout_invite`: Workout buddy invitation
+- `workout_canceled`: Workout cancelled by buddy
+- `workout_opt_out`: Buddy opted out of workout
+- `workout_cancelled`: User cancelled their own workout
+- `post_like`: Someone liked your post
+- `post_comment`: Someone commented on your post
 
 **Delivery:**
-- Real-time via Socket.IO
+- Real-time via Socket.IO to user's room
 - Persisted in database for offline users
 - Browser notifications (Web Notifications API)
+- In-app notification popups with animations
+- Notification badge updates
 
 ### Connection Resilience
 **Features:**
@@ -457,12 +557,19 @@ DATABASE_FILE=./data.sqlite
 JWT_SECRET=your_secret_key
 GOOGLE_CLIENT_ID=oauth_client_id
 GOOGLE_CLIENT_SECRET=oauth_client_secret
-PORT=5000
+SENDGRID_API_KEY=sendgrid_api_key
+RESEND_API_KEY=resend_api_key
+SMTP_USER=email_user
+SMTP_PASS=email_password
+PORT=4000
+NODE_ENV=production
 ```
 
 **Frontend Environment:**
 ```bash
-REACT_APP_API_BASE=https://backend-url.onrender.com
+REACT_APP_API_URL=https://backend-url.onrender.com
+REACT_APP_SOCKET_URL=https://backend-url.onrender.com
+REACT_APP_GOOGLE_CLIENT_ID=oauth_client_id
 ```
 
 ### Build Process
@@ -537,24 +644,42 @@ npm run build
 - React Router for navigation
 - Axios for API calls
 - SQLite for relationship storage
+- Socket.IO for real-time updates
 
 **Features:**
-- User profiles with bio, location, profile pictures
+- User profiles with bio, location, profile pictures, nicknames
 - Friend system (send/accept/reject requests)
 - User search and discovery
-- Follow/unfollow functionality
+- Friend request notifications
+- Unfriend with notification
+- Friend list management
+- Mutual friends detection
+- User profile sharing (QR codes)
+- Recently active users
+- Username-based profile URLs
 
 ### 2. Content Sharing
 **Technologies:**
 - Multer for file uploads
-- React hooks for state
-- SQLite BLOB storage references
+- React hooks for state management
+- SQLite for content storage
+- get-video-duration for video metadata
 
 **Features:**
 - Create posts with text, images, videos
-- Like and save posts
+- Like and save posts (toggle functionality)
 - Nested comment system with replies
 - Post sharing (QR code generation)
+- Post editing and deletion
+- Post visibility controls
+- Media preview before upload
+- Video duration extraction
+- Post context menu (edit/delete)
+- Confirmation dialogs for destructive actions
+- Saved posts collection
+- Post engagement tracking
+- Comment threading
+- Comment reactions
 
 ### 3. Messaging System
 **Technologies:**
@@ -567,28 +692,83 @@ npm run build
 - Message reactions (emojis)
 - GIF support
 - Read receipts
-- Typing indicators (potential)
+- Real-time typing delivery
+- Message encryption toggle
+- Unread message tracking
+- Conversation history
 
 ### 4. Workout Management
 **Technologies:**
 - React Context for reminders
 - dayjs for date handling
 - Browser Notifications API
+- localStorage for workout plans
 
 **Features:**
 - Schedule workouts on calendar
 - Set reminders for workouts
 - Track workout history
 - Timezone-aware scheduling
+- Workout buddy invitations
+- Invite acceptance/decline system
+- Workout cancellation notifications
+- Opt-out from scheduled workouts
+- Timer-based workout reminders
+
+### 5. Notification System
+**Technologies:**
+- Socket.IO for real-time push
+- React state for in-app notifications
+- Browser Notifications API
+- SQLite for persistence
+
+**Features:**
+- Multiple notification types:
+  - Friend requests
+  - Friend acceptance
+  - Unfriend alerts
+  - Message notifications
+  - Workout invites
+  - Workout cancellations
+  - Post likes and comments
+- Real-time notification popups with green gradient styling
+- Animated slide-down notifications (top-right corner)
+- Notification tabs (Requests, Workouts, Unfriended, Messages)
+- Mark as read/unread
+- Delete individual notifications
+- Mark all as read
+- Persistent notification storage
+- Notification badges and counts
+
+### 6. Email Verification System
+**Technologies:**
+- SendGrid for email delivery
+- Nodemailer as backup
+- Resend service integration
+- JWT for verification tokens
+
+**Features:**
+- Email verification for new registrations
+- 6-digit verification codes
+- Token-based email verification (link)
+- Resend verification code option
+- Spam folder reminder notification
+- Code expiration handling
+- Email verification status tracking
 
 ### 5. Internationalization (i18n)
 **Technology:**
 - Custom React Context
 - JSON translation files
+- localStorage for language persistence
 
-**Languages:**
+**Languages Supported:**
 - English (default)
-- Spanish
+- Spanish (Español)
+- French (Français)
+- German (Deutsch)
+- Italian (Italiano)
+- Portuguese (Português)
 - Additional languages configurable
 
 **Implementation:**
@@ -597,24 +777,103 @@ const { t } = useLanguage();
 <p>{t('welcome_message')}</p>
 ```
 
+**Translation Coverage:**
+- All UI elements
+- Error messages
+- Navigation labels
+- Button text
+- Form fields
+- Notification messages
+
 ### 6. Notifications System
 **Types:**
 - In-app notifications (React state)
 - Real-time push (Socket.IO)
 - Browser notifications (Notification API)
+- Email notifications (SendGrid/Nodemailer)
 
 **Persistence:**
 - Stored in SQLite notifications table
 - Fetched on login for offline period
 - Marked as read/unread
+- Notification categories and filtering
+- Auto-refresh every 5 seconds
+- Socket-based real-time updates
+
+**Notification Categories:**
+- Friend Requests (with accept/reject actions)
+- Workout Invites (accept/decline with timer integration)
+- Unfriend Alerts
+- Message Notifications (with chat navigation)
+- Workout Cancellations
+- Workout Opt-outs
+
+**UI Features:**
+- Tabbed interface for different notification types
+- Color-coded notification cards (blue, purple, amber, emerald)
+- Animated notification badges
+- Notification sounds (configurable)
+- Desktop notifications permission handling
 
 ### 7. Privacy & Settings
 **User Controls:**
 - Account privacy settings
-- Theme preferences (light/dark)
-- Language selection
+- Theme preferences (light/dark mode)
+- Language selection (multi-language)
 - Notification preferences
 - Timezone configuration
+- Email notification settings
+- Profile visibility controls
+- Friend list privacy
+
+**Theme System:**
+- Light/Dark mode toggle
+- System preference detection
+- Persistent theme storage
+- Dynamic class-based implementation
+- Smooth transitions between themes
+
+### 8. Profile Management
+**Features:**
+- Profile picture upload and update
+- Bio editing (inline editing)
+- Location editing
+- Nickname system
+- Profile sharing (QR code generation)
+- Friend count display
+- Posts/Saved posts tabs
+- Profile completion tracking
+
+**Profile Pictures:**
+- Upload with preview
+- Automatic image optimization
+- Success notification with gradient animation
+- File type validation
+- Default avatar support
+
+### 9. Social Features
+**Friend System:**
+- Send friend requests
+- Accept/reject requests with animations
+- Unfriend functionality
+- Friend list with search
+- Mutual friends display
+- Friend request notifications
+- Friend acceptance success popups
+
+**User Discovery:**
+- Search users by username/email
+- Filter search results
+- User profile previews
+- Quick add friend buttons
+- Recently active users
+
+**User Profiles:**
+- View other users' profiles
+- See user's posts
+- Friend status indicators
+- Profile sharing links
+- Username-based URLs
 
 ---
 
@@ -674,10 +933,31 @@ const { t } = useLanguage();
 1. User fills form → Frontend validation
 2. POST /api/auth/register → Backend receives data
 3. Password hashed → bcrypt.hash()
-4. User inserted → SQLite INSERT
-5. JWT generated → jsonwebtoken.sign()
-6. Token returned → Frontend stores in localStorage
-7. Redirect to home → React Router navigation
+4. Verification code generated → 6-digit random code
+5. User inserted → SQLite INSERT
+6. Email sent → SendGrid/Nodemailer/Resend
+7. User redirected → Email verification page
+8. User enters code → POST /api/auth/verify-code
+9. Code validated → Comparison with stored code
+10. JWT generated → jsonwebtoken.sign()
+11. Token returned → Frontend stores in localStorage
+12. Redirect to home → React Router navigation
+```
+
+### Email Verification Flow
+```
+1. Registration → Send verification email
+2. User receives email → Check spam folder reminder
+3. Option A: Click link → Token verification
+   - GET /api/auth/verify-token
+   - Token validated
+   - User marked as verified
+4. Option B: Enter 6-digit code
+   - POST /api/auth/verify-code
+   - Code compared with stored value
+   - Expiration check
+5. Resend option → POST /api/auth/resend-code
+6. Success → JWT issued and login
 ```
 
 ### Real-Time Message Flow

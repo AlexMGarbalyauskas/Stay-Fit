@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { getFriendRequests, acceptFriendRequest, rejectFriendRequest, getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, respondToWorkoutInvite } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { ArrowLeft, Users, UserX, MessageSquare, BellRing, Check, X as Close, Trash2, Bell, Dumbbell } from 'lucide-react';
+import { ArrowLeft, Users, UserX, MessageSquare, BellRing, Check, X as Close, Trash2, Bell, Dumbbell, UserPlus } from 'lucide-react';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import { useLanguage } from '../context/LanguageContext';
@@ -20,6 +20,7 @@ export default function Notifications({ onFriendUpdate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const socketRef = useRef(null);
+  const [successPopup, setSuccessPopup] = useState(null);
 
   const workoutTypes = useMemo(() => ['workout_invite', 'workout_canceled', 'workout_opt_out', 'workout_cancelled'], []);
 
@@ -123,10 +124,14 @@ export default function Notifications({ onFriendUpdate }) {
     return () => { clearInterval(interval); if (socketRef.current) socketRef.current.disconnect(); };
   }, [tab, isAuthenticated]);
 
-  const handleAccept = async (requestId, senderId) => {
+  const handleAccept = async (requestId, senderId, username) => {
     await acceptFriendRequest(requestId, senderId);
     setItems(prev => prev.filter(r => r.id !== requestId));
     if (onFriendUpdate) onFriendUpdate();
+    
+    // Show success popup
+    setSuccessPopup(`New friend added: @${username}`);
+    setTimeout(() => setSuccessPopup(null), 3000);
   };
 
   const handleReject = async (requestId) => {
@@ -284,7 +289,7 @@ export default function Notifications({ onFriendUpdate }) {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => handleAccept(r.id, r.sender_id)}
+              onClick={() => handleAccept(r.id, r.sender_id, r.username)}
               className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${toneClasses.emerald.button}`}
             >
               <Check className="h-4 w-4" /> {t('accept')}
@@ -433,6 +438,18 @@ export default function Notifications({ onFriendUpdate }) {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br text-slate-800 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100'}`}>
+      {/* Success Popup */}
+      {successPopup && (
+        <div className="fixed top-20 right-4 z-50 animate-slideDown">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <UserPlus className="w-5 h-5" />
+            <div>
+              <span className="font-semibold">Friend Request Accepted!</span>
+              <div className="text-sm text-green-50 mt-0.5">{successPopup}</div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button onClick={() => navigate(-1)} className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${isDark ? 'bg-gray-800 text-gray-300 shadow-gray-800 hover:bg-gray-700' : 'bg-white text-slate-700 shadow-slate-200 hover:bg-slate-50'}`}>
@@ -484,6 +501,18 @@ export default function Notifications({ onFriendUpdate }) {
         {!loading && !error && tab === 'unfriended' && items.length > 0 && renderUnfriended()}
         {!loading && !error && tab === 'message' && items.length > 0 && renderMessages()}
       </div>
+
+      <style>{`
+        @keyframes slideDown {
+          0% { transform: translateY(-100%); opacity: 0; }
+          10% { transform: translateY(0); opacity: 1; }
+          90% { transform: translateY(0); opacity: 1; }
+          100% { transform: translateY(20px); opacity: 0; }
+        }
+        .animate-slideDown {
+          animation: slideDown 3s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 }
