@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { verifyEmailToken } from '../api';
 import { CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { log, error as logError } from '../utils/logger';
 
 export default function VerifyEmailToken() {
   const navigate = useNavigate();
@@ -13,40 +14,32 @@ export default function VerifyEmailToken() {
     const token = searchParams.get('token');
     const userId = searchParams.get('userId');
 
-    console.log('🔍 VerifyEmailToken page loaded', { token: token?.substring(0, 10) + '...', userId });
+    log('🔍 VerifyEmailToken page loaded', { userId });
 
     if (!token || !userId) {
-      console.error('❌ Missing token or userId');
+      logError('❌ Missing token or userId');
       setStatus('error');
       setError('Missing verification token or user ID');
       return;
     }
-
-    console.log('📤 Calling verifyEmailToken API...');
     
     // Verify the token
     verifyEmailToken(token, userId)
       .then((response) => {
-        console.log('✅ Verification successful!', response.data);
+        log('✅ Verification successful');
         
         // Save token and user info
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
-        console.log('💾 Saved to localStorage:', {
-          token: response.data.token?.substring(0, 20) + '...',
-          user: response.data.user
-        });
-        
         setStatus('success');
         setTimeout(() => {
-          console.log('🔄 Redirecting to /home...');
           navigate('/home');
         }, 2000);
       })
       .catch((err) => {
-        console.error('❌ Verification failed:', err);
-        console.error('Error response:', err.response?.data);
+        logError('❌ Verification failed:', err);
+        logError('Error response:', err.response?.data);
         setStatus('error');
         setError(err.response?.data?.error || 'Failed to verify email. Please try again.');
       });

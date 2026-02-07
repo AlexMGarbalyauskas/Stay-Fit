@@ -20,6 +20,7 @@ export default function Settings() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [showShareNotification, setShowShareNotification] = useState(false);
   const isDark = theme === 'dark';
+  const iconClass = isDark ? 'text-gray-200' : 'text-black';
   const navigate = useNavigate();
   const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
 
@@ -217,7 +218,7 @@ export default function Settings() {
             />
           ) : (
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-gray-500" />
+              <User className={`w-8 h-8 ${iconClass}`} />
             </div>
           )}
           <div>
@@ -233,21 +234,21 @@ export default function Settings() {
           {/* Theme Toggle */}
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
-              {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
+              {theme === 'light' ? <Sun size={20} className={iconClass} /> : <Moon size={20} className={iconClass} />}
               <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{theme === 'light' ? t('lightMode') : t('darkMode')}</span>
             </div>
             <button
               onClick={handleThemeToggle}
               className={`rounded-full p-2 transition ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-100' : 'bg-gray-200 hover:bg-gray-300'}`}
-              title={'Switch to ' + (theme === 'light' ? 'dark' : 'light') + ' mode'}
+              title={theme === 'light' ? t('switchToDarkMode') : t('switchToLightMode')}
             >
-              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+              {theme === 'light' ? <Moon size={16} className={iconClass} /> : <Sun size={16} className={iconClass} />}
             </button>
           </div>
 
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
-              <Languages size={20} />
+              <Languages size={20} className={iconClass} />
               <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('language')}</span>
             </div>
             <select
@@ -270,7 +271,7 @@ export default function Settings() {
           {/* Notifications */}
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
-              <Bell size={20} />
+              <Bell size={20} className={iconClass} />
               <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('notificationSettings')}</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -287,7 +288,7 @@ export default function Settings() {
           {/* Privacy */}
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
-              <Lock size={20} />
+              <Lock size={20} className={iconClass} />
               <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('privacy')}</span>
             </div>
             <select
@@ -307,7 +308,7 @@ export default function Settings() {
             onClick={handleTimezoneClick}
           >
             <div className="flex items-center gap-2">
-              <Globe size={20} />
+              <Globe size={20} className={iconClass} />
               <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('timezone')}</span>
             </div>
             <div className="text-right">
@@ -326,23 +327,31 @@ export default function Settings() {
             </div>
           </div>
 
+          {/* Account details */}
+          <button
+            onClick={() => navigate('/settings/details')}
+            className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
+          >
+            <User size={20} className={iconClass} /> {t('viewAccountDetails')}
+          </button>
+
           {/* Other settings */}
           <button
             onClick={() => navigate('/settings/other')}
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <Wrench size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('other')}
+            <Wrench size={20} className={iconClass} /> {t('other')}
           </button>
         </div>
 
         {/* Statistics Section */}
         <div className={`mt-4 p-4 rounded shadow ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
-          <h3 className={`font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Statistics</h3>
+          <h3 className={`font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('statistics')}</h3>
           <button
             onClick={() => navigate('/settings/stats')}
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <BarChart3 size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> View Your Stats
+            <BarChart3 size={20} className={iconClass} /> {t('viewYourStats')}
           </button>
         </div>
 
@@ -353,19 +362,19 @@ export default function Settings() {
             onClick={() => navigate('/settings/about')}
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <Info size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('about')}
+            <Info size={20} className={iconClass} /> {t('about')}
           </button>
           <button
             onClick={() => navigate('/share')}
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <Share2 size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('shareApp')}
+            <Share2 size={20} className={iconClass} /> {t('shareApp')}
           </button>
           <button
             onClick={handleRateApp}
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <Star size={20} className={isDark ? 'text-gray-200' : 'text-gray-900'} /> {t('rateApp')}
+            <Star size={20} className={iconClass} /> {t('rateApp')}
           </button>
         </div>
 
@@ -375,7 +384,7 @@ export default function Settings() {
             onClick={handleLogout}
             className="flex items-center justify-center gap-2 w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
           >
-            <LogOut size={20} /> {t('logout')}
+            <LogOut size={20} className="text-white" /> {t('logout')}
           </button>
         </div>
 

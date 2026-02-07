@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { toggleLike, toggleSave } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import { log, error as logError } from '../utils/logger';
 
 export default function Home({ onLogout, isAuthenticated }) {
   const { t } = useLanguage();
@@ -25,19 +26,18 @@ export default function Home({ onLogout, isAuthenticated }) {
       return;
     }
 
-    console.log('🔍 Home: Fetching user data...');
-    console.log('🔍 isAuthenticated:', isAuthenticated);
-    console.log('🔍 API_BASE:', API_BASE);
-    console.log('🔍 Token:', localStorage.getItem('token'));
+    log('🔍 Home: Fetching user data...');
+    log('🔍 isAuthenticated:', isAuthenticated);
+    log('🔍 API_BASE:', API_BASE);
 
     getMe()
       .then(res => {
-        console.log('✅ getMe response:', res);
+        log('✅ getMe response:', res);
         setUser(res.data.user || res.data);
       })
       .catch(err => {
-        console.error('❌ getMe error:', err);
-        console.error('❌ Error response:', err.response);
+        logError('❌ getMe error:', err);
+        logError('❌ Error response:', err.response);
         if (err?.response?.status === 404) {
           alert('Session invalid or user not found. Please log in again.');
         }
@@ -115,7 +115,7 @@ export default function Home({ onLogout, isAuthenticated }) {
           }
         }
       } catch (e) {
-        console.error('Failed to load workout plans', e);
+        logError('Failed to load workout plans', e);
       }
     }, 1000);
     
@@ -129,7 +129,7 @@ export default function Home({ onLogout, isAuthenticated }) {
       // API now includes likes_count, comments_count, saves_count, liked, saved
       setPosts(fetched);
     } catch (err) {
-      console.error('Failed to load posts', err);
+      logError('Failed to load posts', err);
     }
   };
 

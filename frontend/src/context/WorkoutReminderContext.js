@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../api';
 import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
+import { log, error as logError } from '../utils/logger';
 
 const WorkoutReminderContext = createContext();
 
@@ -47,7 +48,7 @@ export function WorkoutReminderProvider({ children }) {
               setTodayWorkout({ ...todayPlan, date: todayPlan.date || todayKey });
             } else if (!reminderFiredRef.current) {
               // Timer has hit 0, show the prompt
-              console.log('🏋️ Workout reminder triggered!', { todayPlan, diff });
+              log('🏋️ Workout reminder triggered!', { todayPlan, diff });
               reminderFiredRef.current = true;
               setCountdown('NOW!');
               setTodayWorkout({ ...todayPlan, date: todayPlan.date || todayKey });
@@ -67,7 +68,7 @@ export function WorkoutReminderProvider({ children }) {
           }
         }
       } catch (e) {
-        console.error('Failed to load workout plans', e);
+        logError('Failed to load workout plans', e);
       }
     };
 
@@ -103,13 +104,13 @@ export function WorkoutReminderProvider({ children }) {
       const socket = io(SOCKET_BASE, getSocketOptions(token));
       
       socket.on('connect', () => {
-        console.log('🏋️ Socket connected for workout reminders');
+        log('🏋️ Socket connected for workout reminders');
       });
 
       socket.on('notification:new', (data) => {
         try {
           if (data?.type === 'workout_invite') {
-            console.log('🏋️ Received workout invite notification:', data);
+            log('🏋️ Received workout invite notification:', data);
             const inviteData = data.data ? (typeof data.data === 'string' ? JSON.parse(data.data) : data.data) : {};
             
             setTodayWorkout({
@@ -120,27 +121,27 @@ export function WorkoutReminderProvider({ children }) {
             setShowWorkoutPrompt(true);
           }
         } catch (err) {
-          console.error('Error processing workout invite notification:', err);
+          logError('Error processing workout invite notification:', err);
         }
       });
 
       socket.on('error', (error) => {
-        console.error('🏋️ Socket error:', error);
+        logError('🏋️ Socket error:', error);
       });
 
       socket.on('disconnect', () => {
-        console.log('🏋️ Socket disconnected');
+        log('🏋️ Socket disconnected');
       });
 
       return () => {
         try {
           socket.disconnect();
         } catch (err) {
-          console.error('Error disconnecting socket:', err);
+          logError('Error disconnecting socket:', err);
         }
       };
     } catch (err) {
-      console.error('Failed to initialize workout reminder socket:', err);
+      logError('Failed to initialize workout reminder socket:', err);
       return undefined;
     }
   }, []);

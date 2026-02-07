@@ -89,6 +89,36 @@ router.put('/', auth, (req, res) => {
   });
 });
 
+// CHANGE password
+router.put('/password', auth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password are required' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  }
+
+  const userId = req.user.id;
+  const userRow = await new Promise((resolve, reject) => {
+    db.get('SELECT password_hash FROM users WHERE id = ?', [userId], (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  }).catch(() => null);
+
+  if (!userRow) return res.status(404).json({ error: 'User not found' });
+
+  const ok = await bcrypt.compare(currentPassword, userRow.password_hash).catch(() => false);
+  if (!ok) return res.status(401).json({ error: 'Invalid current password' });
+
+  const hash = await bcrypt.hash(newPassword, 10);
+  db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, userId], function (err) {
+    if (err) return res.status(500).json({ error: 'Failed to update password' });
+    res.json({ message: 'Password updated' });
+  });
+});
+
 // UPDATE bio & location (legacy POST endpoint for backward compatibility)
 router.post('/update', auth, (req, res) => {
   const { bio, location, nickname, privacy, timezone } = req.body;

@@ -11,6 +11,7 @@ import VerifyEmailToken from './pages/VerifyEmailToken';
 import Profile from './pages/Profile';
 import SavedPosts from './pages/SavedPosts';
 import Settings from './pages/Settings';
+import UserDetails from './pages/UserDetails';
 import OtherSettings from './pages/OtherSettings';
 import AboutSettings from './pages/AboutSettings';
 import StatsSettings from './pages/StatsSettings';
@@ -38,6 +39,7 @@ import { io } from 'socket.io-client';
 import { API_BASE } from './api';
 import { SOCKET_BASE, getSocketOptions } from './utils/socket';
 import { Dumbbell, X as Close, BellRing } from 'lucide-react';
+import { log, error as logError } from './utils/logger';
 
 function App() {
   const [refreshFriends, setRefreshFriends] = useState(0);
@@ -108,6 +110,7 @@ function App() {
         <Route path="/post" element={requireAuth(<Post />)} />
         <Route path="/posts/:id/comments" element={requireAuth(<PostComments />)} />
         <Route path="/settings" element={requireAuth(<Settings />)} />
+        <Route path="/settings/details" element={requireAuth(<UserDetails />)} />
         <Route path="/settings/other" element={requireAuth(<OtherSettings />)} />
         <Route path="/settings/about" element={requireAuth(<AboutSettings />)} />
         <Route path="/settings/stats" element={requireAuth(<StatsSettings />)} />
@@ -154,7 +157,7 @@ function App() {
     const [theme] = useState(localStorage.getItem('theme') || 'light');
     const isDark = theme === 'dark';
 
-    console.log('🏋️ GlobalWorkoutPrompt state:', { showWorkoutPrompt, todayWorkout });
+    log('🏋️ GlobalWorkoutPrompt state:', { showWorkoutPrompt, todayWorkout });
 
     if (!showWorkoutPrompt || !todayWorkout) return null;
 
@@ -169,7 +172,7 @@ function App() {
         delete plans[key];
         localStorage.setItem('workout-plans', JSON.stringify(plans));
       } catch (e) {
-        console.error('Failed to clean local plan on cancel:', e);
+        logError('Failed to clean local plan on cancel:', e);
       }
     };
 
@@ -184,7 +187,7 @@ function App() {
           throw new Error(`Cancel failed: ${res.status}`);
         }
       } catch (e) {
-        console.error('Failed to cancel workout on server:', e);
+        logError('Failed to cancel workout on server:', e);
       }
     };
 
@@ -205,7 +208,7 @@ function App() {
           body: JSON.stringify({ status: 'declined' })
         });
       } catch (e) {
-        console.error('Failed to decline invite on Not Now:', e);
+        logError('Failed to decline invite on Not Now:', e);
       }
     };
 
@@ -240,10 +243,10 @@ function App() {
                   : `You skipped your scheduled ${todayWorkout.workout} workout`
               }
             })
-          }).catch(e => console.error('Failed to create cancellation notification:', e));
+          }).catch(e => logError('Failed to create cancellation notification:', e));
         }
       } catch (e) {
-        console.error('Failed to create cancellation notification:', e);
+        logError('Failed to create cancellation notification:', e);
       }
       
       dismissPrompt();
@@ -263,7 +266,7 @@ function App() {
           dismissPrompt();
           alert('Workout accepted! See you there! 💪');
         }).catch(err => {
-          console.error('Failed to accept workout invite:', err);
+          logError('Failed to accept workout invite:', err);
           alert('Failed to accept invite');
         });
       }
@@ -283,7 +286,7 @@ function App() {
           dismissPrompt();
           alert('Invite declined');
         }).catch(err => {
-          console.error('Failed to decline workout invite:', err);
+          logError('Failed to decline workout invite:', err);
           alert('Failed to decline invite');
         });
       }
@@ -380,7 +383,7 @@ function App() {
           socket.off('notification:new', handleNotification);
           socket.disconnect();
         } catch (err) {
-          console.error('Failed to disconnect notification socket:', err);
+          logError('Failed to disconnect notification socket:', err);
         }
       };
     }, []);

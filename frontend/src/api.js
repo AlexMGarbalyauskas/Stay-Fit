@@ -39,6 +39,8 @@ export const getUsers = () => api.get('/api/users');
 export const getUser = id => api.get(`/api/users/${id}`);
 export const getMe = () => api.get('/api/me');
 export const updateMe = (data) => api.put('/api/me', data);
+export const changePassword = (currentPassword, newPassword) =>
+  api.put('/api/me/password', { currentPassword, newPassword });
 export const getTotalUsersCount = async () => {
   const res = await api.get('/api/users');
   return res.data.users?.length || 0;
