@@ -89,7 +89,11 @@ export const toggleSave = (postId) => api.post(`/api/posts/${postId}/save`);
 
 // COMMENTS
 export const getComments = (postId) => api.get(`/api/posts/${postId}/comments`);
-export const createComment = (postId, comment) => api.post(`/api/posts/${postId}/comments`, { comment });
+export const createComment = (postId, content, parentCommentId = null) =>
+  api.post(`/api/posts/${postId}/comments`, {
+    content,
+    parent_comment_id: parentCommentId,
+  });
 export const deleteComment = (postId, commentId) => api.delete(`/api/posts/${postId}/comments/${commentId}`);
 export const likeComment = (postId, commentId) => api.post(`/api/posts/${postId}/comments/${commentId}/like`);
 export const unlikeComment = (postId, commentId) => api.delete(`/api/posts/${postId}/comments/${commentId}/like`);
@@ -97,8 +101,8 @@ export const toggleCommentLike = (postId, commentId) => api.post(`/api/posts/${p
 
 // NESTED COMMENTS
 export const getNestedComments = (postId, commentId) => api.get(`/api/posts/${postId}/comments/${commentId}/replies`);
-export const createNestedComment = (postId, commentId, comment) =>
-  api.post(`/api/posts/${postId}/comments/${commentId}/replies`, { comment });
+export const createNestedComment = (postId, commentId, content) =>
+  api.post(`/api/posts/${postId}/comments/${commentId}/replies`, { content });
 export const deleteNestedComment = (postId, commentId, nestedCommentId) =>
   api.delete(`/api/posts/${postId}/comments/${commentId}/replies/${nestedCommentId}`);
 export const likeNestedComment = (postId, commentId, nestedCommentId) =>
