@@ -69,17 +69,27 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const passwordRules = /^(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};:'",.<>/?\\|`~]).{8,}$/;
+    if (!passwordRules.test(password)) {
+      setError(t('passwordRulesError'));
+      return;
+    }
     if (password !== passwordConfirm) {
-      setError('Passwords do not match');
+      setError(t('passwordsDoNotMatch'));
       return;
     }
     if (!tosRead || !agree) {
-      setError('Please read and accept the Terms of Service before registering.');
+      setError(t('acceptTermsBeforeRegistering'));
       return;
     }
     try {
-      await register(username, email, password);
+      const response = await register(username, email, password);
       localStorage.removeItem(DRAFT_KEY);
+      if (response.data?.requiresVerification) {
+        const userParam = encodeURIComponent(JSON.stringify(response.data.user));
+        navigate(`/verify-email?user=${userParam}&emailSent=${response.data.emailSent}`);
+        return;
+      }
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
@@ -117,6 +127,9 @@ export default function Register() {
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
+          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            {t('passwordRulesHint')}
+          </p>
 
           <input
             className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' : 'border-gray-300 text-gray-900'}`}
@@ -128,11 +141,11 @@ export default function Register() {
 
           {/* Terms of Service gate */}
           <div className={`text-sm border rounded-xl p-3 ${isDark ? 'text-gray-300 bg-gray-800 border-gray-700' : 'text-gray-700 bg-gray-50 border-gray-200'}`}>
-            <p className="mb-2">{t('readTerms')} <Link className="text-blue-600 underline" to="/terms">Terms of Service</Link>.</p>
+            <p className="mb-2">{t('readTerms')} <Link className="text-blue-600 underline" to="/terms">{t('termsOfService')}</Link>.</p>
             <div className="flex items-center gap-2">
               <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
               <span>{t('acceptTerms')}</span>
-              <span className={`ml-auto text-xs ${tosRead ? 'text-green-600' : 'text-red-500'}`}>{tosRead ? t('loading') : 'Please read terms'}</span>
+              <span className={`ml-auto text-xs ${tosRead ? 'text-green-600' : 'text-red-500'}`}>{tosRead ? t('loading') : t('pleaseReadTerms')}</span>
             </div>
           </div>
 
@@ -150,8 +163,8 @@ export default function Register() {
         <div className="mt-6">
           <button
             onClick={() => {
-              if (!tosRead) { alert('Please read the Terms of Service first.'); return; }
-              if (!agree) { alert('Please accept the Terms of Service.'); return; }
+              if (!tosRead) { alert(t('pleaseReadTermsFirst')); return; }
+              if (!agree) { alert(t('pleaseAcceptTerms')); return; }
               handleGoogleRegister();
             }}
             className={`w-full border p-3 rounded-xl flex items-center justify-center transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800 text-gray-200' : 'border-gray-300 hover:bg-gray-50 text-gray-900'}`}

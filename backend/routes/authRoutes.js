@@ -24,12 +24,29 @@ router.post('/register', async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
     db.run(
-      'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-      [username, email, hash],
+      'INSERT INTO users (username, email, password_hash, email_verified) VALUES (?, ?, ?, ?)',
+      [username, email, hash, 0],
       function (err) {
         if (err) return res.status(500).json({ error: 'DB error' });
-        const token = jwt.sign({ id: this.lastID, username, email }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ user: { id: this.lastID, username, email }, token });
+
+        const userId = this.lastID;
+        const verificationCode = generateVerificationCode();
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        db.run(
+          'INSERT INTO email_verification_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+          [userId, verificationCode, expiresAt.toISOString()],
+          async (insertErr) => {
+            if (insertErr) return res.status(500).json({ error: 'DB error' });
+
+            const emailSent = await sendVerificationEmail(email, username, verificationCode);
+            res.json({
+              user: { id: userId, username, email },
+              emailSent,
+              requiresVerification: true
+            });
+          }
+        );
       }
     );
   });
@@ -46,6 +63,13 @@ router.post('/login', (req, res) => {
 
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(400).json({ error: 'Invalid password' });
+
+    if (!user.email_verified) {
+      return res.status(403).json({
+        error: 'Email not verified',
+        user: { id: user.id, username: user.username, email: user.email }
+      });
+    }
 
     const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, username: user.username, email: user.email }, token });

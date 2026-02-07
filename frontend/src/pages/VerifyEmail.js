@@ -17,10 +17,9 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     const userParam = searchParams.get('user');
-    const isGoogleSignup = searchParams.get('isGoogleSignup') === 'true';
     const emailSentParam = searchParams.get('emailSent');
 
-    if (!userParam || !isGoogleSignup) {
+    if (!userParam) {
       navigate('/login');
       return;
     }
