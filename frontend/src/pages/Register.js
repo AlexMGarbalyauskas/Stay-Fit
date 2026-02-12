@@ -85,6 +85,7 @@ export default function Register() {
     try {
       const response = await register(username, email, password);
       localStorage.removeItem(DRAFT_KEY);
+      localStorage.setItem('onboarding_pending', 'true');
       if (response.data?.requiresVerification) {
         const userParam = encodeURIComponent(JSON.stringify(response.data.user));
         navigate(`/verify-email?user=${userParam}&emailSent=${response.data.emailSent}`);
@@ -97,6 +98,7 @@ export default function Register() {
   };
 
   const handleGoogleRegister = () => {
+    localStorage.setItem('onboarding_pending', 'true');
     window.location.href = `${API_BASE}/api/auth/google/register`;
   };
 

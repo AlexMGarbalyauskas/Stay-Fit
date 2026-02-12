@@ -22,6 +22,24 @@ export default function Login({ onLogin }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const handlePostLoginRedirect = (user) => {
+    const userId = user?.id;
+    if (!userId) {
+      navigate('/home');
+      return;
+    }
+    const doneKey = `onboarding_done_${userId}`;
+    const pending = localStorage.getItem('onboarding_pending') === 'true';
+    if (pending && !localStorage.getItem(doneKey)) {
+      navigate('/onboarding?auto=1');
+      return;
+    }
+    if (pending && localStorage.getItem(doneKey)) {
+      localStorage.removeItem('onboarding_pending');
+    }
+    navigate('/home');
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
@@ -43,9 +61,14 @@ export default function Login({ onLogin }) {
           const user = JSON.parse(userParam);
           // Initialize encryption for OAuth login using token as seed
           initializeEncryption(token + user.id);
+          if (onLogin) onLogin();
+          handlePostLoginRedirect(user);
         } catch (e) {
           console.error('Failed to parse user data:', e);
+          if (onLogin) onLogin();
+          navigate('/home');
         }
+        return;
       }
       if (onLogin) onLogin();
       navigate('/home');
@@ -63,7 +86,7 @@ export default function Login({ onLogin }) {
       initializeEncryption(password + res.data.user.id);
       
       if (onLogin) onLogin();
-      navigate('/home');
+      handlePostLoginRedirect(res.data.user);
     } catch (err) {
       console.error('Login error:', err.response?.data || err);
       setError(err.response?.data?.error || 'Login failed');
