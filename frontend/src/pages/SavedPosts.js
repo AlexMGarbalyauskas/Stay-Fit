@@ -86,7 +86,7 @@ export default function SavedPosts() {
                   )}
 
                   {/* Comments button */}
-                  <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition">
+                  <div className="absolute top-2 left-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
                     <button
                       onClick={() => navigate(`/posts/${p.id}/comments`)}
                       className="bg-white bg-opacity-90 px-2 py-1 rounded text-xs"
@@ -96,7 +96,7 @@ export default function SavedPosts() {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="absolute bottom-2 left-2 flex gap-2 items-center opacity-0 group-hover:opacity-100 transition">
+                  <div className="absolute bottom-2 left-2 flex gap-2 items-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
                     <button
                       onClick={() =>
                         toggleLike(p.id)

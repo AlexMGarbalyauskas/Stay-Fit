@@ -417,7 +417,7 @@ export default function Profile() {
                     )}
 
                     {/* Overlay on hover */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100">
+                    <div className="absolute inset-0 bg-black bg-opacity-40 md:bg-opacity-0 md:group-hover:bg-opacity-50 transition flex items-center justify-center gap-4 opacity-100 md:opacity-0 md:group-hover:opacity-100">
                       {/* Edit Button */}
                       {!showSaved && (
                         <button
