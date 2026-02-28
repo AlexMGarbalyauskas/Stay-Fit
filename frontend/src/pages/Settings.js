@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, BarChart3, BookOpen, Bot } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import AIHelperModal from '../components/AIHelperModal';
 import { useNavigate } from 'react-router-dom';
 import { updateMe } from '../api';
 import { useLanguage } from '../context/LanguageContext';
@@ -19,6 +20,7 @@ export default function Settings() {
   const [currentTime, setCurrentTime] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [showShareNotification, setShowShareNotification] = useState(false);
+  const [showAIHelper, setShowAIHelper] = useState(false);
   const isDark = theme === 'dark';
   const iconClass = isDark ? 'text-gray-200' : 'text-black';
   const navigate = useNavigate();
@@ -351,7 +353,7 @@ export default function Settings() {
           </button>
 
           <button
-            onClick={() => navigate('/ai-helper')}
+            onClick={() => setShowAIHelper(true)}
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
             <Bot size={20} className={iconClass} /> {t('aiHelper')}
@@ -560,6 +562,8 @@ export default function Settings() {
       `}</style>
 
       <Navbar />
+
+      <AIHelperModal open={showAIHelper} onClose={() => setShowAIHelper(false)} />
 
     </div>
   );
