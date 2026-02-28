@@ -31,6 +31,7 @@ import { clearEncryption } from './utils/crypto';
 import CalendarPage from './pages/Calendar';
 import Tutorials from './pages/Tutorials';
 import OnboardingTutorial from './pages/OnboardingTutorial';
+import AIHelper from './pages/AIHelper';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import DebugOverlay from './components/DebugOverlay';
@@ -121,6 +122,7 @@ function App() {
         <Route path="/calendar" element={requireAuth(<CalendarPage />)} />
         <Route path="/tutorials" element={requireAuth(<Tutorials isAuthenticated={isAuthenticated} />)} />
         <Route path="/onboarding" element={requireAuth(<OnboardingTutorial />)} />
+        <Route path="/ai-helper" element={requireAuth(<AIHelper />)} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
 

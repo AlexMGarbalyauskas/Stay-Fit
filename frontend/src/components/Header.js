@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, BookOpen } from 'lucide-react';
+import { Bell, BookOpen, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getNotifications } from '../api';
 import { io } from 'socket.io-client';
 import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 import { useLanguage } from '../context/LanguageContext';
+import AIHelperModal from './AIHelperModal';
 
 export default function Header({ disableNotifications = false }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [hasUnread, setHasUnread] = useState(false);
+  const [showAIHelper, setShowAIHelper] = useState(false);
   const socketRef = useRef(null);
 
   const refreshUnread = async () => {
@@ -46,7 +48,7 @@ export default function Header({ disableNotifications = false }) {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
+    <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-[120]">
       <div className="relative max-w-md mx-auto flex items-center px-4 py-3">
         
         {/* Centered Title */}
@@ -64,6 +66,14 @@ export default function Header({ disableNotifications = false }) {
         </button>
 
         <button
+          onClick={() => setShowAIHelper(true)}
+          className="p-2 rounded-full transition hover:bg-gray-100"
+          title={t('aiHelper')}
+        >
+          <Bot className="w-6 h-6 text-gray-700" />
+        </button>
+
+        <button
           onClick={handleNotificationsClick}
           disabled={disableNotifications}
           className={`relative p-2 rounded-full transition ${
@@ -77,6 +87,8 @@ export default function Header({ disableNotifications = false }) {
         </button>
 
       </div>
+
+      <AIHelperModal open={showAIHelper} onClose={() => setShowAIHelper(false)} />
     </header>
   );
 }

@@ -25,6 +25,7 @@ app.use('/api/messages', require('./routes/messagesRoutes'));
 app.use('/api/notifications', require('./routes/notificationsRoutes'));
 app.use('/api/posts', require('./routes/postsRoutes'));
 app.use('/api/workout-schedules', require('./routes/workoutSchedulesRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 
 
 // Health check

@@ -112,6 +112,9 @@ export const likeNestedComment = (postId, commentId, nestedCommentId) =>
 export const unlikeNestedComment = (postId, commentId, nestedCommentId) =>
   api.delete(`/api/posts/${postId}/comments/${commentId}/replies/${nestedCommentId}/like`);
 
+// AI HELPER
+export const askAIHelper = (prompt) => api.post('/api/ai/helper', { prompt });
+
 // ACCOUNT
 export const deleteAccount = (password) => api.delete('/api/me/delete', { data: { password } });
 
