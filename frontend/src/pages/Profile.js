@@ -35,11 +35,21 @@ export default function Profile() {
   const isAuthenticated = !!token;
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
+  const syncLocalUser = (updatedUser) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({ ...stored, ...updatedUser }));
+    } catch {
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   // Fetch profile info
   const fetchProfile = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/me`, authHeaders);
       setUser(res.data.user);
+      syncLocalUser(res.data.user);
       setBioInput(res.data.user.bio || '');
       setLocationInput(res.data.user.location || '');
       setNicknameInput(res.data.user.nickname || '');
@@ -73,8 +83,10 @@ export default function Profile() {
   // Save bio
   const handleSaveBio = async () => {
     try {
-      await axios.put(`${API_URL}/api/me`, { bio: bioInput }, authHeaders);
-      setUser(prev => ({ ...prev, bio: bioInput }));
+      const res = await axios.put(`${API_URL}/api/me`, { bio: bioInput }, authHeaders);
+      const updatedUser = res.data?.user || { ...user, bio: bioInput };
+      setUser(updatedUser);
+      syncLocalUser(updatedUser);
       setBioEditing(false);
     } catch (err) {
       console.error(err);
@@ -85,8 +97,10 @@ export default function Profile() {
   // Save location
   const handleSaveLocation = async () => {
     try {
-      await axios.put(`${API_URL}/api/me`, { location: locationInput }, authHeaders);
-      setUser(prev => ({ ...prev, location: locationInput }));
+      const res = await axios.put(`${API_URL}/api/me`, { location: locationInput }, authHeaders);
+      const updatedUser = res.data?.user || { ...user, location: locationInput };
+      setUser(updatedUser);
+      syncLocalUser(updatedUser);
       setLocationEditing(false);
     } catch (err) {
       console.error(err);
@@ -97,8 +111,10 @@ export default function Profile() {
   // Save nickname
   const handleSaveNickname = async () => {
     try {
-      await axios.put(`${API_URL}/api/me`, { nickname: nicknameInput }, authHeaders);
-      setUser(prev => ({ ...prev, nickname: nicknameInput }));
+      const res = await axios.put(`${API_URL}/api/me`, { nickname: nicknameInput }, authHeaders);
+      const updatedUser = res.data?.user || { ...user, nickname: nicknameInput };
+      setUser(updatedUser);
+      syncLocalUser(updatedUser);
       setNicknameEditing(false);
     } catch (err) {
       console.error(err);
@@ -126,7 +142,9 @@ export default function Profile() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setUser(prev => ({ ...prev, profile_picture: res.data.profile_picture }));
+      const updatedUser = res.data?.user || { ...user, profile_picture: res.data.profile_picture };
+      setUser(updatedUser);
+      syncLocalUser(updatedUser);
       setSelectedFile(null);
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);

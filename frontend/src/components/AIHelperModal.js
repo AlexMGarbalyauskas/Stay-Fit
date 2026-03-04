@@ -4,7 +4,7 @@ import { askAIHelper } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function AIHelperModal({ open, onClose }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
 
@@ -32,7 +32,7 @@ export default function AIHelperModal({ open, onClose }) {
     setError('');
 
     try {
-      const res = await askAIHelper(cleaned);
+      const res = await askAIHelper(cleaned, language);
       const assistantText = (res.data?.reply || '').trim();
       if (assistantText) {
         setMessages(prev => [...prev, { role: 'assistant', text: assistantText }]);
@@ -40,9 +40,9 @@ export default function AIHelperModal({ open, onClose }) {
     } catch (err) {
       const status = err?.response?.status;
       if (status === 404) {
-        setError('AI endpoint not found. Restart backend server and try again.');
+        setError(t('aiEndpointNotFound'));
       } else if (status === 429) {
-        setError('AI helper is temporarily unavailable due to quota/rate limits. Please try again later.');
+        setError(t('aiRateLimited'));
       } else {
         setError(err?.response?.data?.error || t('aiHelperError'));
       }
@@ -92,13 +92,13 @@ export default function AIHelperModal({ open, onClose }) {
 
             <div className={`rounded-xl border p-3 flex-1 min-h-0 ${isDark ? 'border-gray-700 bg-gray-950/40' : 'border-gray-200 bg-slate-50'}`}>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs uppercase tracking-wide font-semibold text-blue-500">Conversation</p>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{messages.length} messages</p>
+                <p className="text-xs uppercase tracking-wide font-semibold text-blue-500">{t('aiConversation')}</p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{messages.length} {t('messages').toLowerCase()}</p>
               </div>
               <div className="h-full overflow-y-auto pr-1 space-y-3 pb-2">
                 {messages.length === 0 && (
                   <div className={`h-full flex items-center justify-center text-center text-sm px-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Start by asking a question below.
+                    {t('aiStartAsking')}
                   </div>
                 )}
                 {messages.map((message, index) => (
@@ -111,7 +111,7 @@ export default function AIHelperModal({ open, onClose }) {
                     }`}
                   >
                     <p className={`text-[11px] uppercase tracking-wide font-semibold mb-1 ${message.role === 'user' ? 'text-blue-500' : 'text-emerald-500'}`}>
-                      {message.role === 'user' ? 'You' : t('aiResponse')}
+                      {message.role === 'user' ? t('youText') : t('aiResponse')}
                     </p>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.text}</p>
                   </div>

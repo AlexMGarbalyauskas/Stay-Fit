@@ -44,7 +44,10 @@ import { Dumbbell, X as Close, BellRing } from 'lucide-react';
 import { log, error as logError } from './utils/logger';
 
 function App() {
+  // Tracks updates that should refresh the friends list page.
   const [refreshFriends, setRefreshFriends] = useState(0);
+
+  // Reads auth state from localStorage on first render.
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       return !!localStorage.getItem('token') && !!JSON.parse(localStorage.getItem('user'));
@@ -52,10 +55,14 @@ function App() {
       return false;
     }
   });
+
+  // Controls the initial splash loader visibility.
   const [booting, setBooting] = useState(true);
 
+  // Wrap protected pages so guests are redirected to AuthRequired.
   const requireAuth = (element) => isAuthenticated ? element : <AuthRequired />;
 
+  // Forces dependent pages to re-fetch friendship-related data.
   const triggerFriendRefresh = () => setRefreshFriends(prev => prev + 1);
 
   // Initialize theme on app load
@@ -96,65 +103,70 @@ function App() {
     <Router>
       <LanguageProvider>
         <WorkoutReminderProvider>
+
+          {/* Startup splash shown briefly while app boots */}
           {booting && <SplashLoader />}
+
+          {/* Public and protected application routes */}
           <Routes>
-          <Route path="/" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
-        <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
-        <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
-        <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/verify-email-token" element={<VerifyEmailToken />} />
-        <Route path="/download" element={<PublicShare />} />
+            <Route path="/" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
+            <Route path="/login" element={!isAuthenticated ? <Login onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+            <Route path="/register" element={!isAuthenticated ? <Register onRegister={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+            <Route path="/social-login" element={!isAuthenticated ? <SocialLogin onLogin={() => setIsAuthenticated(true)} /> : <Navigate to="/home" />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-email-token" element={<VerifyEmailToken />} />
+            <Route path="/download" element={<PublicShare />} />
 
-        <Route path="/home" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
-        <Route path="/profile" element={requireAuth(<Profile />)} />
-        <Route path="/saved-posts" element={requireAuth(<SavedPosts />)} />
-        <Route path="/post" element={requireAuth(<Post />)} />
-        <Route path="/posts/:id/comments" element={requireAuth(<PostComments />)} />
-        <Route path="/settings" element={requireAuth(<Settings />)} />
-        <Route path="/settings/details" element={requireAuth(<UserDetails />)} />
-        <Route path="/settings/other" element={requireAuth(<OtherSettings />)} />
-        <Route path="/settings/about" element={requireAuth(<AboutSettings />)} />
-        <Route path="/settings/stats" element={requireAuth(<StatsSettings />)} />
-        <Route path="/share" element={requireAuth(<ShareApp />)} />
-        <Route path="/chat" element={requireAuth(<ChatPage />)} />
-        <Route path="/chat/:id" element={requireAuth(<ChatPage />)} />
-        <Route path="/calendar" element={requireAuth(<CalendarPage />)} />
-        <Route path="/tutorials" element={requireAuth(<Tutorials isAuthenticated={isAuthenticated} />)} />
-        <Route path="/onboarding" element={requireAuth(<OnboardingTutorial />)} />
-        <Route path="/ai-helper" element={requireAuth(<AIHelper />)} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
+            <Route path="/home" element={<Home onLogout={handleLogout} isAuthenticated={isAuthenticated} />} />
+            <Route path="/profile" element={requireAuth(<Profile />)} />
+            <Route path="/saved-posts" element={requireAuth(<SavedPosts />)} />
+            <Route path="/post" element={requireAuth(<Post />)} />
+            <Route path="/posts/:id/comments" element={requireAuth(<PostComments />)} />
+            <Route path="/settings" element={requireAuth(<Settings />)} />
+            <Route path="/settings/details" element={requireAuth(<UserDetails />)} />
+            <Route path="/settings/other" element={requireAuth(<OtherSettings />)} />
+            <Route path="/settings/about" element={requireAuth(<AboutSettings />)} />
+            <Route path="/settings/stats" element={requireAuth(<StatsSettings />)} />
+            <Route path="/share" element={requireAuth(<ShareApp />)} />
+            <Route path="/chat" element={requireAuth(<ChatPage />)} />
+            <Route path="/chat/:id" element={requireAuth(<ChatPage />)} />
+            <Route path="/calendar" element={requireAuth(<CalendarPage />)} />
+            <Route path="/tutorials" element={requireAuth(<Tutorials isAuthenticated={isAuthenticated} />)} />
+            <Route path="/onboarding" element={requireAuth(<OnboardingTutorial />)} />
+            <Route path="/ai-helper" element={requireAuth(<AIHelper />)} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
 
-        <Route
-          path="/find"
-          element={requireAuth(<FindFriends onFriendUpdate={triggerFriendRefresh} />)}
-        />
-        <Route
-          path="/friend-requests"
-          element={requireAuth(<FriendRequests onFriendUpdate={triggerFriendRefresh} />)}
-        />
-        <Route
-          path="/friends"
-          element={requireAuth(<Friends refreshTrigger={refreshFriends} />)}
-        />
-        <Route path="/users/:id" element={requireAuth(<UserProfile />)} />
-        <Route path="/user/:id" element={requireAuth(<UserProfile />)} />
-        <Route path="/notifications" element={requireAuth(<Notifications />)} />
-        <Route path="/user/:id/friends" element={requireAuth(<UserFriends />)} />
-      </Routes>
+            <Route
+              path="/find"
+              element={requireAuth(<FindFriends onFriendUpdate={triggerFriendRefresh} />)}
+            />
+            <Route
+              path="/friend-requests"
+              element={requireAuth(<FriendRequests onFriendUpdate={triggerFriendRefresh} />)}
+            />
+            <Route
+              path="/friends"
+              element={requireAuth(<Friends refreshTrigger={refreshFriends} />)}
+            />
+            <Route path="/users/:id" element={requireAuth(<UserProfile />)} />
+            <Route path="/user/:id" element={requireAuth(<UserProfile />)} />
+            <Route path="/notifications" element={requireAuth(<Notifications />)} />
+            <Route path="/user/:id/friends" element={requireAuth(<UserFriends />)} />
+          </Routes>
 
-      {/* Global Workout Prompt Modal */}
-      <GlobalWorkoutPrompt />
+          {/* Global workout prompt modal */}
+          <GlobalWorkoutPrompt />
 
-      {/* Global notification toast rendered inside Router so it can navigate */}
-      <NotificationToast />
-    </WorkoutReminderProvider>
-    </LanguageProvider>
+          {/* Global notification toast kept inside Router so navigation works */}
+          <NotificationToast />
+
+        </WorkoutReminderProvider>
+      </LanguageProvider>
     </Router>
   );
 
-  // Global Workout Prompt Component
+  // Displays scheduled workout prompt / invite actions.
   function GlobalWorkoutPrompt() {
     const { showWorkoutPrompt, todayWorkout, closePrompt, dismissPrompt } = useWorkoutReminder();
     const navigate = useNavigate();
@@ -357,6 +369,7 @@ function App() {
     );
   }
 
+  // Shows real-time notification toast from socket events.
   function NotificationToast() {
     const navigate = useNavigate();
     const [toast, setToast] = useState(null);
@@ -440,6 +453,7 @@ function App() {
     );
   }
 
+  // App startup loader shown during boot delay.
   function SplashLoader() {
     const [theme] = useState(localStorage.getItem('theme') || 'light');
     const isDark = theme === 'dark';

@@ -10,14 +10,16 @@ router.get('/:userId', auth, (req, res) => {
   const other = req.params.userId;
 
   db.all(
-    `SELECT id, sender_id, receiver_id, content,
-            IFNULL(message_type,'text') as message_type,
-            media_url,
-            encrypted_content,
-            iv,
-            is_encrypted,
-            created_at
+        `SELECT messages.id, messages.sender_id, messages.receiver_id, messages.content,
+          IFNULL(messages.message_type,'text') as message_type,
+          messages.media_url,
+          messages.encrypted_content,
+          messages.iv,
+          messages.is_encrypted,
+          messages.created_at,
+         u.profile_picture AS sender_profile_picture
      FROM messages
+       JOIN users u ON u.id = messages.sender_id
      WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
      ORDER BY created_at ASC`,
     [me, other, other, me],

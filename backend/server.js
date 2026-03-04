@@ -87,27 +87,37 @@ io.on('connection', (socket) => {
               console.error('Error saving message:', err);
               return;
             }
-            const message = { 
-              id: this.lastID, 
-              sender_id: userId, 
-              receiver_id: receiverId, 
-              content: finalContent, 
-              message_type: type, 
-              media_url: mediaUrl || null, 
-              encrypted_content: encryptedContent,
-              iv: encryptedIv,
-              is_encrypted: isEncryptedFlag,
-              created_at: createdAt 
-            };
-            io.to(`user:${receiverId}`).emit('receive_message', message);
-            socket.emit('receive_message', message);
+            const messageId = this.lastID;
 
-            // Create a notification for the receiver
-            const preview = mediaUrl ? '[GIF]' : finalContent.slice(0, 200);
-            db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: preview })], (err) => {
-              if (err) console.error('Failed to create message notification', err);
-              // include preview content in the socket event for toast
-              io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
+            db.get('SELECT profile_picture FROM users WHERE id = ?', [userId], (profileErr, senderRow) => {
+              if (profileErr) {
+                console.error('Error loading sender profile picture:', profileErr);
+              }
+
+              const message = {
+                id: messageId,
+                sender_id: userId,
+                receiver_id: receiverId,
+                content: finalContent,
+                message_type: type,
+                media_url: mediaUrl || null,
+                encrypted_content: encryptedContent,
+                iv: encryptedIv,
+                is_encrypted: isEncryptedFlag,
+                created_at: createdAt,
+                sender_profile_picture: senderRow?.profile_picture || null
+              };
+
+              io.to(`user:${receiverId}`).emit('receive_message', message);
+              socket.emit('receive_message', message);
+
+              // Create a notification for the receiver
+              const preview = mediaUrl ? '[GIF]' : finalContent.slice(0, 200);
+              db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: preview })], (err) => {
+                if (err) console.error('Failed to create message notification', err);
+                // include preview content in the socket event for toast
+                io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
+              });
             });
           }
         );

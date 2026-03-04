@@ -35,6 +35,7 @@ export default function CalendarPage() {
   const [showCamera, setShowCamera] = useState(false);
   const [postDates, setPostDates] = useState(new Set()); // Set of dates with posts
   const [currentStreak, setCurrentStreak] = useState(0); // Current posting streak
+  const [plannerActivated, setPlannerActivated] = useState(false);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
@@ -312,65 +313,84 @@ export default function CalendarPage() {
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-white text-slate-800'}`}>
       <div className="mx-auto max-w-6xl px-4 py-6">
-        {/* Posting Streak Display */}
-        {currentStreak > 0 && (
-          <div className="mb-4 rounded-xl bg-gradient-to-r from-orange-400 to-red-500 p-4 text-white shadow-lg">
-            <div className="flex items-center justify-center gap-3">
-              <Flame className="w-8 h-8 fill-white" />
-              <div className="text-center">
-                <p className="text-sm font-semibold uppercase tracking-wide">Posting Streak</p>
-                <p className="text-3xl font-bold">{currentStreak} {currentStreak === 1 ? 'day' : 'days'}</p>
-              </div>
-              <Flame className="w-8 h-8 fill-white" />
-            </div>
-          </div>
-        )}
-
-        {/* Countdown Timer Display */}
-        {countdown && (
-          <div className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide">{t('nextWorkout')}</p>
-                <p className="text-lg font-bold">{plans[dateKey(today.getFullYear(), today.getMonth(), today.getDate())]?.workout || t('workout')}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-medium">{t('timeUntilReminder')}</p>
-                <p className="text-3xl font-bold tabular-nums">{countdown}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center mb-4">
           <button
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-800"
           >
             <ArrowLeft size={16} /> {t('back')}
           </button>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => changeYear(-1)} 
-              className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" 
-              aria-label={t('previousYear')}
-              disabled={year <= minYear}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <div className="text-lg font-bold text-gray-800">{year}</div>
-            <button 
-              onClick={() => changeYear(1)} 
-              className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" 
-              aria-label={t('nextYear')}
-              disabled={year >= maxYear}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3 md:grid-cols-2">
+        {!plannerActivated ? (
+          <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm text-center">
+            <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+              <Dumbbell className="w-7 h-7" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Workout Planner</h2>
+            <p className="text-sm text-gray-600 mb-5">Press the button below to open your calendar workout plan.</p>
+            <button
+              onClick={() => setPlannerActivated(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-700"
+            >
+              <Dumbbell size={16} /> Open Planner
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-end mb-4">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => changeYear(-1)} 
+                  className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  aria-label={t('previousYear')}
+                  disabled={year <= minYear}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <div className="text-lg font-bold text-gray-800">{year}</div>
+                <button 
+                  onClick={() => changeYear(1)} 
+                  className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  aria-label={t('nextYear')}
+                  disabled={year >= maxYear}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Posting Streak Display */}
+            {currentStreak > 0 && (
+              <div className="mb-4 rounded-xl bg-gradient-to-r from-orange-400 to-red-500 p-4 text-white shadow-lg">
+                <div className="flex items-center justify-center gap-3">
+                  <Flame className="w-8 h-8 fill-white" />
+                  <div className="text-center">
+                    <p className="text-sm font-semibold uppercase tracking-wide">Posting Streak</p>
+                    <p className="text-3xl font-bold">{currentStreak} {currentStreak === 1 ? 'day' : 'days'}</p>
+                  </div>
+                  <Flame className="w-8 h-8 fill-white" />
+                </div>
+              </div>
+            )}
+
+            {/* Countdown Timer Display */}
+            {countdown && (
+              <div className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide">{t('nextWorkout')}</p>
+                    <p className="text-lg font-bold">{plans[dateKey(today.getFullYear(), today.getMonth(), today.getDate())]?.workout || t('workout')}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-medium">{t('timeUntilReminder')}</p>
+                    <p className="text-3xl font-bold tabular-nums">{countdown}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-4 lg:grid-cols-3 md:grid-cols-2">
           {months.map((month, idx) => (
             <div key={month} className="rounded-xl border border-gray-100 bg-white shadow-sm">
               <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
@@ -410,9 +430,9 @@ export default function CalendarPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
 
-        <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">{t('selectedDay')}</p>
@@ -507,7 +527,9 @@ export default function CalendarPage() {
           </div>
 
           {saved && <p className="mt-3 text-sm font-semibold text-green-600">{t('savedLocally')}</p>}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Buddy Selection Modal */}

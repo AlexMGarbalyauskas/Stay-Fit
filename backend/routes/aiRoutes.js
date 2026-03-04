@@ -27,6 +27,7 @@ const extractReplyText = (data) => {
 
 router.post('/helper', auth, async (req, res) => {
   const prompt = (req.body?.prompt || '').trim();
+  const requestedLanguage = (req.body?.language || 'en').toLowerCase();
 
   if (!prompt) {
     return res.status(400).json({ error: 'Prompt is required' });
@@ -38,6 +39,13 @@ router.post('/helper', auth, async (req, res) => {
 
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const languageMap = {
+    en: 'English',
+    es: 'Spanish',
+    fr: 'French',
+    it: 'Italian',
+  };
+  const responseLanguage = languageMap[requestedLanguage] || 'English';
 
   if (!apiKey) {
     return res.status(503).json({ error: 'AI service is not configured on server' });
@@ -46,7 +54,7 @@ router.post('/helper', auth, async (req, res) => {
   try {
     const requestBody = {
       model,
-      instructions: 'You are a helpful AI assistant for the Stay Fit app. Give practical, concise, fitness-focused guidance and general app help. Do not provide medical diagnosis.',
+      instructions: `You are a helpful AI assistant for the Stay Fit app. Give practical, concise, fitness-focused guidance and general app help. Do not provide medical diagnosis. Always reply in ${responseLanguage}.`,
       input: prompt,
       max_output_tokens: 1200,
     };

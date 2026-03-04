@@ -62,9 +62,6 @@ export const checkWorkoutReminders = (plans) => {
 
 // Start checking for reminders every minute
 export const startReminderService = (getPlans) => {
-  // Request permission on start
-  requestNotificationPermission();
-
   // Check immediately
   checkWorkoutReminders(getPlans());
 

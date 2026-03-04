@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import api, { createPost } from '../api';
 import { useLanguage } from '../context/LanguageContext';
-import { Upload, Camera, Video, Image as ImageIcon, Sparkles, Dumbbell } from 'lucide-react';
+import { Upload, Camera, Video, Image as ImageIcon, Dumbbell } from 'lucide-react';
 
 export default function Post() {
   const { t } = useLanguage();
@@ -544,22 +544,22 @@ export default function Post() {
     <>
       <Header />
 
-      <main className={`min-h-screen bg-gradient-to-br pt-16 pb-16 flex flex-col items-center px-4 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800' : 'from-blue-50 via-purple-50 to-pink-50'}`}>
+      <main className={`min-h-screen bg-gradient-to-br pt-16 pb-16 flex flex-col items-center px-4 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800' : 'from-blue-50 via-emerald-50 to-green-50'}`}>
         <div className={`backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-lg mt-12 border ${isDark ? 'bg-gray-900/80 border-gray-700/20' : 'bg-white/80 border-white/20'}`}>
           {!composerOpen ? (
             <div className="text-center space-y-6">
               {/* Icon header */}
               <div className="flex justify-center">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-xl opacity-60 animate-pulse"></div>
-                  <div className="relative bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-full">
-                    <Sparkles className="w-10 h-10 text-white" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full blur-xl opacity-60 animate-pulse"></div>
+                  <div className="relative bg-gradient-to-r from-green-500 to-emerald-600 p-4 rounded-full">
+                    <Dumbbell className="w-10 h-10 text-white" />
                   </div>
                 </div>
               </div>
 
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3" style={{ wordSpacing: '0.25em' }}>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3" style={{ wordSpacing: '0.25em' }}>
                   {t('chooseMediaType')}
                 </h2>
                 <p className="text-gray-600 text-lg" style={{ wordSpacing: '0.15em' }}>{t('chooseSource')}</p>
@@ -597,10 +597,10 @@ export default function Post() {
           ) : (
             <>
               <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-2 rounded-lg">
+                  <Dumbbell className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('createPost')}</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{t('createPost')}</h2>
               </div>
 
               <div className="flex gap-2 mb-4 flex-wrap">
@@ -943,7 +943,7 @@ export default function Post() {
             style={{ display: 'block' }}
           />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full text-2xl font-bold shadow-2xl" style={{ animation: 'popIn 0.5s ease-out', textShadow: '0 0 20px rgba(0,0,0,0.5)' }}>
+            <div className="relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-full text-2xl font-bold shadow-2xl" style={{ animation: 'popIn 0.5s ease-out', textShadow: '0 0 20px rgba(0,0,0,0.5)' }}>
               <style>{`
                 @keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
               `}</style>

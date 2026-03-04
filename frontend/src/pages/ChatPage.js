@@ -16,10 +16,13 @@ export default function ChatPage() {
   const { t } = useLanguage();
   const isDark = document.documentElement.classList.contains('dark');
   const navigate = useNavigate();
-  let currentUser = null;
-  try {
-    currentUser = JSON.parse(localStorage.getItem('user'));
-  } catch {}
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user'));
+    } catch {
+      return null;
+    }
+  });
   const token = localStorage.getItem('token');
   const isAuthenticated = !!(token && currentUser);
 
@@ -102,6 +105,20 @@ export default function ChatPage() {
       .then(res => setFriends(res.data.friends || []))
       .catch(err => console.error('Friends load error', err));
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    api.get('/api/me')
+      .then((res) => {
+        const latestUser = res.data?.user;
+        if (!latestUser) return;
+        setCurrentUser(latestUser);
+        try {
+          localStorage.setItem('user', JSON.stringify(latestUser));
+        } catch {}
+      })
+      .catch(() => {});
+  }, [token]);
 
   const params = useParams();
 
@@ -363,7 +380,7 @@ export default function ChatPage() {
                   const isMine = Number(msg.sender_id) === Number(currentUser.id);
                   const isGif = msg.message_type === 'gif' || msg.media_url;
                   const reactions = reactionsMap[msg.id] || [];
-                  const senderProfilePic = isMine ? currentUser.profile_picture : activeFriend.profile_picture;
+                  const senderProfilePic = msg.sender_profile_picture || (isMine ? currentUser.profile_picture : activeFriend.profile_picture);
                   const profilePicSrc = senderProfilePic?.startsWith('http') ? senderProfilePic : senderProfilePic ? `${API_BASE}${senderProfilePic}` : null;
 
                   return (
