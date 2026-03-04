@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, BarChart3, BookOpen, Bot } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, BarChart3, BookOpen, Bot, Volume2 } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import AIHelperModal from '../components/AIHelperModal';
 import { useNavigate } from 'react-router-dom';
 import { updateMe } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import { isSoundEnabled, setSoundEnabled } from '../utils/sounds';
 
 export default function Settings() {
   const { language, setLanguage: setGlobalLanguage, t } = useLanguage();
@@ -19,6 +20,7 @@ export default function Settings() {
   const [showTimezoneModal, setShowTimezoneModal] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [soundsEnabled, setSoundsEnabled] = useState(isSoundEnabled());
   const [showShareNotification, setShowShareNotification] = useState(false);
   const [showAIHelper, setShowAIHelper] = useState(false);
   const isDark = theme === 'dark';
@@ -92,12 +94,20 @@ export default function Settings() {
     setGlobalLanguage(newLanguage);
   };
 
+  const handleSoundsToggle = () => {
+    const nextValue = !soundsEnabled;
+    setSoundsEnabled(nextValue);
+    setSoundEnabled(nextValue);
+  };
+
   const handleLogout = () => {
     const savedLanguage = localStorage.getItem('language');
     const savedTheme = localStorage.getItem('theme');
+    const savedSounds = localStorage.getItem('soundEnabled');
     localStorage.clear();
     if (savedLanguage) localStorage.setItem('language', savedLanguage);
     if (savedTheme) localStorage.setItem('theme', savedTheme);
+    if (savedSounds !== null) localStorage.setItem('soundEnabled', savedSounds);
     window.location.href = '/';
   };
 
@@ -263,6 +273,22 @@ export default function Settings() {
               <option value="fr">Français</option>
               <option value="it">Italiano</option>
             </select>
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              <Volume2 size={20} className={iconClass} />
+              <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('soundEffects')}</span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={soundsEnabled}
+                onChange={handleSoundsToggle}
+                className="sr-only peer"
+              />
+              <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+            </label>
           </div>
         </div>
 

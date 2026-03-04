@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 import Login from './pages/Login';
@@ -40,6 +40,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { io } from 'socket.io-client';
 import { API_BASE } from './api';
 import { SOCKET_BASE, getSocketOptions } from './utils/socket';
+import { playNotificationSound } from './utils/sounds';
 import { Dumbbell, X as Close, BellRing } from 'lucide-react';
 import { log, error as logError } from './utils/logger';
 
@@ -171,9 +172,18 @@ function App() {
     const { showWorkoutPrompt, todayWorkout, closePrompt, dismissPrompt } = useWorkoutReminder();
     const navigate = useNavigate();
     const [theme] = useState(localStorage.getItem('theme') || 'light');
+    const lastPromptSoundKeyRef = useRef(null);
     const isDark = theme === 'dark';
 
     log('🏋️ GlobalWorkoutPrompt state:', { showWorkoutPrompt, todayWorkout });
+
+    useEffect(() => {
+      if (!showWorkoutPrompt || !todayWorkout) return;
+      const soundKey = `${todayWorkout.scheduleId || todayWorkout.date || todayWorkout.time || todayWorkout.workout || 'workout'}:${todayWorkout.isInvite ? 'invite' : 'workout'}`;
+      if (lastPromptSoundKeyRef.current === soundKey) return;
+      lastPromptSoundKeyRef.current = soundKey;
+      playNotificationSound(todayWorkout.isInvite ? 'invite' : 'workout');
+    }, [showWorkoutPrompt, todayWorkout]);
 
     if (!showWorkoutPrompt || !todayWorkout) return null;
 
@@ -382,6 +392,7 @@ function App() {
 
       const handleNotification = (data) => {
         if (!data) return;
+        playNotificationSound(data.type === 'message' ? 'message' : 'notification');
         let payload = data.data || {};
         if (typeof payload === 'string') {
           try {

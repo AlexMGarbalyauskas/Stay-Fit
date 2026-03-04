@@ -1,3 +1,5 @@
+import { playNotificationSound } from './sounds';
+
 // Workout Reminder Notification System
 
 export const requestNotificationPermission = async () => {
@@ -20,6 +22,7 @@ export const requestNotificationPermission = async () => {
 
 export const showWorkoutNotification = (workout, time, note = '') => {
   if (Notification.permission === 'granted') {
+    playNotificationSound('workout');
     new Notification('Workout Reminder! 🏋️', {
       body: `Time for ${workout}${time ? ` at ${time}` : ''}${note ? `\n${note}` : ''}`,
       icon: '/manifest.json', // You can add a custom icon
@@ -50,13 +53,11 @@ export const checkWorkoutReminders = (plans) => {
   const fiveMinutes = 5 * 60 * 1000;
 
   if (timeDiff > 0 && timeDiff <= fiveMinutes) {
-    showWorkoutNotification(plan.workout, plan.time, plan.note);
-    
-    // Mark as shown to avoid duplicate notifications
     const shownKey = `shown_${today}_${plan.time}`;
-    if (!sessionStorage.getItem(shownKey)) {
-      sessionStorage.setItem(shownKey, 'true');
-    }
+    if (sessionStorage.getItem(shownKey)) return;
+
+    showWorkoutNotification(plan.workout, plan.time, plan.note);
+    sessionStorage.setItem(shownKey, 'true');
   }
 };
 
