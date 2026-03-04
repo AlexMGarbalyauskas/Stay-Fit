@@ -14,6 +14,14 @@ export default function Header({ disableNotifications = false }) {
   const [showAIHelper, setShowAIHelper] = useState(false);
   const socketRef = useRef(null);
 
+  const isAuthenticated = (() => {
+    try {
+      return !!localStorage.getItem('token') && !!JSON.parse(localStorage.getItem('user'));
+    } catch {
+      return false;
+    }
+  })();
+
   const refreshUnread = async () => {
     try {
       const res = await getNotifications();
@@ -65,13 +73,15 @@ export default function Header({ disableNotifications = false }) {
           <BookOpen className="w-6 h-6 text-gray-700" />
         </button>
 
-        <button
-          onClick={() => setShowAIHelper(true)}
-          className="p-2 rounded-full transition hover:bg-gray-100"
-          title={t('aiHelper')}
-        >
-          <Bot className="w-6 h-6 text-gray-700" />
-        </button>
+        {isAuthenticated && (
+          <button
+            onClick={() => setShowAIHelper(true)}
+            className="p-2 rounded-full transition hover:bg-gray-100"
+            title={t('aiHelper')}
+          >
+            <Bot className="w-6 h-6 text-gray-700" />
+          </button>
+        )}
 
         <button
           onClick={handleNotificationsClick}
@@ -88,7 +98,9 @@ export default function Header({ disableNotifications = false }) {
 
       </div>
 
-      <AIHelperModal open={showAIHelper} onClose={() => setShowAIHelper(false)} />
+      {isAuthenticated && (
+        <AIHelperModal open={showAIHelper} onClose={() => setShowAIHelper(false)} />
+      )}
     </header>
   );
 }

@@ -371,7 +371,7 @@ export default function ChatPage() {
                       {/* Profile Picture */}
                       <div className="flex-shrink-0 self-end">
                         <button
-                          onClick={() => navigate(`/user/${isMine ? currentUser.id : activeFriend.id}`)}
+                          onClick={() => navigate(isMine ? '/profile' : `/user/${activeFriend.id}`)}
                           className="hover:opacity-80 transition"
                           title={isMine ? 'Your Profile' : activeFriend.username}
                         >
