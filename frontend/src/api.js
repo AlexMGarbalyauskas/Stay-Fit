@@ -1,6 +1,24 @@
 import axios from 'axios';
 
-export const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+const isBrowser = typeof window !== 'undefined';
+const DEFAULT_PROD_API_BASE = 'https://stay-fit-1.onrender.com';
+
+const resolveApiBase = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+
+  if (isBrowser) {
+    const { hostname } = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:4000';
+    }
+  }
+
+  return DEFAULT_PROD_API_BASE;
+};
+
+export const API_BASE = resolveApiBase();
 
 const api = axios.create({
   baseURL: API_BASE,

@@ -4,6 +4,7 @@ const { Resend } = require('resend');
 
 const useSendGrid = !!process.env.SENDGRID_API_KEY;
 const useResend = !!process.env.RESEND_API_KEY && !useSendGrid;
+const hasSmtpCredentials = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
 
 if (useSendGrid) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -12,13 +13,15 @@ if (useSendGrid) {
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // SMTP transporter (fallback for local/dev)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const transporter = hasSmtpCredentials
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+  : null;
 
 // Alternative: For development/testing, you can use Mailtrap or similar
 // const transporter = nodemailer.createTransport({
@@ -82,7 +85,7 @@ async function sendVerificationEmail(email, username, verificationCode) {
         html,
       });
       console.log('✅ Resend response:', response);
-    } else {
+    } else if (transporter) {
       console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
       const mailOptions = {
         from: fromAddress,
@@ -91,6 +94,10 @@ async function sendVerificationEmail(email, username, verificationCode) {
         html,
       };
       await transporter.sendMail(mailOptions);
+    } else {
+      throw new Error(
+        'No email provider configured. Set SENDGRID_API_KEY, RESEND_API_KEY, or EMAIL_USER and EMAIL_PASSWORD.'
+      );
     }
     console.log(`✅ Verification email sent to ${email}`);
     return true;
