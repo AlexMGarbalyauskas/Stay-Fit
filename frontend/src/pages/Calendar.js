@@ -328,6 +328,7 @@ export default function CalendarPage() {
               <Dumbbell className="w-7 h-7" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Workout Planner</h2>
+            <p className="text-sm text-gray-500 mb-2">Plan your weekly workouts, set reminder times, and stay consistent.</p>
             <p className="text-sm text-gray-600 mb-5">Press the button below to open your calendar workout plan.</p>
             <button
               onClick={() => setPlannerActivated(true)}

@@ -18,7 +18,8 @@ const EXERCISE_TUTORIALS = {
       'Push through your palms to return to starting position',
       'Repeat for desired number of reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/pushups.jpg'
   },
   'Squats': {
     description: 'Strengthen your legs and glutes with this fundamental exercise',
@@ -31,7 +32,8 @@ const EXERCISE_TUTORIALS = {
       'Lower until thighs are parallel to ground',
       'Push through heels to return to standing'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/squats.png'
   },
   'Deadlifts': {
     description: 'Full body strength training exercise',
@@ -44,7 +46,8 @@ const EXERCISE_TUTORIALS = {
       'Drive through heels to stand up',
       'Lower bar back to ground with control'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/deadlifts.png'
   },
   'Pull-ups': {
     description: 'Build back and arm strength',
@@ -57,7 +60,8 @@ const EXERCISE_TUTORIALS = {
       'Lower body with control',
       'Repeat for desired reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/pull-up.webp'
   },
   'Bench Press': {
     description: 'Develop chest, shoulders, and triceps',
@@ -70,7 +74,8 @@ const EXERCISE_TUTORIALS = {
       'Keep elbows at 45-degree angle',
       'Press bar back up to starting position'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/bench%20press.jpg'
   },
   'Plank': {
     description: 'Core strengthening exercise',
@@ -83,7 +88,8 @@ const EXERCISE_TUTORIALS = {
       'Hold position for desired time',
       'Rest and repeat'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/plank.webp'
   },
   'Dumbbell Curls': {
     description: 'Bicep isolation exercise',
@@ -96,7 +102,8 @@ const EXERCISE_TUTORIALS = {
       'Lower weights back down with control',
       'Repeat for desired reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/dumbellcurls.jpg'
   },
   'Lunges': {
     description: 'Leg strengthening and balance exercise',
@@ -109,7 +116,8 @@ const EXERCISE_TUTORIALS = {
       'Push back to starting position',
       'Alternate legs for desired reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/lunges.webp'
   },
   'Chest Press': {
     description: 'Chest and triceps strengthening exercise',
@@ -122,7 +130,8 @@ const EXERCISE_TUTORIALS = {
       'Lower dumbbells back to chest',
       'Repeat for desired reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/machine-chest-press.jpg'
   },
   'Back Rows': {
     description: 'Back and biceps strengthening exercise',
@@ -135,7 +144,8 @@ const EXERCISE_TUTORIALS = {
       'Lower dumbbells back down',
       'Repeat for desired reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/backrows.webp'
   },
   'Shoulder Press': {
     description: 'Shoulder and upper body strength exercise',
@@ -148,7 +158,8 @@ const EXERCISE_TUTORIALS = {
       'Lower back to shoulder height',
       'Repeat for desired reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/shoulderpress.webp'
   },
   'Bicep Curls': {
     description: 'Arm and bicep isolation exercise',
@@ -161,7 +172,8 @@ const EXERCISE_TUTORIALS = {
       'Lower weights back down with control',
       'Repeat for desired reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/bicepcurls.webp'
   },
   'Tricep Dips': {
     description: 'Tricep strengthening bodyweight exercise',
@@ -174,7 +186,8 @@ const EXERCISE_TUTORIALS = {
       'Push back up to starting position',
       'Repeat for desired reps'
     ],
-    videoUrl: '' // Add your video link here
+    videoUrl: '', // Add your video link here
+    imageUrl: '/tricepdips.jpg'
   }
 };
 
@@ -184,12 +197,12 @@ const getExercisesFromWorkouts = (plans) => {
   
   // Common exercises in Full Body, Upper Body, Lower Body, etc.
   const workoutExercises = {
-    'Full Body': ['Push-ups', 'Squats', 'Deadlifts', 'Bench Press'],
-    'Upper Body': ['Push-ups', 'Pull-ups', 'Bench Press', 'Dumbbell Curls'],
+    'Full Body': ['Push-ups', 'Squats', 'Deadlifts', 'Bench Press', 'Chest Press'],
+    'Upper Body': ['Push-ups', 'Pull-ups', 'Bench Press', 'Chest Press', 'Dumbbell Curls'],
     'Lower Body': ['Squats', 'Lunges', 'Deadlifts'],
     'Core': ['Plank', 'Push-ups', 'Squats'],
     'Cardio': ['Lunges', 'Squats'],
-    'Strength': ['Deadlifts', 'Bench Press', 'Pull-ups']
+    'Strength': ['Deadlifts', 'Bench Press', 'Chest Press', 'Pull-ups']
   };
 
   Object.values(plans).forEach(plan => {
@@ -201,6 +214,47 @@ const getExercisesFromWorkouts = (plans) => {
   return Array.from(exercises);
 };
 
+const MUSCLE_EXERCISE_MAP = {
+  chest: ['Push-ups', 'Bench Press', 'Chest Press'],
+  shoulders: ['Push-ups', 'Shoulder Press', 'Bench Press'],
+  biceps: ['Dumbbell Curls', 'Bicep Curls', 'Back Rows', 'Pull-ups'],
+  triceps: ['Push-ups', 'Tricep Dips', 'Bench Press', 'Chest Press'],
+  back: ['Pull-ups', 'Back Rows', 'Deadlifts'],
+  core: ['Plank', 'Push-ups', 'Deadlifts'],
+  glutes: ['Squats', 'Lunges', 'Deadlifts'],
+  legs: ['Squats', 'Lunges', 'Deadlifts']
+};
+
+const BODY_MAP_AREAS = [
+  { key: 'chest', label: 'Chest' },
+  { key: 'shoulders', label: 'Shoulders' },
+  { key: 'biceps', label: 'Biceps' },
+  { key: 'triceps', label: 'Triceps' },
+  { key: 'core', label: 'Core' },
+  { key: 'back', label: 'Back' },
+  { key: 'glutes', label: 'Glutes' },
+  { key: 'legs', label: 'Legs' }
+];
+
+const BODY_HOTSPOTS = [
+  // Front body
+  { key: 'shoulders', label: 'Shoulders', side: 'front', left: '18.2%', top: '23.2%', width: '8.2%', height: '7.4%' },
+  { key: 'shoulders', label: 'Shoulders', side: 'front', left: '31.4%', top: '23.2%', width: '8.2%', height: '7.4%' },
+  { key: 'chest', label: 'Chest', side: 'front', left: '18.8%', top: '28.6%', width: '8%', height: '7.8%' },
+  { key: 'chest', label: 'Chest', side: 'front', left: '27.2%', top: '28.6%', width: '8%', height: '7.8%' },
+  { key: 'biceps', label: 'Biceps', side: 'front', left: '12.5%', top: '29.5%', width: '8%', height: '11%' },
+  { key: 'core', label: 'Core', side: 'front', left: '21.8%', top: '35%', width: '10%', height: '16%' },
+  { key: 'legs', label: 'Legs', side: 'front', left: '24%', top: '56%', width: '16%', height: '26%' },
+
+  // Back body
+  { key: 'shoulders', label: 'Shoulders', side: 'back', left: '60.5%', top: '22.5%', width: '10%', height: '6.5%' },
+  { key: 'shoulders', label: 'Shoulders', side: 'back', left: '74.5%', top: '22.5%', width: '10%', height: '6.5%' },
+  { key: 'back', label: 'Back', side: 'back', left: '65%', top: '28%', width: '14%', height: '22%' },
+  { key: 'triceps', label: 'Triceps', side: 'back', left: '81%', top: '30%', width: '8%', height: '11%' },
+  { key: 'glutes', label: 'Glutes', side: 'back', left: '66.5%', top: '45.4%', width: '12.5%', height: '11%' },
+  { key: 'legs', label: 'Legs', side: 'back', left: '63.5%', top: '56%', width: '16%', height: '26%' }
+];
+
 export default function Tutorials({ isAuthenticated }) {
   const { t } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
@@ -209,6 +263,8 @@ export default function Tutorials({ isAuthenticated }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [filterDifficulty, setFilterDifficulty] = useState('All');
+  const [selectedMuscle, setSelectedMuscle] = useState(null);
+  const bodyParts = BODY_MAP_AREAS;
 
   // Get exercises from user's workout plans
   const userExercises = useMemo(() => {
@@ -231,9 +287,10 @@ export default function Tutorials({ isAuthenticated }) {
       const matchesSearch = exercise.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (tutorial?.description || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesDifficulty = filterDifficulty === 'All' || tutorial?.difficulty === filterDifficulty;
-      return matchesSearch && matchesDifficulty;
+      const matchesMuscle = !selectedMuscle || (MUSCLE_EXERCISE_MAP[selectedMuscle] || []).includes(exercise);
+      return matchesSearch && matchesDifficulty && matchesMuscle;
     });
-  }, [userExercises, searchTerm, filterDifficulty]);
+  }, [userExercises, searchTerm, filterDifficulty, selectedMuscle]);
 
   const selectedTutorial = selectedExercise ? EXERCISE_TUTORIALS[selectedExercise] : null;
 
@@ -258,7 +315,7 @@ export default function Tutorials({ isAuthenticated }) {
             <div className="mb-8">
               <button
                 onClick={() => navigate(-1)}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition mb-4 ${
                   isDark
                     ? 'bg-gray-800 text-gray-300 shadow-gray-800 hover:bg-gray-700'
                     : 'bg-white text-slate-700 shadow-slate-200 hover:bg-slate-50'
@@ -272,6 +329,81 @@ export default function Tutorials({ isAuthenticated }) {
               <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
                 Learn proper form for exercises in your workout plans
               </p>
+            </div>
+
+            {/* Clickable body map */}
+            <div className={`mb-8 rounded-2xl p-5 border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                <h2 className="text-lg font-bold">Select a Muscle Group</h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedMuscle(null)}
+                    className={`text-sm font-semibold px-3 py-1.5 rounded-full transition ${
+                      isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                <div className="mx-auto w-full max-w-[560px]">
+                  <div className={`rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-gradient-to-b from-slate-50 to-slate-100'} border ${isDark ? 'border-gray-700' : 'border-gray-200'} p-3`}>
+                    <div className="relative w-full max-w-[384px] mx-auto aspect-[384/423]">
+                      <img src="/bodydiagram.png" alt="Body map" className="absolute inset-0 h-full w-full object-cover pointer-events-none" />
+
+                      {BODY_HOTSPOTS.map((hotspot, idx) => {
+                        const active = selectedMuscle === hotspot.key;
+                        return (
+                          <button
+                            key={`${hotspot.key}-${hotspot.side}-${idx}`}
+                            type="button"
+                            onClick={() => setSelectedMuscle(hotspot.key)}
+                            aria-label={`Select ${hotspot.label || hotspot.key}`}
+                            className={`absolute transition ${active ? 'bg-pink-500/40 ring-2 ring-pink-300' : 'bg-transparent hover:bg-pink-400/20'}`}
+                            style={{
+                              left: hotspot.left,
+                              top: hotspot.top,
+                              width: hotspot.width,
+                              height: hotspot.height,
+                              borderRadius: '45%'
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} mb-3`}>
+                    {selectedMuscle
+                      ? `Showing ${bodyParts.find((p) => p.key === selectedMuscle)?.label || selectedMuscle} exercises`
+                      : 'Click a highlighted muscle region on the body map to filter exercises.'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {bodyParts.map((part) => {
+                      const active = selectedMuscle === part.key;
+                      return (
+                        <button
+                          key={`chip-${part.key}`}
+                          onClick={() => setSelectedMuscle(part.key)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                            active
+                              ? 'bg-blue-600 text-white'
+                              : isDark
+                              ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          {part.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Search and Filter */}
@@ -320,8 +452,16 @@ export default function Tutorials({ isAuthenticated }) {
                         isDark ? 'bg-gray-800' : 'bg-gray-100'
                       }`}
                     >
-                      <div className={`relative h-40 ${isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-400 to-purple-500'} flex items-center justify-center`}>
-                        <Play className="w-16 h-16 text-white opacity-80" />
+                      <div className={`relative h-40 ${isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-400 to-purple-500'} flex items-center justify-center overflow-hidden`}>
+                        {tutorial?.imageUrl ? (
+                          <img
+                            src={tutorial.imageUrl}
+                            alt={exercise}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Play className="w-16 h-16 text-white opacity-80" />
+                        )}
                       </div>
 
                       <div className="p-4">
@@ -362,7 +502,7 @@ export default function Tutorials({ isAuthenticated }) {
           <div>
             <button
               onClick={() => setSelectedExercise(null)}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${
+              className={`mb-6 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${
                 isDark
                   ? 'bg-gray-800 text-gray-300 shadow-gray-800 hover:bg-gray-700'
                   : 'bg-white text-slate-700 shadow-slate-200 hover:bg-slate-50'
@@ -386,6 +526,12 @@ export default function Tutorials({ isAuthenticated }) {
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     ></iframe>
+                  ) : selectedTutorial?.imageUrl ? (
+                    <img
+                      src={selectedTutorial.imageUrl}
+                      alt={selectedExercise}
+                      className="h-full w-full object-cover"
+                    />
                   ) : null}
                 </div>
 
