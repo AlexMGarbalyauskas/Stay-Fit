@@ -7,9 +7,33 @@ const { sendVerificationEmail } = require('../utils/email');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+const EMAIL_WAIT_TIMEOUT_MS = Number(process.env.EMAIL_WAIT_TIMEOUT_MS || 8000);
 
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendVerificationEmailWithDeadline(email, username, verificationCode, flow) {
+  try {
+    const result = await Promise.race([
+      sendVerificationEmail(email, username, verificationCode),
+      new Promise((resolve) => setTimeout(() => resolve(null), EMAIL_WAIT_TIMEOUT_MS)),
+    ]);
+
+    if (result === null) {
+      console.error('❌ Verification email timed out at route level:', {
+        flow,
+        email,
+        timeoutMs: EMAIL_WAIT_TIMEOUT_MS,
+      });
+      return false;
+    }
+
+    return !!result;
+  } catch (error) {
+    console.error('❌ Verification email route-level error:', { flow, email, message: error?.message });
+    return false;
+  }
 }
 
 // REGISTER
@@ -39,7 +63,7 @@ router.post('/register', async (req, res) => {
           async (insertErr) => {
             if (insertErr) return res.status(500).json({ error: 'DB error' });
 
-            const emailSent = await sendVerificationEmail(email, username, verificationCode);
+            const emailSent = await sendVerificationEmailWithDeadline(email, username, verificationCode, 'register');
             if (!emailSent) {
               console.error('❌ Verification email failed to send during register:', {
                 userId,
@@ -287,7 +311,7 @@ router.post('/resend-verification-code', (req, res) => {
       async (insertErr) => {
         if (insertErr) return res.status(500).json({ error: 'DB error' });
 
-        const emailSent = await sendVerificationEmail(user.email, user.username, verificationCode);
+        const emailSent = await sendVerificationEmailWithDeadline(user.email, user.username, verificationCode, 'resend-verification-code');
         if (!emailSent) {
           console.error('❌ Verification email failed to resend:', {
             userId: user.id,

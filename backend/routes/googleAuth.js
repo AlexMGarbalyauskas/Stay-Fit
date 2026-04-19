@@ -8,6 +8,7 @@ const { sendVerificationEmail } = require('../utils/email');
 const bcrypt = require('bcrypt');
 
 const router = express.Router();
+const EMAIL_WAIT_TIMEOUT_MS = Number(process.env.EMAIL_WAIT_TIMEOUT_MS || 8000);
 
 const allowedFrontendOrigins = [
   'http://localhost:3000',
@@ -55,6 +56,29 @@ function parseGoogleState(state) {
 // Helper function to generate verification code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+}
+
+async function sendVerificationEmailWithDeadline(email, username, verificationCode, flow) {
+  try {
+    const result = await Promise.race([
+      sendVerificationEmail(email, username, verificationCode),
+      new Promise((resolve) => setTimeout(() => resolve(null), EMAIL_WAIT_TIMEOUT_MS)),
+    ]);
+
+    if (result === null) {
+      console.error('❌ Google flow verification email timed out at route level:', {
+        flow,
+        email,
+        timeoutMs: EMAIL_WAIT_TIMEOUT_MS,
+      });
+      return false;
+    }
+
+    return !!result;
+  } catch (error) {
+    console.error('❌ Google flow verification email route-level error:', { flow, email, message: error?.message });
+    return false;
+  }
 }
 
 // LOGIN with Google
@@ -146,10 +170,11 @@ router.get(
                 }
 
                 // Send verification email
-                const emailSent = await sendVerificationEmail(
+                const emailSent = await sendVerificationEmailWithDeadline(
                   email,
                   username,
-                  verificationCode
+                  verificationCode,
+                  'google-register'
                 );
 
                 const userParam = encodeURIComponent(JSON.stringify({ 
@@ -196,10 +221,11 @@ router.get(
             return res.status(500).send('Frontend URL not configured');
           }
 
-          const emailSent = await sendVerificationEmail(
+          const emailSent = await sendVerificationEmailWithDeadline(
             req.user.email,
             req.user.username,
-            verificationCode
+            verificationCode,
+            'google-login-unverified'
           );
 
           const userParam = encodeURIComponent(JSON.stringify({ 
