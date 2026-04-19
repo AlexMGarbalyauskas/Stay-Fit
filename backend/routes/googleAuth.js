@@ -9,24 +9,6 @@ const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
-function resolveFrontendUrl(req) {
-  if (process.env.CLIENT_URL) return process.env.CLIENT_URL;
-
-  const origin = req.get('origin');
-  if (origin && (origin.includes('onrender.com') || origin.includes('localhost'))) {
-    return origin;
-  }
-
-  const forwardedHost = req.get('x-forwarded-host');
-  const host = forwardedHost || req.get('host') || '';
-  if (host.includes('localhost')) return 'http://localhost:3000';
-  if (host.includes('stay-fit-2.onrender.com')) return 'https://stay-fit-2.onrender.com';
-  if (host.includes('stay-fit-1.onrender.com')) return 'https://stay-fit-1.onrender.com';
-
-  if (process.env.NODE_ENV === 'development') return 'http://localhost:3000';
-  return 'https://stay-fit-2.onrender.com';
-}
-
 // Helper function to generate verification code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
@@ -47,16 +29,6 @@ router.get(
 // Google OAuth callback - handles both login and register
 router.get(
   '/callback',
-  (req, res, next) => {
-    console.log('🔁 Google callback hit:', {
-      state: req.query?.state,
-      hasCode: !!req.query?.code,
-      hasError: !!req.query?.error,
-      error: req.query?.error,
-      errorDescription: req.query?.error_description,
-    });
-    next();
-  },
   passport.authenticate('google', { session: false, failureRedirect: '/' }),
   (req, res) => {
     // Get the state from the URL to determine if this is login or register
@@ -69,13 +41,14 @@ router.get(
         // Login route - reject new users
         console.log('❌ New user tried to login instead of register:', req.user.email);
         
-        const frontendUrl = resolveFrontendUrl(req);
+        const frontendUrl =
+          process.env.CLIENT_URL ||
+          (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
 
         if (!frontendUrl) {
           return res.status(500).send('Frontend URL not configured');
         }
 
-        console.log('↪️ Google login redirecting to frontend URL:', frontendUrl);
         return res.redirect(`${frontendUrl}/login?error=please_register&email=${encodeURIComponent(req.user.email)}`);
       }
 
@@ -116,7 +89,9 @@ router.get(
                   return res.status(500).send('Error creating verification code');
                 }
 
-                const frontendUrl = resolveFrontendUrl(req);
+                const frontendUrl =
+                  process.env.CLIENT_URL ||
+                  (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
 
                 if (!frontendUrl) {
                   return res.status(500).send('Frontend URL not configured');
@@ -134,7 +109,6 @@ router.get(
                   username, 
                   email 
                 }));
-                console.log('↪️ Google register redirecting to frontend URL:', frontendUrl);
                 res.redirect(`${frontendUrl}/verify-email?user=${userParam}&isGoogleSignup=true&emailSent=${emailSent}`);
               }
             );
@@ -167,7 +141,9 @@ router.get(
             return res.status(500).send('Error creating verification code');
           }
 
-          const frontendUrl = resolveFrontendUrl(req);
+          const frontendUrl =
+            process.env.CLIENT_URL ||
+            (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
 
           if (!frontendUrl) {
             return res.status(500).send('Frontend URL not configured');
@@ -184,7 +160,6 @@ router.get(
             username: req.user.username, 
             email: req.user.email 
           }));
-          console.log('↪️ Google verify-email redirecting to frontend URL:', frontendUrl);
           res.redirect(`${frontendUrl}/verify-email?user=${userParam}&isGoogleSignup=true&emailSent=${emailSent}`);
         }
       );
@@ -205,14 +180,15 @@ router.get(
       { expiresIn: '7d' }
     );
 
-    const frontendUrl = resolveFrontendUrl(req);
+    const frontendUrl =
+      process.env.CLIENT_URL ||
+      (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
 
     if (!frontendUrl) {
       return res.status(500).send('Frontend URL not configured');
     }
 
     const userParam = encodeURIComponent(JSON.stringify({ id: req.user.id, username: req.user.username, email: req.user.email }));
-    console.log('↪️ Google social-login redirecting to frontend URL:', frontendUrl);
     res.redirect(`${frontendUrl}/social-login?token=${token}&user=${userParam}`);
   }
 );

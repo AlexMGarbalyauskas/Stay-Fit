@@ -8,8 +8,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      // Relative fallback keeps OAuth working across deployed hosts when env is misconfigured.
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback',
+        callbackURL: process.env.GOOGLE_CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -43,7 +42,6 @@ passport.use(
           if (user) {
             // User exists, return them with isNewUser flag = false
             user.isNewUser = false;
-            console.log('✅ Google strategy existing user found:', { id: user.id, email: user.email });
             return done(null, user);
           }
 
@@ -54,7 +52,6 @@ passport.use(
             username,
             isNewUser: true,
           };
-          console.log('🆕 Google strategy new user detected:', { email, username });
           return done(null, newUserData);
         });
       } catch (err) {
