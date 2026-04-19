@@ -8,7 +8,8 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      // Relative fallback keeps OAuth working across deployed hosts when env is misconfigured.
+      callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

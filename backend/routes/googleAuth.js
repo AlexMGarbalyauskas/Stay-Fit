@@ -9,6 +9,25 @@ const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
+function resolveFrontendUrl(req) {
+  if (process.env.CLIENT_URL) return process.env.CLIENT_URL;
+
+  const origin = req.get('origin');
+  if (origin) return origin;
+
+  const referer = req.get('referer');
+  if (referer) {
+    try {
+      return new URL(referer).origin;
+    } catch {
+      // no-op
+    }
+  }
+
+  if (process.env.NODE_ENV === 'development') return 'http://localhost:3000';
+  return 'https://stay-fit-1.onrender.com';
+}
+
 // Helper function to generate verification code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
@@ -41,9 +60,7 @@ router.get(
         // Login route - reject new users
         console.log('❌ New user tried to login instead of register:', req.user.email);
         
-        const frontendUrl =
-          process.env.CLIENT_URL ||
-          (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+        const frontendUrl = resolveFrontendUrl(req);
 
         if (!frontendUrl) {
           return res.status(500).send('Frontend URL not configured');
@@ -89,9 +106,7 @@ router.get(
                   return res.status(500).send('Error creating verification code');
                 }
 
-                const frontendUrl =
-                  process.env.CLIENT_URL ||
-                  (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+                const frontendUrl = resolveFrontendUrl(req);
 
                 if (!frontendUrl) {
                   return res.status(500).send('Frontend URL not configured');
@@ -141,9 +156,7 @@ router.get(
             return res.status(500).send('Error creating verification code');
           }
 
-          const frontendUrl =
-            process.env.CLIENT_URL ||
-            (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+          const frontendUrl = resolveFrontendUrl(req);
 
           if (!frontendUrl) {
             return res.status(500).send('Frontend URL not configured');
@@ -180,9 +193,7 @@ router.get(
       { expiresIn: '7d' }
     );
 
-    const frontendUrl =
-      process.env.CLIENT_URL ||
-      (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+    const frontendUrl = resolveFrontendUrl(req);
 
     if (!frontendUrl) {
       return res.status(500).send('Frontend URL not configured');
