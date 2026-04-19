@@ -91,6 +91,62 @@ const EXERCISE_TUTORIALS = {
     videoUrl: '', // Add your video link here
     imageUrl: '/plank.webp'
   },
+  'Bicycle Crunches': {
+    description: 'Dynamic core exercise targeting abs and obliques',
+    duration: '2:40',
+    difficulty: 'Beginner',
+    instructions: [
+      'Lie on your back with hands behind your head',
+      'Lift shoulders and legs slightly off the floor',
+      'Bring right elbow toward left knee while extending right leg',
+      'Switch sides in a pedaling motion',
+      'Keep core engaged throughout the movement'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/bicyclecrunches.webp'
+  },
+  'Russian Twists': {
+    description: 'Core and oblique exercise for rotational strength',
+    duration: '2:30',
+    difficulty: 'Beginner',
+    instructions: [
+      'Sit on the floor with knees bent and feet lightly lifted',
+      'Lean back slightly while keeping your chest up',
+      'Clasp hands together in front of your chest',
+      'Rotate your torso from side to side with control',
+      'Keep movement slow and core tight'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/russian-twist.webp'
+  },
+  'Leg Raises': {
+    description: 'Lower abdominal exercise to build core control',
+    duration: '2:20',
+    difficulty: 'Intermediate',
+    instructions: [
+      'Lie flat on your back with legs straight',
+      'Place hands under your hips for support if needed',
+      'Raise your legs until they are near vertical',
+      'Lower them slowly without touching the floor',
+      'Avoid arching your lower back'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/leg-raises.png'
+  },
+  'Mountain Climbers': {
+    description: 'Cardio-core movement that challenges stability and endurance',
+    duration: '2:10',
+    difficulty: 'Intermediate',
+    instructions: [
+      'Start in a high plank position',
+      'Drive one knee toward your chest',
+      'Quickly switch legs in a running motion',
+      'Keep hips level and shoulders over wrists',
+      'Maintain a steady pace with controlled breathing'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/mountain-climber-jump.webp'
+  },
   'Dumbbell Curls': {
     description: 'Bicep isolation exercise',
     duration: '2:15',
@@ -200,7 +256,7 @@ const getExercisesFromWorkouts = (plans) => {
     'Full Body': ['Push-ups', 'Squats', 'Deadlifts', 'Bench Press', 'Chest Press'],
     'Upper Body': ['Push-ups', 'Pull-ups', 'Bench Press', 'Chest Press', 'Dumbbell Curls'],
     'Lower Body': ['Squats', 'Lunges', 'Deadlifts'],
-    'Core': ['Plank', 'Push-ups', 'Squats'],
+    'Core': ['Plank', 'Leg Raises', 'Mountain Climbers', 'Bicycle Crunches', 'Russian Twists', 'Push-ups'],
     'Cardio': ['Lunges', 'Squats'],
     'Strength': ['Deadlifts', 'Bench Press', 'Chest Press', 'Pull-ups']
   };
@@ -220,7 +276,7 @@ const MUSCLE_EXERCISE_MAP = {
   biceps: ['Dumbbell Curls', 'Bicep Curls', 'Back Rows', 'Pull-ups'],
   triceps: ['Push-ups', 'Tricep Dips', 'Bench Press', 'Chest Press'],
   back: ['Pull-ups', 'Back Rows', 'Deadlifts'],
-  core: ['Plank', 'Push-ups', 'Deadlifts'],
+  core: ['Plank', 'Leg Raises', 'Mountain Climbers', 'Bicycle Crunches', 'Russian Twists', 'Push-ups', 'Deadlifts'],
   glutes: ['Squats', 'Lunges', 'Deadlifts'],
   legs: ['Squats', 'Lunges', 'Deadlifts']
 };
