@@ -48,6 +48,16 @@ router.get(
 // Google OAuth callback - handles both login and register
 router.get(
   '/callback',
+  (req, res, next) => {
+    console.log('🔁 Google callback hit:', {
+      state: req.query?.state,
+      hasCode: !!req.query?.code,
+      hasError: !!req.query?.error,
+      error: req.query?.error,
+      errorDescription: req.query?.error_description,
+    });
+    next();
+  },
   passport.authenticate('google', { session: false, failureRedirect: '/' }),
   (req, res) => {
     // Get the state from the URL to determine if this is login or register

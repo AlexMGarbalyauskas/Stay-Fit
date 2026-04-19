@@ -16,11 +16,34 @@ passport.use(
         const email = profile.emails[0].value;
         const username = profile.displayName;
 
+        console.log('🔐 Google strategy profile received:', {
+          email,
+          username,
+          profileId: profile.id,
+        });
+
+        let finished = false;
+        const timeoutId = setTimeout(() => {
+          if (finished) return;
+          finished = true;
+          console.error('❌ Google strategy timeout while querying DB for user:', { email });
+          done(new Error('Google authentication timed out while loading user record'));
+        }, 15000);
+
         db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
-          if (err) return done(err);
+          if (finished) return;
+          finished = true;
+          clearTimeout(timeoutId);
+
+          if (err) {
+            console.error('❌ Google strategy DB error:', err);
+            return done(err);
+          }
+
           if (user) {
             // User exists, return them with isNewUser flag = false
             user.isNewUser = false;
+            console.log('✅ Google strategy existing user found:', { id: user.id, email: user.email });
             return done(null, user);
           }
 
@@ -31,9 +54,11 @@ passport.use(
             username,
             isNewUser: true,
           };
+          console.log('🆕 Google strategy new user detected:', { email, username });
           return done(null, newUserData);
         });
       } catch (err) {
+        console.error('❌ Google strategy unexpected error:', err);
         done(err);
       }
     }
