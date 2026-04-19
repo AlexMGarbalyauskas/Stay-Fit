@@ -99,7 +99,8 @@ export default function Register() {
 
   const handleGoogleRegister = () => {
     localStorage.setItem('onboarding_pending', 'true');
-    window.location.href = `${API_BASE}/api/auth/google/register`;
+    const frontendOrigin = encodeURIComponent(window.location.origin);
+    window.location.href = `${API_BASE}/api/auth/google/register?frontend=${frontendOrigin}`;
   };
 
   return (

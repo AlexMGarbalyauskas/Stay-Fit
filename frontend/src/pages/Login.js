@@ -94,7 +94,8 @@ export default function Login({ onLogin }) {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/api/auth/google/login`;
+    const frontendOrigin = encodeURIComponent(window.location.origin);
+    window.location.href = `${API_BASE}/api/auth/google/login?frontend=${frontendOrigin}`;
   };
 
   return (

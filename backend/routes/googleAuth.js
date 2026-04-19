@@ -9,6 +9,49 @@ const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
+const allowedFrontendOrigins = [
+  'http://localhost:3000',
+  'http://192.168.0.16:3000',
+  'https://stay-fit-1.onrender.com',
+  'https://stay-fit-2.onrender.com',
+];
+
+function getDefaultFrontendUrl() {
+  return process.env.CLIENT_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+}
+
+function sanitizeFrontendOrigin(frontend) {
+  if (!frontend) return null;
+  try {
+    const origin = new URL(frontend).origin;
+    return allowedFrontendOrigins.includes(origin) ? origin : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildGoogleState(mode, frontend) {
+  return JSON.stringify({ mode, frontend: sanitizeFrontendOrigin(frontend) });
+}
+
+function parseGoogleState(state) {
+  if (!state) return { mode: null, frontend: null };
+
+  try {
+    const parsed = JSON.parse(state);
+    return {
+      mode: parsed?.mode || null,
+      frontend: sanitizeFrontendOrigin(parsed?.frontend) || null,
+    };
+  } catch {
+    // Backward compatibility for old plain-string states
+    return {
+      mode: state,
+      frontend: null,
+    };
+  }
+}
+
 // Helper function to generate verification code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
@@ -17,13 +60,19 @@ function generateVerificationCode() {
 // LOGIN with Google
 router.get(
   '/login',
-  passport.authenticate('google', { scope: ['profile', 'email'], state: 'login' })
+  (req, res, next) => {
+    const state = buildGoogleState('login', req.query.frontend);
+    passport.authenticate('google', { scope: ['profile', 'email'], state })(req, res, next);
+  }
 );
 
 // REGISTER with Google
 router.get(
   '/register',
-  passport.authenticate('google', { scope: ['profile', 'email'], state: 'register' })
+  (req, res, next) => {
+    const state = buildGoogleState('register', req.query.frontend);
+    passport.authenticate('google', { scope: ['profile', 'email'], state })(req, res, next);
+  }
 );
 
 // Google OAuth callback - handles both login and register
@@ -32,8 +81,9 @@ router.get(
   passport.authenticate('google', { session: false, failureRedirect: '/' }),
   (req, res) => {
     // Get the state from the URL to determine if this is login or register
-    const state = req.query.state;
-    const isRegister = state === 'register';
+    const parsedState = parseGoogleState(req.query.state);
+    const isRegister = parsedState.mode === 'register';
+    const frontendFromState = parsedState.frontend;
     
     // Check if this is a new user
     if (req.user.isNewUser) {
@@ -42,8 +92,7 @@ router.get(
         console.log('❌ New user tried to login instead of register:', req.user.email);
         
         const frontendUrl =
-          process.env.CLIENT_URL ||
-          (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+          frontendFromState || getDefaultFrontendUrl();
 
         if (!frontendUrl) {
           return res.status(500).send('Frontend URL not configured');
@@ -90,8 +139,7 @@ router.get(
                 }
 
                 const frontendUrl =
-                  process.env.CLIENT_URL ||
-                  (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+                  frontendFromState || getDefaultFrontendUrl();
 
                 if (!frontendUrl) {
                   return res.status(500).send('Frontend URL not configured');
@@ -142,8 +190,7 @@ router.get(
           }
 
           const frontendUrl =
-            process.env.CLIENT_URL ||
-            (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+            frontendFromState || getDefaultFrontendUrl();
 
           if (!frontendUrl) {
             return res.status(500).send('Frontend URL not configured');
@@ -181,8 +228,7 @@ router.get(
     );
 
     const frontendUrl =
-      process.env.CLIENT_URL ||
-      (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+      frontendFromState || getDefaultFrontendUrl();
 
     if (!frontendUrl) {
       return res.status(500).send('Frontend URL not configured');
