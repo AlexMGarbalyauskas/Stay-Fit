@@ -12,6 +12,23 @@ if (useSendGrid) {
 
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_SEND_TIMEOUT_MS = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 12000);
+const EMAIL_DIAGNOSTICS_MAX = 50;
+const emailDiagnostics = [];
+
+function pushEmailDiagnostic(entry) {
+  emailDiagnostics.unshift({
+    at: new Date().toISOString(),
+    ...entry,
+  });
+  if (emailDiagnostics.length > EMAIL_DIAGNOSTICS_MAX) {
+    emailDiagnostics.length = EMAIL_DIAGNOSTICS_MAX;
+  }
+}
+
+function getEmailDiagnostics(limit = 20) {
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 20, EMAIL_DIAGNOSTICS_MAX));
+  return emailDiagnostics.slice(0, safeLimit);
+}
 
 function logEmailProviderError(provider, email, fromAddress, error) {
   const providerError = {
@@ -27,6 +44,17 @@ function logEmailProviderError(provider, email, fromAddress, error) {
     rejected: error?.rejected || null,
     command: error?.command || null,
   };
+
+  pushEmailDiagnostic({
+    type: 'provider-error',
+    provider,
+    email,
+    fromAddress,
+    message: providerError.message,
+    code: providerError.code,
+    statusCode: providerError.statusCode,
+    responseBody: providerError.responseBody,
+  });
 
   console.error('❌ Verification email provider error:', providerError);
 }
@@ -102,6 +130,12 @@ async function sendVerificationEmail(email, username, verificationCode) {
 
   if (providerQueue.length === 0) {
     console.error('❌ No email provider configured. Set SENDGRID_API_KEY, RESEND_API_KEY, or EMAIL_USER/EMAIL_PASSWORD.');
+    pushEmailDiagnostic({
+      type: 'provider-config-error',
+      provider: 'none',
+      email,
+      message: 'No email provider configured',
+    });
     return false;
   }
 
@@ -131,6 +165,13 @@ async function sendVerificationEmail(email, username, verificationCode) {
           'SendGrid email send'
         );
         console.log('✅ SendGrid response:', response?.[0]?.statusCode || 'ok');
+        pushEmailDiagnostic({
+          type: 'provider-success',
+          provider,
+          email,
+          fromAddress,
+          statusCode: response?.[0]?.statusCode || null,
+        });
       } else if (provider === 'resend') {
         console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);
         const response = await withTimeout(
@@ -144,6 +185,13 @@ async function sendVerificationEmail(email, username, verificationCode) {
           'Resend email send'
         );
         console.log('✅ Resend response:', response);
+        pushEmailDiagnostic({
+          type: 'provider-success',
+          provider,
+          email,
+          fromAddress,
+          resendId: response?.data?.id || response?.id || null,
+        });
       } else if (provider === 'smtp') {
         console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
         const mailOptions = {
@@ -157,6 +205,12 @@ async function sendVerificationEmail(email, username, verificationCode) {
           EMAIL_SEND_TIMEOUT_MS,
           'SMTP email send'
         );
+        pushEmailDiagnostic({
+          type: 'provider-success',
+          provider,
+          email,
+          fromAddress,
+        });
       }
 
       console.log(`✅ Verification email sent to ${email} using ${provider}`);
@@ -168,7 +222,13 @@ async function sendVerificationEmail(email, username, verificationCode) {
   }
 
   console.error(`❌ All email providers failed for ${email}`);
+  pushEmailDiagnostic({
+    type: 'all-providers-failed',
+    provider: 'all',
+    email,
+    message: 'All configured providers failed',
+  });
   return false;
 }
 
-module.exports = { sendVerificationEmail };
+module.exports = { sendVerificationEmail, getEmailDiagnostics };

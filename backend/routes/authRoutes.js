@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const auth = require('../middleware/auth');
-const { sendVerificationEmail } = require('../utils/email');
+const { sendVerificationEmail, getEmailDiagnostics } = require('../utils/email');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
@@ -34,6 +34,17 @@ async function sendVerificationEmailWithDeadline(email, username, verificationCo
     console.error('❌ Verification email route-level error:', { flow, email, message: error?.message });
     return false;
   }
+}
+
+function requireEmailDebugToken(req, res, next) {
+  const token = process.env.EMAIL_DEBUG_TOKEN;
+  if (!token) return res.status(404).json({ error: 'Not found' });
+
+  const provided = req.headers['x-email-debug-token'];
+  if (!provided || provided !== token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
 }
 
 // REGISTER
@@ -349,6 +360,38 @@ router.get('/verification-status', auth, (req, res) => {
       res.json({ email_verified: !!user.email_verified });
     }
   );
+});
+
+// DEBUG: recent email provider diagnostics (requires EMAIL_DEBUG_TOKEN)
+router.get('/email-debug', requireEmailDebugToken, (req, res) => {
+  const limit = Number(req.query.limit || 20);
+  res.json({
+    providers: {
+      sendgrid: !!process.env.SENDGRID_API_KEY,
+      resend: !!process.env.RESEND_API_KEY,
+      smtp: !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD),
+    },
+    diagnostics: getEmailDiagnostics(limit),
+  });
+});
+
+// DEBUG: send a test verification email on demand (requires EMAIL_DEBUG_TOKEN)
+router.post('/email-debug/send-test', requireEmailDebugToken, async (req, res) => {
+  const { email, username } = req.body || {};
+  if (!email) return res.status(400).json({ error: 'email is required' });
+
+  const verificationCode = generateVerificationCode();
+  const ok = await sendVerificationEmailWithDeadline(
+    email,
+    username || 'Debug User',
+    verificationCode,
+    'debug-send-test'
+  );
+
+  res.json({
+    emailSent: ok,
+    verificationCode,
+  });
 });
 
 module.exports = router;
