@@ -12,6 +12,24 @@ if (useSendGrid) {
 
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
 
+function logEmailProviderError(provider, email, fromAddress, error) {
+  const providerError = {
+    provider,
+    email,
+    fromAddress,
+    message: error?.message,
+    name: error?.name,
+    code: error?.code,
+    statusCode: error?.statusCode,
+    responseBody: error?.response?.body || error?.response?.data || null,
+    response: error?.response || null,
+    rejected: error?.rejected || null,
+    command: error?.command || null,
+  };
+
+  console.error('❌ Verification email provider error:', providerError);
+}
+
 // SMTP transporter (fallback for local/dev)
 const transporter = hasSmtpCredentials
   ? nodemailer.createTransport({
@@ -102,6 +120,8 @@ async function sendVerificationEmail(email, username, verificationCode) {
     console.log(`✅ Verification email sent to ${email}`);
     return true;
   } catch (error) {
+    const provider = useSendGrid ? 'sendgrid' : useResend ? 'resend' : transporter ? 'smtp' : 'none';
+    logEmailProviderError(provider, email, fromAddress, error);
     console.error(`❌ Error sending verification email to ${email}:`, error.message, error);
     return false;
   }

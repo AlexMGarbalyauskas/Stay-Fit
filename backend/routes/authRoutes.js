@@ -40,6 +40,14 @@ router.post('/register', async (req, res) => {
             if (insertErr) return res.status(500).json({ error: 'DB error' });
 
             const emailSent = await sendVerificationEmail(email, username, verificationCode);
+            if (!emailSent) {
+              console.error('❌ Verification email failed to send during register:', {
+                userId,
+                email,
+                username,
+                flow: 'register',
+              });
+            }
             res.json({
               user: { id: userId, username, email },
               emailSent,
@@ -280,6 +288,14 @@ router.post('/resend-verification-code', (req, res) => {
         if (insertErr) return res.status(500).json({ error: 'DB error' });
 
         const emailSent = await sendVerificationEmail(user.email, user.username, verificationCode);
+        if (!emailSent) {
+          console.error('❌ Verification email failed to resend:', {
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            flow: 'resend-verification-code',
+          });
+        }
         res.json({ emailSent });
       }
     );
