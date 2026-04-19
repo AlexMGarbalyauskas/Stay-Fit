@@ -13,19 +13,18 @@ function resolveFrontendUrl(req) {
   if (process.env.CLIENT_URL) return process.env.CLIENT_URL;
 
   const origin = req.get('origin');
-  if (origin) return origin;
-
-  const referer = req.get('referer');
-  if (referer) {
-    try {
-      return new URL(referer).origin;
-    } catch {
-      // no-op
-    }
+  if (origin && (origin.includes('onrender.com') || origin.includes('localhost'))) {
+    return origin;
   }
 
+  const forwardedHost = req.get('x-forwarded-host');
+  const host = forwardedHost || req.get('host') || '';
+  if (host.includes('localhost')) return 'http://localhost:3000';
+  if (host.includes('stay-fit-2.onrender.com')) return 'https://stay-fit-2.onrender.com';
+  if (host.includes('stay-fit-1.onrender.com')) return 'https://stay-fit-1.onrender.com';
+
   if (process.env.NODE_ENV === 'development') return 'http://localhost:3000';
-  return 'https://stay-fit-1.onrender.com';
+  return 'https://stay-fit-2.onrender.com';
 }
 
 // Helper function to generate verification code
@@ -76,6 +75,7 @@ router.get(
           return res.status(500).send('Frontend URL not configured');
         }
 
+        console.log('↪️ Google login redirecting to frontend URL:', frontendUrl);
         return res.redirect(`${frontendUrl}/login?error=please_register&email=${encodeURIComponent(req.user.email)}`);
       }
 
@@ -134,6 +134,7 @@ router.get(
                   username, 
                   email 
                 }));
+                console.log('↪️ Google register redirecting to frontend URL:', frontendUrl);
                 res.redirect(`${frontendUrl}/verify-email?user=${userParam}&isGoogleSignup=true&emailSent=${emailSent}`);
               }
             );
@@ -183,6 +184,7 @@ router.get(
             username: req.user.username, 
             email: req.user.email 
           }));
+          console.log('↪️ Google verify-email redirecting to frontend URL:', frontendUrl);
           res.redirect(`${frontendUrl}/verify-email?user=${userParam}&isGoogleSignup=true&emailSent=${emailSent}`);
         }
       );
@@ -210,6 +212,7 @@ router.get(
     }
 
     const userParam = encodeURIComponent(JSON.stringify({ id: req.user.id, username: req.user.username, email: req.user.email }));
+    console.log('↪️ Google social-login redirecting to frontend URL:', frontendUrl);
     res.redirect(`${frontendUrl}/social-login?token=${token}&user=${userParam}`);
   }
 );
