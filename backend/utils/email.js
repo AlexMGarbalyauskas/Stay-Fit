@@ -11,6 +11,7 @@ if (useSendGrid) {
 }
 
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
+const EMAIL_SEND_TIMEOUT_MS = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 12000);
 
 function logEmailProviderError(provider, email, fromAddress, error) {
   const providerError = {
@@ -28,6 +29,17 @@ function logEmailProviderError(provider, email, fromAddress, error) {
   };
 
   console.error('❌ Verification email provider error:', providerError);
+}
+
+function withTimeout(promise, timeoutMs, label) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 }
 
 // SMTP transporter (fallback for local/dev)
@@ -87,21 +99,29 @@ async function sendVerificationEmail(email, username, verificationCode) {
 
     if (useSendGrid) {
       console.log(`📧 Sending email via SendGrid to ${email} from ${fromAddress}`);
-      const response = await sgMail.send({
-        to: email,
-        from: fromAddress,
-        subject,
-        html,
-      });
+      const response = await withTimeout(
+        sgMail.send({
+          to: email,
+          from: fromAddress,
+          subject,
+          html,
+        }),
+        EMAIL_SEND_TIMEOUT_MS,
+        'SendGrid email send'
+      );
       console.log('✅ SendGrid response:', response?.[0]?.statusCode || 'ok');
     } else if (useResend) {
       console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);
-      const response = await resend.emails.send({
-        from: fromAddress,
-        to: email,
-        subject,
-        html,
-      });
+      const response = await withTimeout(
+        resend.emails.send({
+          from: fromAddress,
+          to: email,
+          subject,
+          html,
+        }),
+        EMAIL_SEND_TIMEOUT_MS,
+        'Resend email send'
+      );
       console.log('✅ Resend response:', response);
     } else if (transporter) {
       console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
@@ -111,7 +131,11 @@ async function sendVerificationEmail(email, username, verificationCode) {
         subject,
         html,
       };
-      await transporter.sendMail(mailOptions);
+      await withTimeout(
+        transporter.sendMail(mailOptions),
+        EMAIL_SEND_TIMEOUT_MS,
+        'SMTP email send'
+      );
     } else {
       throw new Error(
         'No email provider configured. Set SENDGRID_API_KEY, RESEND_API_KEY, or EMAIL_USER and EMAIL_PASSWORD.'
