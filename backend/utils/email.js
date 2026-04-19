@@ -3,7 +3,7 @@ const sgMail = require('@sendgrid/mail');
 const { Resend } = require('resend');
 
 const useSendGrid = !!process.env.SENDGRID_API_KEY;
-const useResend = !!process.env.RESEND_API_KEY && !useSendGrid;
+const useResend = !!process.env.RESEND_API_KEY;
 const hasSmtpCredentials = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
 
 if (useSendGrid) {
@@ -64,10 +64,8 @@ const transporter = hasSmtpCredentials
 // });
 
 async function sendVerificationEmail(email, username, verificationCode) {
-  try {
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'onboarding@resend.dev';
-    const subject = 'Verify Your Stay Fit Account';
-    const html = `
+  const subject = 'Verify Your Stay Fit Account';
+  const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
             <h1 style="color: white; margin: 0;">Stay Fit</h1>
@@ -97,58 +95,80 @@ async function sendVerificationEmail(email, username, verificationCode) {
         </div>
       `;
 
-    if (useSendGrid) {
-      console.log(`📧 Sending email via SendGrid to ${email} from ${fromAddress}`);
-      const response = await withTimeout(
-        sgMail.send({
-          to: email,
-          from: fromAddress,
-          subject,
-          html,
-        }),
-        EMAIL_SEND_TIMEOUT_MS,
-        'SendGrid email send'
-      );
-      console.log('✅ SendGrid response:', response?.[0]?.statusCode || 'ok');
-    } else if (useResend) {
-      console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);
-      const response = await withTimeout(
-        resend.emails.send({
-          from: fromAddress,
-          to: email,
-          subject,
-          html,
-        }),
-        EMAIL_SEND_TIMEOUT_MS,
-        'Resend email send'
-      );
-      console.log('✅ Resend response:', response);
-    } else if (transporter) {
-      console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
-      const mailOptions = {
-        from: fromAddress,
-        to: email,
-        subject,
-        html,
-      };
-      await withTimeout(
-        transporter.sendMail(mailOptions),
-        EMAIL_SEND_TIMEOUT_MS,
-        'SMTP email send'
-      );
-    } else {
-      throw new Error(
-        'No email provider configured. Set SENDGRID_API_KEY, RESEND_API_KEY, or EMAIL_USER and EMAIL_PASSWORD.'
-      );
-    }
-    console.log(`✅ Verification email sent to ${email}`);
-    return true;
-  } catch (error) {
-    const provider = useSendGrid ? 'sendgrid' : useResend ? 'resend' : transporter ? 'smtp' : 'none';
-    logEmailProviderError(provider, email, fromAddress, error);
-    console.error(`❌ Error sending verification email to ${email}:`, error.message, error);
+  const providerQueue = [];
+  if (useSendGrid) providerQueue.push('sendgrid');
+  if (useResend) providerQueue.push('resend');
+  if (transporter) providerQueue.push('smtp');
+
+  if (providerQueue.length === 0) {
+    console.error('❌ No email provider configured. Set SENDGRID_API_KEY, RESEND_API_KEY, or EMAIL_USER/EMAIL_PASSWORD.');
     return false;
   }
+
+  for (const provider of providerQueue) {
+    const fromAddress =
+      provider === 'sendgrid'
+        ? process.env.EMAIL_FROM_SENDGRID || process.env.EMAIL_FROM || process.env.EMAIL_USER
+        : provider === 'resend'
+        ? process.env.EMAIL_FROM_RESEND || process.env.EMAIL_FROM || 'onboarding@resend.dev'
+        : process.env.EMAIL_FROM || process.env.EMAIL_USER;
+
+    try {
+      if (!fromAddress) {
+        throw new Error(`Missing sender address for provider ${provider}. Set EMAIL_FROM (or provider-specific EMAIL_FROM_SENDGRID/EMAIL_FROM_RESEND).`);
+      }
+
+      if (provider === 'sendgrid') {
+        console.log(`📧 Sending email via SendGrid to ${email} from ${fromAddress}`);
+        const response = await withTimeout(
+          sgMail.send({
+            to: email,
+            from: fromAddress,
+            subject,
+            html,
+          }),
+          EMAIL_SEND_TIMEOUT_MS,
+          'SendGrid email send'
+        );
+        console.log('✅ SendGrid response:', response?.[0]?.statusCode || 'ok');
+      } else if (provider === 'resend') {
+        console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);
+        const response = await withTimeout(
+          resend.emails.send({
+            from: fromAddress,
+            to: email,
+            subject,
+            html,
+          }),
+          EMAIL_SEND_TIMEOUT_MS,
+          'Resend email send'
+        );
+        console.log('✅ Resend response:', response);
+      } else if (provider === 'smtp') {
+        console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
+        const mailOptions = {
+          from: fromAddress,
+          to: email,
+          subject,
+          html,
+        };
+        await withTimeout(
+          transporter.sendMail(mailOptions),
+          EMAIL_SEND_TIMEOUT_MS,
+          'SMTP email send'
+        );
+      }
+
+      console.log(`✅ Verification email sent to ${email} using ${provider}`);
+      return true;
+    } catch (error) {
+      logEmailProviderError(provider, email, fromAddress, error);
+      console.error(`❌ Email send failed via ${provider}, trying next provider if available.`);
+    }
+  }
+
+  console.error(`❌ All email providers failed for ${email}`);
+  return false;
 }
 
 module.exports = { sendVerificationEmail };
