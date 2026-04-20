@@ -215,6 +215,9 @@ async function sendVerificationEmail(email, username, verificationCode) {
           resendId: response?.data?.id || response?.id || null,
         });
       } else if (provider === 'smtp') {
+        if (!transporter) {
+          throw new Error('SMTP provider selected but EMAIL_USER/EMAIL_PASSWORD are not configured.');
+        }
         console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
         const mailOptions = {
           from: fromAddress,
