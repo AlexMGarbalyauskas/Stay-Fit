@@ -371,6 +371,7 @@ router.get('/email-debug', requireEmailDebugToken, (req, res) => {
       resend: !!process.env.RESEND_API_KEY,
       smtp: !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD),
     },
+    providerMode: (process.env.EMAIL_PROVIDER || '').trim().toLowerCase() || 'auto',
     diagnostics: getEmailDiagnostics(limit),
   });
 });

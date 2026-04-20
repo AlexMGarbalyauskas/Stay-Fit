@@ -4,6 +4,7 @@ const { Resend } = require('resend');
 const useMailSender = !!(process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY);
 const useResend = !!process.env.RESEND_API_KEY;
 const hasSmtpCredentials = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
+const emailProviderMode = (process.env.EMAIL_PROVIDER || '').trim().toLowerCase();
 
 const mailSenderToken = process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY;
 
@@ -121,9 +122,17 @@ async function sendVerificationEmail(email, username, verificationCode) {
       `;
 
   const providerQueue = [];
-  if (useMailSender) providerQueue.push('mailsender');
-  if (useResend) providerQueue.push('resend');
-  if (transporter) providerQueue.push('smtp');
+  if (emailProviderMode === 'mailsender') {
+    providerQueue.push('mailsender');
+  } else if (emailProviderMode === 'resend') {
+    providerQueue.push('resend');
+  } else if (emailProviderMode === 'smtp') {
+    providerQueue.push('smtp');
+  } else {
+    if (useMailSender) providerQueue.push('mailsender');
+    if (useResend) providerQueue.push('resend');
+    if (transporter) providerQueue.push('smtp');
+  }
 
   if (providerQueue.length === 0) {
     console.error('❌ No email provider configured. Set MAILSENDER_API_TOKEN (or MAILERSEND_API_KEY), RESEND_API_KEY, or EMAIL_USER/EMAIL_PASSWORD.');
