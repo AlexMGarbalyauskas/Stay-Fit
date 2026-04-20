@@ -27,6 +27,12 @@ export default function Settings() {
   const iconClass = isDark ? 'text-gray-200' : 'text-black';
   const navigate = useNavigate();
   const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
+  const appTutorialLabel = ({
+    en: 'App Tutorial',
+    es: 'Tutorial de la App',
+    fr: 'Tutoriel de l\'app',
+    it: 'Tutorial dell\'app'
+  })[language] || t('appTutorial');
 
   const privacyLabel = (value) => {
     if (value === 'Public') return t('public');
@@ -375,7 +381,7 @@ export default function Settings() {
             onClick={() => navigate('/onboarding?return=settings')}
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
-            <BookOpen size={20} className={iconClass} /> {t('appTutorial')}
+            <BookOpen size={20} className={iconClass} /> {appTutorialLabel}
           </button>
 
           <button

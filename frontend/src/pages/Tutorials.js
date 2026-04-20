@@ -5,6 +5,93 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { useLanguage } from '../context/LanguageContext';
 
+const TUTORIAL_UI_TRANSLATIONS = {
+  es: {
+    pleaseLoginToViewTutorials: 'Inicia sesión para ver los tutoriales.',
+    exerciseTutorials: 'Tutoriales de Ejercicios',
+    learnProperForm: 'Aprende la técnica correcta para los ejercicios de tus planes de entrenamiento',
+    selectMuscleGroup: 'Selecciona un grupo muscular',
+    selectMuscleGroupAria: 'Seleccionar {muscle}',
+    clearFilter: 'Limpiar filtro',
+    showingMuscleExercises: 'Mostrando ejercicios de {muscle}',
+    clickMuscleToFilter: 'Haz clic en una zona muscular resaltada del mapa corporal para filtrar ejercicios.',
+    searchExercises: 'Buscar ejercicios...',
+    allDifficulties: 'Todas las dificultades',
+    difficultyBeginner: 'Principiante',
+    difficultyIntermediate: 'Intermedio',
+    difficultyAdvanced: 'Avanzado',
+    noExercisesFoundSearch: 'No se encontraron ejercicios que coincidan con tu búsqueda.',
+    backToTutorials: 'Volver a tutoriales',
+    durationLabel: 'Duración',
+    difficultyLabel: 'Dificultad',
+    howToPerform: 'Cómo realizarlo',
+    muscleChest: 'Pecho',
+    muscleShoulders: 'Hombros',
+    muscleBiceps: 'Bíceps',
+    muscleTriceps: 'Tríceps',
+    muscleCore: 'Core',
+    muscleBack: 'Espalda',
+    muscleGlutes: 'Glúteos',
+    muscleLegs: 'Piernas'
+  },
+  fr: {
+    pleaseLoginToViewTutorials: 'Veuillez vous connecter pour voir les tutoriels.',
+    exerciseTutorials: 'Tutoriels d\'exercices',
+    learnProperForm: 'Apprenez la bonne technique pour les exercices de vos programmes',
+    selectMuscleGroup: 'Sélectionnez un groupe musculaire',
+    selectMuscleGroupAria: 'Sélectionner {muscle}',
+    clearFilter: 'Effacer le filtre',
+    showingMuscleExercises: 'Affichage des exercices de {muscle}',
+    clickMuscleToFilter: 'Cliquez sur une zone musculaire mise en évidence sur le schéma corporel pour filtrer les exercices.',
+    searchExercises: 'Rechercher des exercices...',
+    allDifficulties: 'Toutes les difficultés',
+    difficultyBeginner: 'Débutant',
+    difficultyIntermediate: 'Intermédiaire',
+    difficultyAdvanced: 'Avancé',
+    noExercisesFoundSearch: 'Aucun exercice ne correspond à votre recherche.',
+    backToTutorials: 'Retour aux tutoriels',
+    durationLabel: 'Durée',
+    difficultyLabel: 'Difficulté',
+    howToPerform: 'Comment faire',
+    muscleChest: 'Poitrine',
+    muscleShoulders: 'Épaules',
+    muscleBiceps: 'Biceps',
+    muscleTriceps: 'Triceps',
+    muscleCore: 'Gainage',
+    muscleBack: 'Dos',
+    muscleGlutes: 'Fessiers',
+    muscleLegs: 'Jambes'
+  },
+  it: {
+    pleaseLoginToViewTutorials: 'Accedi per vedere i tutorial.',
+    exerciseTutorials: 'Tutorial degli esercizi',
+    learnProperForm: 'Impara la tecnica corretta per gli esercizi nei tuoi piani di allenamento',
+    selectMuscleGroup: 'Seleziona un gruppo muscolare',
+    selectMuscleGroupAria: 'Seleziona {muscle}',
+    clearFilter: 'Cancella filtro',
+    showingMuscleExercises: 'Mostra esercizi per {muscle}',
+    clickMuscleToFilter: 'Fai clic su una zona muscolare evidenziata nella mappa del corpo per filtrare gli esercizi.',
+    searchExercises: 'Cerca esercizi...',
+    allDifficulties: 'Tutte le difficoltà',
+    difficultyBeginner: 'Principiante',
+    difficultyIntermediate: 'Intermedio',
+    difficultyAdvanced: 'Avanzato',
+    noExercisesFoundSearch: 'Nessun esercizio trovato con la tua ricerca.',
+    backToTutorials: 'Torna ai tutorial',
+    durationLabel: 'Durata',
+    difficultyLabel: 'Difficoltà',
+    howToPerform: 'Come eseguirlo',
+    muscleChest: 'Petto',
+    muscleShoulders: 'Spalle',
+    muscleBiceps: 'Bicipiti',
+    muscleTriceps: 'Tricipiti',
+    muscleCore: 'Core',
+    muscleBack: 'Schiena',
+    muscleGlutes: 'Glutei',
+    muscleLegs: 'Gambe'
+  }
+};
+
 // Sample exercise tutorials database
 const EXERCISE_TUTORIALS = {
   'Push-ups': {
@@ -247,6 +334,66 @@ const EXERCISE_TUTORIALS = {
   }
 };
 
+const EXERCISE_COPY_TRANSLATIONS = {
+  es: {
+    'Push-ups': { name: 'Flexiones', description: 'Un ejercicio clásico de pecho, hombros y tríceps' },
+    'Squats': { name: 'Sentadillas', description: 'Fortalece piernas y glúteos con este ejercicio fundamental' },
+    'Deadlifts': { name: 'Peso muerto', description: 'Ejercicio de fuerza para todo el cuerpo' },
+    'Pull-ups': { name: 'Dominadas', description: 'Desarrolla fuerza en espalda y brazos' },
+    'Bench Press': { name: 'Press de banca', description: 'Desarrolla pecho, hombros y tríceps' },
+    'Plank': { name: 'Plancha', description: 'Ejercicio de fortalecimiento del core' },
+    'Bicycle Crunches': { name: 'Crunch bicicleta', description: 'Ejercicio dinámico de core para abdominales y oblicuos' },
+    'Russian Twists': { name: 'Giros rusos', description: 'Ejercicio de core y oblicuos para fuerza rotacional' },
+    'Leg Raises': { name: 'Elevaciones de piernas', description: 'Ejercicio abdominal inferior para control del core' },
+    'Mountain Climbers': { name: 'Escaladores', description: 'Movimiento cardio-core para estabilidad y resistencia' },
+    'Dumbbell Curls': { name: 'Curl con mancuernas', description: 'Ejercicio de aislamiento de bíceps' },
+    'Lunges': { name: 'Zancadas', description: 'Ejercicio de piernas para fuerza y equilibrio' },
+    'Chest Press': { name: 'Press de pecho', description: 'Ejercicio para fortalecer pecho y tríceps' },
+    'Back Rows': { name: 'Remo de espalda', description: 'Ejercicio para fortalecer espalda y bíceps' },
+    'Shoulder Press': { name: 'Press de hombros', description: 'Ejercicio de fuerza para hombros y tren superior' },
+    'Bicep Curls': { name: 'Curl de bíceps', description: 'Ejercicio de aislamiento para brazos y bíceps' },
+    'Tricep Dips': { name: 'Fondos de tríceps', description: 'Ejercicio de peso corporal para fortalecer tríceps' }
+  },
+  fr: {
+    'Push-ups': { name: 'Pompes', description: 'Un exercice classique pour la poitrine, les épaules et les triceps' },
+    'Squats': { name: 'Squats', description: 'Renforcez vos jambes et fessiers avec cet exercice fondamental' },
+    'Deadlifts': { name: 'Soulevé de terre', description: 'Exercice de force pour tout le corps' },
+    'Pull-ups': { name: 'Tractions', description: 'Développe la force du dos et des bras' },
+    'Bench Press': { name: 'Développé couché', description: 'Développe la poitrine, les épaules et les triceps' },
+    'Plank': { name: 'Planche', description: 'Exercice de renforcement du gainage' },
+    'Bicycle Crunches': { name: 'Crunch vélo', description: 'Exercice dynamique de gainage ciblant abdos et obliques' },
+    'Russian Twists': { name: 'Rotations russes', description: 'Exercice pour les obliques et la rotation du tronc' },
+    'Leg Raises': { name: 'Relevés de jambes', description: 'Exercice des abdos inférieurs pour le contrôle du tronc' },
+    'Mountain Climbers': { name: 'Mountain climbers', description: 'Mouvement cardio-gainage pour stabilité et endurance' },
+    'Dumbbell Curls': { name: 'Curl haltères', description: 'Exercice d’isolation des biceps' },
+    'Lunges': { name: 'Fentes', description: 'Exercice jambes pour la force et l’équilibre' },
+    'Chest Press': { name: 'Presse poitrine', description: 'Exercice de renforcement de la poitrine et des triceps' },
+    'Back Rows': { name: 'Rowing dos', description: 'Exercice de renforcement du dos et des biceps' },
+    'Shoulder Press': { name: 'Développé épaules', description: 'Exercice de force pour les épaules et le haut du corps' },
+    'Bicep Curls': { name: 'Curl biceps', description: 'Exercice d’isolation des bras et biceps' },
+    'Tricep Dips': { name: 'Dips triceps', description: 'Exercice au poids du corps pour les triceps' }
+  },
+  it: {
+    'Push-ups': { name: 'Piegamenti', description: 'Un classico esercizio per petto, spalle e tricipiti' },
+    'Squats': { name: 'Squat', description: 'Rinforza gambe e glutei con questo esercizio fondamentale' },
+    'Deadlifts': { name: 'Stacchi da terra', description: 'Esercizio di forza per tutto il corpo' },
+    'Pull-ups': { name: 'Trazioni', description: 'Sviluppa forza di schiena e braccia' },
+    'Bench Press': { name: 'Panca piana', description: 'Sviluppa petto, spalle e tricipiti' },
+    'Plank': { name: 'Plank', description: 'Esercizio di rafforzamento del core' },
+    'Bicycle Crunches': { name: 'Crunch bicicletta', description: 'Esercizio dinamico per addominali e obliqui' },
+    'Russian Twists': { name: 'Twist russi', description: 'Esercizio per core e obliqui con rotazione' },
+    'Leg Raises': { name: 'Sollevamento gambe', description: 'Esercizio per addominali bassi e controllo del core' },
+    'Mountain Climbers': { name: 'Mountain climber', description: 'Movimento cardio-core per stabilità e resistenza' },
+    'Dumbbell Curls': { name: 'Curl con manubri', description: 'Esercizio di isolamento per i bicipiti' },
+    'Lunges': { name: 'Affondi', description: 'Esercizio per gambe, forza ed equilibrio' },
+    'Chest Press': { name: 'Chest press', description: 'Esercizio per rafforzare petto e tricipiti' },
+    'Back Rows': { name: 'Rematore', description: 'Esercizio per rafforzare schiena e bicipiti' },
+    'Shoulder Press': { name: 'Shoulder press', description: 'Esercizio di forza per spalle e parte superiore del corpo' },
+    'Bicep Curls': { name: 'Curl bicipiti', description: 'Esercizio di isolamento per braccia e bicipiti' },
+    'Tricep Dips': { name: 'Dip tricipiti', description: 'Esercizio a corpo libero per i tricipiti' }
+  }
+};
+
 // Extract unique exercises from plans - if empty, show all exercises
 const getExercisesFromWorkouts = (plans) => {
   const exercises = new Set();
@@ -282,14 +429,14 @@ const MUSCLE_EXERCISE_MAP = {
 };
 
 const BODY_MAP_AREAS = [
-  { key: 'chest', label: 'Chest' },
-  { key: 'shoulders', label: 'Shoulders' },
-  { key: 'biceps', label: 'Biceps' },
-  { key: 'triceps', label: 'Triceps' },
-  { key: 'core', label: 'Core' },
-  { key: 'back', label: 'Back' },
-  { key: 'glutes', label: 'Glutes' },
-  { key: 'legs', label: 'Legs' }
+  { key: 'chest' },
+  { key: 'shoulders' },
+  { key: 'biceps' },
+  { key: 'triceps' },
+  { key: 'core' },
+  { key: 'back' },
+  { key: 'glutes' },
+  { key: 'legs' }
 ];
 
 const BODY_HOTSPOTS = [
@@ -312,7 +459,7 @@ const BODY_HOTSPOTS = [
 ];
 
 export default function Tutorials({ isAuthenticated }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
   const navigate = useNavigate();
@@ -321,6 +468,38 @@ export default function Tutorials({ isAuthenticated }) {
   const [filterDifficulty, setFilterDifficulty] = useState('All');
   const [selectedMuscle, setSelectedMuscle] = useState(null);
   const bodyParts = BODY_MAP_AREAS;
+
+  const tt = (key) => TUTORIAL_UI_TRANSLATIONS[language]?.[key] || t(key);
+
+  const translateTemplate = (key, values = {}) => {
+    let text = tt(key);
+    Object.entries(values).forEach(([name, value]) => {
+      text = text.replace(`{${name}}`, String(value));
+    });
+    return text;
+  };
+
+  const muscleLabel = (muscleKey) => {
+    if (!muscleKey) return '';
+    const normalized = muscleKey.charAt(0).toUpperCase() + muscleKey.slice(1);
+    return tt(`muscle${normalized}`);
+  };
+
+  const difficultyLabel = (difficulty) => {
+    if (difficulty === 'Beginner') return tt('difficultyBeginner');
+    if (difficulty === 'Intermediate') return tt('difficultyIntermediate');
+    if (difficulty === 'Advanced') return tt('difficultyAdvanced');
+    return difficulty;
+  };
+
+  const localizedExerciseCopy = (exercise, tutorial) => {
+    const localized = EXERCISE_COPY_TRANSLATIONS[language]?.[exercise];
+    return {
+      name: localized?.name || exercise,
+      description: localized?.description || tutorial?.description || '',
+      instructions: tutorial?.instructions || []
+    };
+  };
 
   // Get exercises from user's workout plans
   const userExercises = useMemo(() => {
@@ -340,22 +519,26 @@ export default function Tutorials({ isAuthenticated }) {
   const filteredExercises = useMemo(() => {
     return userExercises.filter(exercise => {
       const tutorial = EXERCISE_TUTORIALS[exercise];
-      const matchesSearch = exercise.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (tutorial?.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const copy = localizedExerciseCopy(exercise, tutorial);
+      const matchesSearch = copy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          copy.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesDifficulty = filterDifficulty === 'All' || tutorial?.difficulty === filterDifficulty;
       const matchesMuscle = !selectedMuscle || (MUSCLE_EXERCISE_MAP[selectedMuscle] || []).includes(exercise);
       return matchesSearch && matchesDifficulty && matchesMuscle;
     });
-  }, [userExercises, searchTerm, filterDifficulty, selectedMuscle]);
+  }, [userExercises, searchTerm, filterDifficulty, selectedMuscle, language]);
 
   const selectedTutorial = selectedExercise ? EXERCISE_TUTORIALS[selectedExercise] : null;
+  const selectedExerciseCopy = selectedExercise && selectedTutorial
+    ? localizedExerciseCopy(selectedExercise, selectedTutorial)
+    : null;
 
   if (!isAuthenticated) {
     return (
       <div className={isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} style={{ minHeight: '100vh' }}>
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-8">
-          <p>Please log in to view tutorials.</p>
+          <p>{tt('pleaseLoginToViewTutorials')}</p>
         </main>
         <Navbar />
       </div>
@@ -378,19 +561,19 @@ export default function Tutorials({ isAuthenticated }) {
                 }`}
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                {t('back')}
               </button>
 
-              <h1 className="text-3xl font-bold mb-2">Exercise Tutorials</h1>
+              <h1 className="text-3xl font-bold mb-2">{tt('exerciseTutorials')}</h1>
               <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                Learn proper form for exercises in your workout plans
+                {tt('learnProperForm')}
               </p>
             </div>
 
             {/* Clickable body map */}
             <div className={`mb-8 rounded-2xl p-5 border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
               <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-                <h2 className="text-lg font-bold">Select a Muscle Group</h2>
+                <h2 className="text-lg font-bold">{tt('selectMuscleGroup')}</h2>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSelectedMuscle(null)}
@@ -398,7 +581,7 @@ export default function Tutorials({ isAuthenticated }) {
                       isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
-                    Clear Filter
+                    {tt('clearFilter')}
                   </button>
                 </div>
               </div>
@@ -416,7 +599,7 @@ export default function Tutorials({ isAuthenticated }) {
                             key={`${hotspot.key}-${hotspot.side}-${idx}`}
                             type="button"
                             onClick={() => setSelectedMuscle(hotspot.key)}
-                            aria-label={`Select ${hotspot.label || hotspot.key}`}
+                            aria-label={translateTemplate('selectMuscleGroupAria', { muscle: muscleLabel(hotspot.key) })}
                             className={`absolute transition ${active ? 'bg-pink-500/40 ring-2 ring-pink-300' : 'bg-transparent hover:bg-pink-400/20'}`}
                             style={{
                               left: hotspot.left,
@@ -435,8 +618,8 @@ export default function Tutorials({ isAuthenticated }) {
                 <div>
                   <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} mb-3`}>
                     {selectedMuscle
-                      ? `Showing ${bodyParts.find((p) => p.key === selectedMuscle)?.label || selectedMuscle} exercises`
-                      : 'Click a highlighted muscle region on the body map to filter exercises.'}
+                      ? translateTemplate('showingMuscleExercises', { muscle: muscleLabel(selectedMuscle) })
+                      : tt('clickMuscleToFilter')}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {bodyParts.map((part) => {
@@ -453,7 +636,7 @@ export default function Tutorials({ isAuthenticated }) {
                               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                           }`}
                         >
-                          {part.label}
+                          {muscleLabel(part.key)}
                         </button>
                       );
                     })}
@@ -468,7 +651,7 @@ export default function Tutorials({ isAuthenticated }) {
                 <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search exercises..."
+                  placeholder={tt('searchExercises')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
@@ -488,10 +671,10 @@ export default function Tutorials({ isAuthenticated }) {
                     : 'bg-white border-gray-300 text-gray-900'
                 }`}
               >
-                <option>All Difficulties</option>
-                <option>Beginner</option>
-                <option>Intermediate</option>
-                <option>Advanced</option>
+                <option value="All">{tt('allDifficulties')}</option>
+                <option value="Beginner">{tt('difficultyBeginner')}</option>
+                <option value="Intermediate">{tt('difficultyIntermediate')}</option>
+                <option value="Advanced">{tt('difficultyAdvanced')}</option>
               </select>
             </div>
 
@@ -500,6 +683,7 @@ export default function Tutorials({ isAuthenticated }) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredExercises.map((exercise) => {
                   const tutorial = EXERCISE_TUTORIALS[exercise];
+                  const copy = localizedExerciseCopy(exercise, tutorial);
                   return (
                     <div
                       key={exercise}
@@ -521,9 +705,9 @@ export default function Tutorials({ isAuthenticated }) {
                       </div>
 
                       <div className="p-4">
-                        <h3 className="font-bold text-lg mb-2">{exercise}</h3>
+                        <h3 className="font-bold text-lg mb-2">{copy.name}</h3>
                         <p className={`text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          {tutorial?.description}
+                          {copy.description}
                         </p>
 
                         <div className="flex justify-between items-center text-sm">
@@ -537,7 +721,7 @@ export default function Tutorials({ isAuthenticated }) {
                               ? isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
                               : isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700'
                           }`}>
-                            {tutorial?.difficulty}
+                            {difficultyLabel(tutorial?.difficulty)}
                           </span>
                         </div>
                       </div>
@@ -548,7 +732,7 @@ export default function Tutorials({ isAuthenticated }) {
             ) : (
               <div className={`text-center py-12 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
                 <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                  No exercises found matching your search.
+                  {tt('noExercisesFoundSearch')}
                 </p>
               </div>
             )}
@@ -565,7 +749,7 @@ export default function Tutorials({ isAuthenticated }) {
               }`}
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Tutorials
+              {tt('backToTutorials')}
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -577,7 +761,7 @@ export default function Tutorials({ isAuthenticated }) {
                       width="100%"
                       height="100%"
                       src={selectedTutorial?.videoUrl}
-                      title={selectedExercise}
+                      title={selectedExerciseCopy?.name || selectedExercise}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -592,9 +776,9 @@ export default function Tutorials({ isAuthenticated }) {
                 </div>
 
                 <div className="mt-6">
-                  <h2 className="text-2xl font-bold mb-2">{selectedExercise}</h2>
+                  <h2 className="text-2xl font-bold mb-2">{selectedExerciseCopy?.name || selectedExercise}</h2>
                   <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                    {selectedTutorial?.description}
+                    {selectedExerciseCopy?.description || selectedTutorial?.description}
                   </p>
                 </div>
               </div>
@@ -602,12 +786,12 @@ export default function Tutorials({ isAuthenticated }) {
               {/* Info Sidebar */}
               <div className={`rounded-xl p-6 ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
                 <div className="mb-6">
-                  <p className={`text-sm font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Duration</p>
+                  <p className={`text-sm font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{tt('durationLabel')}</p>
                   <p className="text-2xl font-bold">{selectedTutorial?.duration}</p>
                 </div>
 
                 <div className="mb-6">
-                  <p className={`text-sm font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>Difficulty</p>
+                  <p className={`text-sm font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>{tt('difficultyLabel')}</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                     selectedTutorial?.difficulty === 'Beginner'
                       ? isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'
@@ -615,12 +799,12 @@ export default function Tutorials({ isAuthenticated }) {
                       ? isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
                       : isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700'
                   }`}>
-                    {selectedTutorial?.difficulty}
+                    {difficultyLabel(selectedTutorial?.difficulty)}
                   </span>
                 </div>
 
                 <div>
-                  <p className={`text-sm font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>How to Perform</p>
+                  <p className={`text-sm font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>{tt('howToPerform')}</p>
                   <ol className={`space-y-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     {selectedTutorial?.instructions.map((instruction, idx) => (
                       <li key={idx} className="flex gap-3">

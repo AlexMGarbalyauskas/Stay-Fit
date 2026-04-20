@@ -3,8 +3,62 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
+const ONBOARDING_TRANSLATIONS = {
+  es: {
+    appTutorial: 'Tutorial de la App',
+    skipTutorial: 'Saltar tutorial',
+    finishTutorial: 'Finalizar tutorial',
+    tutorialAvailableInSettings: 'Puedes volver a ver este tutorial en cualquier momento desde Ajustes.',
+    tutorialStepCount: 'Paso {current} de {total}',
+    onboardingStepWelcomeTitle: 'Bienvenido a Stay Fit',
+    onboardingStepWelcomeBody: 'Esta guía rápida te muestra las funciones principales para que empieces fuerte y mantengas la constancia.',
+    onboardingStepPostTitle: 'Comparte tu progreso',
+    onboardingStepPostBody: 'Crea publicaciones con fotos o videos para documentar tus entrenamientos y mantenerte motivado.',
+    onboardingStepPlanTitle: 'Planifica tus entrenamientos',
+    onboardingStepPlanBody: 'Usa el calendario para programar sesiones y recordatorios para no perderte ningún entrenamiento.',
+    onboardingStepConnectTitle: 'Conecta con amigos',
+    onboardingStepConnectBody: 'Encuentra amigos, chatea y apóyense mutuamente con ánimo y reacciones.',
+    onboardingStepPrivacyTitle: 'Controla tu privacidad',
+    onboardingStepPrivacyBody: 'Actualiza privacidad, notificaciones y zona horaria según tus preferencias.'
+  },
+  fr: {
+    appTutorial: 'Tutoriel de l\'app',
+    skipTutorial: 'Passer le tutoriel',
+    finishTutorial: 'Terminer le tutoriel',
+    tutorialAvailableInSettings: 'Vous pouvez revoir ce tutoriel à tout moment depuis Paramètres.',
+    tutorialStepCount: 'Étape {current} sur {total}',
+    onboardingStepWelcomeTitle: 'Bienvenue sur Stay Fit',
+    onboardingStepWelcomeBody: 'Ce guide rapide vous présente les fonctionnalités principales pour bien démarrer et rester régulier.',
+    onboardingStepPostTitle: 'Partagez vos progrès',
+    onboardingStepPostBody: 'Créez des publications avec des photos ou des vidéos pour suivre vos entraînements et rester motivé.',
+    onboardingStepPlanTitle: 'Planifiez vos entraînements',
+    onboardingStepPlanBody: 'Utilisez le calendrier pour programmer vos séances et des rappels afin de ne rien manquer.',
+    onboardingStepConnectTitle: 'Connectez-vous avec des amis',
+    onboardingStepConnectBody: 'Trouvez des amis, discutez et encouragez-vous mutuellement avec des réactions.',
+    onboardingStepPrivacyTitle: 'Contrôlez votre confidentialité',
+    onboardingStepPrivacyBody: 'Mettez à jour confidentialité, notifications et fuseau horaire selon vos préférences.'
+  },
+  it: {
+    appTutorial: 'Tutorial dell\'app',
+    skipTutorial: 'Salta tutorial',
+    finishTutorial: 'Termina tutorial',
+    tutorialAvailableInSettings: 'Puoi rivedere questo tutorial in qualsiasi momento da Impostazioni.',
+    tutorialStepCount: 'Passo {current} di {total}',
+    onboardingStepWelcomeTitle: 'Benvenuto su Stay Fit',
+    onboardingStepWelcomeBody: 'Questa guida rapida mostra le funzionalità principali per iniziare bene e restare costante.',
+    onboardingStepPostTitle: 'Condividi i tuoi progressi',
+    onboardingStepPostBody: 'Crea post con foto o video per documentare gli allenamenti e restare motivato.',
+    onboardingStepPlanTitle: 'Pianifica i tuoi allenamenti',
+    onboardingStepPlanBody: 'Usa il calendario per programmare sessioni e promemoria così non salti nessun allenamento.',
+    onboardingStepConnectTitle: 'Connettiti con gli amici',
+    onboardingStepConnectBody: 'Trova amici, chatta e supportatevi con incoraggiamenti e reazioni.',
+    onboardingStepPrivacyTitle: 'Controlla la tua privacy',
+    onboardingStepPrivacyBody: 'Aggiorna privacy, notifiche e fuso orario in base alle tue preferenze.'
+  }
+};
+
 export default function OnboardingTutorial() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
@@ -25,28 +79,30 @@ export default function OnboardingTutorial() {
   const userId = user?.id;
   const doneKey = userId ? `onboarding_done_${userId}` : null;
 
+  const tt = (key) => ONBOARDING_TRANSLATIONS[language]?.[key] || t(key);
+
   const steps = useMemo(() => ([
     {
-      title: t('onboardingStepWelcomeTitle'),
-      body: t('onboardingStepWelcomeBody')
+      title: tt('onboardingStepWelcomeTitle'),
+      body: tt('onboardingStepWelcomeBody')
     },
     {
-      title: t('onboardingStepPostTitle'),
-      body: t('onboardingStepPostBody')
+      title: tt('onboardingStepPostTitle'),
+      body: tt('onboardingStepPostBody')
     },
     {
-      title: t('onboardingStepPlanTitle'),
-      body: t('onboardingStepPlanBody')
+      title: tt('onboardingStepPlanTitle'),
+      body: tt('onboardingStepPlanBody')
     },
     {
-      title: t('onboardingStepConnectTitle'),
-      body: t('onboardingStepConnectBody')
+      title: tt('onboardingStepConnectTitle'),
+      body: tt('onboardingStepConnectBody')
     },
     {
-      title: t('onboardingStepPrivacyTitle'),
-      body: t('onboardingStepPrivacyBody')
+      title: tt('onboardingStepPrivacyTitle'),
+      body: tt('onboardingStepPrivacyBody')
     }
-  ]), [t]);
+  ]), [tt]);
 
   const [stepIndex, setStepIndex] = useState(0);
 
@@ -108,7 +164,7 @@ export default function OnboardingTutorial() {
             onClick={handleExit}
             className={`text-sm ${isDark ? 'text-gray-300 hover:text-gray-100' : 'text-slate-600 hover:text-slate-900'}`}
           >
-            {t('skipTutorial')}
+            {tt('skipTutorial')}
           </button>
         </div>
 
@@ -116,7 +172,7 @@ export default function OnboardingTutorial() {
           <div className="flex items-center gap-3 mb-4">
             <CheckCircle2 className="text-blue-500" size={24} />
             <p className={`text-sm uppercase tracking-wide ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              {t('appTutorial')}
+              {tt('appTutorial')}
             </p>
           </div>
 
@@ -128,7 +184,7 @@ export default function OnboardingTutorial() {
           <div className="mt-8">
             <div className="flex items-center justify-between mb-4">
               <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                {t('tutorialStepCount')
+                {tt('tutorialStepCount')
                   .replace('{current}', stepIndex + 1)
                   .replace('{total}', steps.length)}
               </span>
@@ -154,14 +210,14 @@ export default function OnboardingTutorial() {
                 onClick={handleNext}
                 className="px-5 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition"
               >
-                {stepIndex === steps.length - 1 ? t('finishTutorial') : t('next')}
+                {stepIndex === steps.length - 1 ? tt('finishTutorial') : t('next')}
               </button>
             </div>
           </div>
         </div>
 
         <p className={`mt-6 text-sm text-center ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-          {t('tutorialAvailableInSettings')}
+          {tt('tutorialAvailableInSettings')}
         </p>
       </div>
     </div>
