@@ -1,14 +1,11 @@
 const nodemailer = require('nodemailer');
-const sgMail = require('@sendgrid/mail');
 const { Resend } = require('resend');
 
-const useSendGrid = !!process.env.SENDGRID_API_KEY;
+const useMailSender = !!(process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY);
 const useResend = !!process.env.RESEND_API_KEY;
 const hasSmtpCredentials = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
 
-if (useSendGrid) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-}
+const mailSenderToken = process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY;
 
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_SEND_TIMEOUT_MS = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 12000);
@@ -124,12 +121,12 @@ async function sendVerificationEmail(email, username, verificationCode) {
       `;
 
   const providerQueue = [];
-  if (useSendGrid) providerQueue.push('sendgrid');
+  if (useMailSender) providerQueue.push('mailsender');
   if (useResend) providerQueue.push('resend');
   if (transporter) providerQueue.push('smtp');
 
   if (providerQueue.length === 0) {
-    console.error('❌ No email provider configured. Set SENDGRID_API_KEY, RESEND_API_KEY, or EMAIL_USER/EMAIL_PASSWORD.');
+    console.error('❌ No email provider configured. Set MAILSENDER_API_TOKEN (or MAILERSEND_API_KEY), RESEND_API_KEY, or EMAIL_USER/EMAIL_PASSWORD.');
     pushEmailDiagnostic({
       type: 'provider-config-error',
       provider: 'none',
@@ -141,36 +138,52 @@ async function sendVerificationEmail(email, username, verificationCode) {
 
   for (const provider of providerQueue) {
     const fromAddress =
-      provider === 'sendgrid'
-        ? process.env.EMAIL_FROM_SENDGRID || process.env.EMAIL_FROM || process.env.EMAIL_USER
+      provider === 'mailsender'
+        ? process.env.EMAIL_FROM_MAILSENDER || process.env.EMAIL_FROM || process.env.EMAIL_USER
         : provider === 'resend'
         ? process.env.EMAIL_FROM_RESEND || process.env.EMAIL_FROM || 'onboarding@resend.dev'
         : process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
     try {
       if (!fromAddress) {
-        throw new Error(`Missing sender address for provider ${provider}. Set EMAIL_FROM (or provider-specific EMAIL_FROM_SENDGRID/EMAIL_FROM_RESEND).`);
+        throw new Error(`Missing sender address for provider ${provider}. Set EMAIL_FROM (or provider-specific EMAIL_FROM_MAILSENDER/EMAIL_FROM_RESEND).`);
       }
 
-      if (provider === 'sendgrid') {
-        console.log(`📧 Sending email via SendGrid to ${email} from ${fromAddress}`);
+      if (provider === 'mailsender') {
+        console.log(`📧 Sending email via MailSender to ${email} from ${fromAddress}`);
         const response = await withTimeout(
-          sgMail.send({
-            to: email,
-            from: fromAddress,
-            subject,
-            html,
+          fetch('https://api.mailersend.com/v1/email', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${mailSenderToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: { email: fromAddress },
+              to: [{ email }],
+              subject,
+              html,
+            }),
           }),
           EMAIL_SEND_TIMEOUT_MS,
-          'SendGrid email send'
+          'MailSender email send'
         );
-        console.log('✅ SendGrid response:', response?.[0]?.statusCode || 'ok');
+
+        if (!response.ok) {
+          const errorBody = await response.text().catch(() => null);
+          const mailSenderError = new Error(`MailSender request failed with status ${response.status}`);
+          mailSenderError.statusCode = response.status;
+          mailSenderError.response = { body: errorBody };
+          throw mailSenderError;
+        }
+
         pushEmailDiagnostic({
           type: 'provider-success',
           provider,
           email,
           fromAddress,
-          statusCode: response?.[0]?.statusCode || null,
+          statusCode: response.status,
+          messageId: response.headers.get('x-message-id') || null,
         });
       } else if (provider === 'resend') {
         console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);

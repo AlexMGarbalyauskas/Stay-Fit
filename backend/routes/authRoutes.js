@@ -367,7 +367,7 @@ router.get('/email-debug', requireEmailDebugToken, (req, res) => {
   const limit = Number(req.query.limit || 20);
   res.json({
     providers: {
-      sendgrid: !!process.env.SENDGRID_API_KEY,
+      mailsender: !!(process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY),
       resend: !!process.env.RESEND_API_KEY,
       smtp: !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD),
     },

@@ -7,8 +7,8 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import EmojiPickerModal from '../components/EmojiPickerModal';
 import dayjs from 'dayjs';
-import { User, Image as ImageIcon, Search, ChevronDown, Lock, MessageCircle, Dumbbell, Smile } from 'lucide-react';
-import { encryptMessage, decryptMessage, isEncryptionReady } from '../utils/crypto';
+import { User, Image as ImageIcon, ChevronDown, Lock, MessageCircle, Smile } from 'lucide-react';
+import { encryptMessage, decryptMessage, isEncryptionReady, initializeEncryption } from '../utils/crypto';
 import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -33,7 +33,6 @@ export default function ChatPage() {
   const [gifQuery, setGifQuery] = useState('');
   const [gifResults, setGifResults] = useState([]);
   const [gifLoading, setGifLoading] = useState(false);
-  const [selectedGifId, setSelectedGifId] = useState(null);
   const [lastGifQuery, setLastGifQuery] = useState('');
   const [gifPanelOpen, setGifPanelOpen] = useState(false);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -44,6 +43,24 @@ export default function ChatPage() {
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, messageId: null, isMine: false });
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
+  const activeFriendRef = useRef(null);
+  const currentUserRef = useRef(currentUser);
+
+  const getLastChatFriendKey = (userId) => `last_chat_friend_id_${userId || 'anonymous'}`;
+
+  useEffect(() => {
+    if (activeFriend?.id) {
+      localStorage.setItem(getLastChatFriendKey(currentUser?.id), String(activeFriend.id));
+    }
+  }, [activeFriend, currentUser?.id]);
+
+  useEffect(() => {
+    activeFriendRef.current = activeFriend;
+  }, [activeFriend]);
+
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,13 +68,18 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
     socketRef.current = io(SOCKET_BASE, getSocketOptions(token));
     const s = socketRef.current;
 
     s.on('connect_error', (err) => console.error('Socket connect error:', err));
 
     s.on('receive_message', async (msg) => {
-      if (activeFriend && (msg.sender_id === activeFriend.id || msg.receiver_id === activeFriend.id)) {
+      const currentFriend = activeFriendRef.current;
+      if (currentFriend && (msg.sender_id === currentFriend.id || msg.receiver_id === currentFriend.id)) {
         // Decrypt message if encrypted
         if (msg.is_encrypted && msg.encrypted_content && msg.iv) {
           try {
@@ -96,18 +118,24 @@ export default function ChatPage() {
       setReactionsMap(prev => { const copy = { ...prev }; delete copy[messageId]; return copy; });
     });
 
-    return () => s.disconnect();
-  }, [token, activeFriend]);
+    return () => {
+      s.off('connect_error');
+      s.off('receive_message');
+      s.off('reaction:update');
+      s.off('message:deleted');
+      s.disconnect();
+    };
+  }, [token, isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     api.get('/api/friends')
       .then(res => setFriends(res.data.friends || []))
       .catch(err => console.error('Friends load error', err));
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!isAuthenticated || !token) return;
     api.get('/api/me')
       .then((res) => {
         const latestUser = res.data?.user;
@@ -118,7 +146,14 @@ export default function ChatPage() {
         } catch {}
       })
       .catch(() => {});
-  }, [token]);
+  }, [isAuthenticated, token]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token || !currentUser?.id) return;
+    if (!isEncryptionReady()) {
+      initializeEncryption(token + currentUser.id);
+    }
+  }, [isAuthenticated, token, currentUser?.id]);
 
   const params = useParams();
 
@@ -133,8 +168,18 @@ export default function ChatPage() {
       else {
         getUser(userIdFromParams).then(r => setActiveFriend(r.data.user)).catch(() => {});
       }
+      return;
     }
-  }, [params?.id, friends]);
+
+    const storedFriendId = localStorage.getItem(getLastChatFriendKey(currentUser?.id));
+    if (storedFriendId) {
+      const found = friends.find(f => Number(f.id) === Number(storedFriendId));
+      if (found) setActiveFriend(found);
+      else {
+        getUser(storedFriendId).then(r => setActiveFriend(r.data.user)).catch(() => {});
+      }
+    }
+  }, [isAuthenticated, params?.id, friends, currentUser?.id]);
 
   useEffect(() => {
     if (!isAuthenticated || !activeFriend) return;
@@ -176,7 +221,7 @@ export default function ChatPage() {
         setReactionsMap(map);
       })
       .catch(err => console.error('Messages load error', err));
-  }, [activeFriend]);
+  }, [isAuthenticated, activeFriend]);
 
   // Auth guard render
   if (!isAuthenticated) {
@@ -329,7 +374,10 @@ export default function ChatPage() {
           {friends.map(friend => (
             <button
               key={friend.id}
-              onClick={() => setActiveFriend(friend)}
+              onClick={() => {
+                setActiveFriend(friend);
+                navigate(`/chat/${friend.id}`);
+              }}
               className={`w-full text-left px-4 py-3 border-b hover:bg-gray-100 flex items-center gap-3 ${activeFriend?.id === friend.id ? 'bg-gray-100' : ''}`}
             >
               {friend.profile_picture ? (
@@ -525,7 +573,7 @@ export default function ChatPage() {
                     <div className="max-h-72 overflow-y-auto pr-1">
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                         {gifResults.map((item, idx) => (
-                          <button key={idx} onClick={() => { setSelectedGifId(item.id); sendGif(item.url, item.id); }} className="relative group">
+                          <button key={idx} onClick={() => sendGif(item.url, item.id)} className="relative group">
                             <img src={item.url} alt="GIF" className="w-full h-28 object-cover rounded" />
                             <span className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition text-white text-xs flex items-center justify-center">Send</span>
                           </button>

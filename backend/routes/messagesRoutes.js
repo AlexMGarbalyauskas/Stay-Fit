@@ -16,12 +16,12 @@ router.get('/:userId', auth, (req, res) => {
           messages.encrypted_content,
           messages.iv,
           messages.is_encrypted,
-          messages.created_at,
+          messages.created_at AS created_at,
          u.profile_picture AS sender_profile_picture
      FROM messages
        JOIN users u ON u.id = messages.sender_id
      WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
-     ORDER BY created_at ASC`,
+     ORDER BY messages.created_at ASC`,
     [me, other, other, me],
     (err, rows) => {
       if (err) return res.status(500).json({ error: 'DB error' });

@@ -182,6 +182,27 @@ db.exec(initSql, (err) => {
         else console.log('✅ Added media_url column to messages');
       });
     }
+    const hasEncryptedContent = cols3 && cols3.some(c => c.name === 'encrypted_content');
+    if (!hasEncryptedContent) {
+      db.run("ALTER TABLE messages ADD COLUMN encrypted_content TEXT", err9 => {
+        if (err9) console.error('Failed to add encrypted_content column to messages', err9);
+        else console.log('✅ Added encrypted_content column to messages');
+      });
+    }
+    const hasIv = cols3 && cols3.some(c => c.name === 'iv');
+    if (!hasIv) {
+      db.run("ALTER TABLE messages ADD COLUMN iv TEXT", err10 => {
+        if (err10) console.error('Failed to add iv column to messages', err10);
+        else console.log('✅ Added iv column to messages');
+      });
+    }
+    const hasEncryptedFlag = cols3 && cols3.some(c => c.name === 'is_encrypted');
+    if (!hasEncryptedFlag) {
+      db.run("ALTER TABLE messages ADD COLUMN is_encrypted INTEGER DEFAULT 0", err11 => {
+        if (err11) console.error('Failed to add is_encrypted column to messages', err11);
+        else console.log('✅ Added is_encrypted column to messages');
+      });
+    }
   });
 });
 
