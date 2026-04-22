@@ -27,6 +27,7 @@ const TUTORIAL_UI_TRANSLATIONS = {
     howToPerform: 'Cómo realizarlo',
     muscleChest: 'Pecho',
     muscleShoulders: 'Hombros',
+    muscleNeck: 'Cuello',
     muscleBiceps: 'Bíceps',
     muscleTriceps: 'Tríceps',
     muscleCore: 'Core',
@@ -55,6 +56,7 @@ const TUTORIAL_UI_TRANSLATIONS = {
     howToPerform: 'Comment faire',
     muscleChest: 'Poitrine',
     muscleShoulders: 'Épaules',
+    muscleNeck: 'Cou',
     muscleBiceps: 'Biceps',
     muscleTriceps: 'Triceps',
     muscleCore: 'Gainage',
@@ -83,6 +85,7 @@ const TUTORIAL_UI_TRANSLATIONS = {
     howToPerform: 'Come eseguirlo',
     muscleChest: 'Petto',
     muscleShoulders: 'Spalle',
+    muscleNeck: 'Collo',
     muscleBiceps: 'Bicipiti',
     muscleTriceps: 'Tricipiti',
     muscleCore: 'Core',
@@ -262,6 +265,104 @@ const EXERCISE_TUTORIALS = {
     videoUrl: '', // Add your video link here
     imageUrl: '/lunges.webp'
   },
+  'Leg Press': {
+    description: 'Machine-based lower body exercise for quads, glutes, and hamstrings',
+    duration: '3:10',
+    difficulty: 'Beginner',
+    instructions: [
+      'Sit on the leg press machine with feet shoulder-width apart on the platform',
+      'Lower the safety handles and brace your core',
+      'Bend knees to lower the platform with control',
+      'Press through your heels to return to starting position',
+      'Keep knees tracking in line with toes throughout'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/legpress.png'
+  },
+  'Romanian Deadlift': {
+    description: 'Posterior chain exercise targeting hamstrings and glutes',
+    duration: '3:20',
+    difficulty: 'Intermediate',
+    instructions: [
+      'Stand tall with dumbbells or barbell in front of your thighs',
+      'Hinge at the hips while keeping a slight bend in your knees',
+      'Lower the weight along your legs with a flat back',
+      'Stop when you feel a stretch in your hamstrings',
+      'Drive hips forward to stand back up'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/romaniandeadlift.jpg'
+  },
+  'Calf Raises': {
+    description: 'Isolation movement to strengthen calves and ankle stability',
+    duration: '2:20',
+    difficulty: 'Beginner',
+    instructions: [
+      'Stand upright with feet hip-width apart',
+      'Rise onto the balls of your feet as high as possible',
+      'Pause briefly at the top',
+      'Lower heels slowly back down',
+      'Use a wall or support for balance if needed'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/calfraises.jpg'
+  },
+  'Bulgarian Split Squat': {
+    description: 'Single-leg exercise for quads, glutes, and balance',
+    duration: '3:00',
+    difficulty: 'Advanced',
+    instructions: [
+      'Stand a step in front of a bench and place rear foot on it',
+      'Keep torso upright and front foot planted',
+      'Lower your body until front thigh is near parallel',
+      'Push through front heel to return up',
+      'Complete reps then switch sides'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/bulgariansplitsquats.webp'
+  },
+  'Handstand Push-up': {
+    description: 'Advanced vertical press that builds shoulder, tricep, and core strength',
+    duration: '3:30',
+    difficulty: 'Advanced',
+    instructions: [
+      'Kick up into a stable handstand against a wall',
+      'Keep body tight with glutes and core engaged',
+      'Lower until head lightly approaches the floor',
+      'Press back up to full lockout',
+      'Control each rep and stop if form breaks'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/handstandpushup.jpeg'
+  },
+  'Muscle-Up': {
+    description: 'Explosive pull and press movement for back, chest, and arms',
+    duration: '3:40',
+    difficulty: 'Advanced',
+    instructions: [
+      'Start with a strong overhand grip on a pull-up bar',
+      'Pull explosively toward the bar using hips and lats',
+      'Transition chest over the bar quickly',
+      'Press to the top support position',
+      'Lower with control and reset between reps'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/muscleups.webp'
+  },
+  'Dragon Flag': {
+    description: 'Advanced core exercise for full-body tension and control',
+    duration: '2:50',
+    difficulty: 'Advanced',
+    instructions: [
+      'Lie on a bench and hold behind your head for support',
+      'Lift hips and body into a straight line',
+      'Lower body slowly while staying rigid',
+      'Stop just above the bench and raise back up',
+      'Avoid arching your lower back during the movement'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/dragonfly.webp'
+  },
   'Chest Press': {
     description: 'Chest and triceps strengthening exercise',
     duration: '3:15',
@@ -331,6 +432,48 @@ const EXERCISE_TUTORIALS = {
     ],
     videoUrl: '', // Add your video link here
     imageUrl: '/tricepdips.jpg'
+  },
+  'Neck Flexion': {
+    description: 'Strengthen the front neck muscles with controlled flexion work',
+    duration: '2:10',
+    difficulty: 'Beginner',
+    instructions: [
+      'Sit tall with shoulders relaxed and spine neutral',
+      'Gently tuck your chin and lower head forward slightly',
+      'Pause while keeping movement controlled',
+      'Return to neutral without jerking',
+      'Repeat slow reps and stop if you feel pain'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/neckflexion.webp'
+  },
+  'Neck Extension': {
+    description: 'Build posterior neck strength using light, controlled extension',
+    duration: '2:20',
+    difficulty: 'Beginner',
+    instructions: [
+      'Start seated with head in a neutral position',
+      'Press the back of your head lightly into resistance',
+      'Hold for one to two seconds',
+      'Release slowly back to neutral',
+      'Keep shoulders down and avoid overextending the neck'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/neckextension.webp'
+  },
+  'Dumbbell Shrugs': {
+    description: 'Strengthen upper traps and neck-support muscles',
+    duration: '2:40',
+    difficulty: 'Beginner',
+    instructions: [
+      'Stand tall holding light dumbbells at your sides',
+      'Lift shoulders straight up toward your ears',
+      'Pause briefly at the top',
+      'Lower shoulders with control',
+      'Avoid rolling shoulders forward or backward'
+    ],
+    videoUrl: '', // Add your video link here
+    imageUrl: '/dumbellshrugs2.jpg'
   }
 };
 
@@ -348,11 +491,21 @@ const EXERCISE_COPY_TRANSLATIONS = {
     'Mountain Climbers': { name: 'Escaladores', description: 'Movimiento cardio-core para estabilidad y resistencia' },
     'Dumbbell Curls': { name: 'Curl con mancuernas', description: 'Ejercicio de aislamiento de bíceps' },
     'Lunges': { name: 'Zancadas', description: 'Ejercicio de piernas para fuerza y equilibrio' },
+    'Leg Press': { name: 'Prensa de piernas', description: 'Ejercicio en máquina para cuádriceps, glúteos e isquiotibiales' },
+    'Romanian Deadlift': { name: 'Peso muerto rumano', description: 'Ejercicio de cadena posterior para isquiotibiales y glúteos' },
+    'Calf Raises': { name: 'Elevaciones de pantorrillas', description: 'Ejercicio de aislamiento para fortalecer las pantorrillas' },
+    'Bulgarian Split Squat': { name: 'Sentadilla búlgara', description: 'Ejercicio unilateral para cuádriceps, glúteos y equilibrio' },
+    'Handstand Push-up': { name: 'Flexión en parada de manos', description: 'Press vertical avanzado para hombros, tríceps y core' },
+    'Muscle-Up': { name: 'Muscle-up', description: 'Movimiento explosivo de tracción y empuje para espalda, pecho y brazos' },
+    'Dragon Flag': { name: 'Bandera dragón', description: 'Ejercicio avanzado de core para tensión y control corporal total' },
     'Chest Press': { name: 'Press de pecho', description: 'Ejercicio para fortalecer pecho y tríceps' },
     'Back Rows': { name: 'Remo de espalda', description: 'Ejercicio para fortalecer espalda y bíceps' },
     'Shoulder Press': { name: 'Press de hombros', description: 'Ejercicio de fuerza para hombros y tren superior' },
     'Bicep Curls': { name: 'Curl de bíceps', description: 'Ejercicio de aislamiento para brazos y bíceps' },
-    'Tricep Dips': { name: 'Fondos de tríceps', description: 'Ejercicio de peso corporal para fortalecer tríceps' }
+    'Tricep Dips': { name: 'Fondos de tríceps', description: 'Ejercicio de peso corporal para fortalecer tríceps' },
+    'Neck Flexion': { name: 'Flexión de cuello', description: 'Fortalece los músculos anteriores del cuello con flexión controlada' },
+    'Neck Extension': { name: 'Extensión de cuello', description: 'Fortalece la parte posterior del cuello con extensión suave y controlada' },
+    'Dumbbell Shrugs': { name: 'Encogimientos con mancuernas', description: 'Fortalece trapecios y músculos de soporte del cuello' }
   },
   fr: {
     'Push-ups': { name: 'Pompes', description: 'Un exercice classique pour la poitrine, les épaules et les triceps' },
@@ -367,11 +520,21 @@ const EXERCISE_COPY_TRANSLATIONS = {
     'Mountain Climbers': { name: 'Mountain climbers', description: 'Mouvement cardio-gainage pour stabilité et endurance' },
     'Dumbbell Curls': { name: 'Curl haltères', description: 'Exercice d’isolation des biceps' },
     'Lunges': { name: 'Fentes', description: 'Exercice jambes pour la force et l’équilibre' },
+    'Leg Press': { name: 'Presse à jambes', description: 'Exercice machine pour quadriceps, fessiers et ischio-jambiers' },
+    'Romanian Deadlift': { name: 'Soulevé de terre roumain', description: 'Exercice de chaîne postérieure pour ischio-jambiers et fessiers' },
+    'Calf Raises': { name: 'Élévations mollets', description: 'Exercice d’isolation pour renforcer les mollets' },
+    'Bulgarian Split Squat': { name: 'Fente bulgare', description: 'Exercice unilatéral pour quadriceps, fessiers et équilibre' },
+    'Handstand Push-up': { name: 'Pompe en équilibre', description: 'Développé vertical avancé pour épaules, triceps et gainage' },
+    'Muscle-Up': { name: 'Muscle-up', description: 'Mouvement explosif de tirage-poussée pour dos, poitrine et bras' },
+    'Dragon Flag': { name: 'Drapeau du dragon', description: 'Exercice avancé de gainage pour tension et contrôle du corps entier' },
     'Chest Press': { name: 'Presse poitrine', description: 'Exercice de renforcement de la poitrine et des triceps' },
     'Back Rows': { name: 'Rowing dos', description: 'Exercice de renforcement du dos et des biceps' },
     'Shoulder Press': { name: 'Développé épaules', description: 'Exercice de force pour les épaules et le haut du corps' },
     'Bicep Curls': { name: 'Curl biceps', description: 'Exercice d’isolation des bras et biceps' },
-    'Tricep Dips': { name: 'Dips triceps', description: 'Exercice au poids du corps pour les triceps' }
+    'Tricep Dips': { name: 'Dips triceps', description: 'Exercice au poids du corps pour les triceps' },
+    'Neck Flexion': { name: 'Flexion du cou', description: 'Renforce l\'avant du cou avec une flexion contrôlée' },
+    'Neck Extension': { name: 'Extension du cou', description: 'Renforce l\'arrière du cou avec une extension douce et contrôlée' },
+    'Dumbbell Shrugs': { name: 'Haussements d\'épaules haltères', description: 'Renforce les trapèzes et les muscles de soutien du cou' }
   },
   it: {
     'Push-ups': { name: 'Piegamenti', description: 'Un classico esercizio per petto, spalle e tricipiti' },
@@ -386,11 +549,21 @@ const EXERCISE_COPY_TRANSLATIONS = {
     'Mountain Climbers': { name: 'Mountain climber', description: 'Movimento cardio-core per stabilità e resistenza' },
     'Dumbbell Curls': { name: 'Curl con manubri', description: 'Esercizio di isolamento per i bicipiti' },
     'Lunges': { name: 'Affondi', description: 'Esercizio per gambe, forza ed equilibrio' },
+    'Leg Press': { name: 'Leg press', description: 'Esercizio alla macchina per quadricipiti, glutei e femorali' },
+    'Romanian Deadlift': { name: 'Stacco rumeno', description: 'Esercizio per la catena posteriore, femorali e glutei' },
+    'Calf Raises': { name: 'Sollevamenti polpacci', description: 'Esercizio di isolamento per rinforzare i polpacci' },
+    'Bulgarian Split Squat': { name: 'Squat bulgaro', description: 'Esercizio unilaterale per quadricipiti, glutei ed equilibrio' },
+    'Handstand Push-up': { name: 'Piegamento in verticale', description: 'Spinta verticale avanzata per spalle, tricipiti e core' },
+    'Muscle-Up': { name: 'Muscle-up', description: 'Movimento esplosivo di tirata e spinta per schiena, petto e braccia' },
+    'Dragon Flag': { name: 'Dragon flag', description: 'Esercizio avanzato per il core con controllo e tensione totale' },
     'Chest Press': { name: 'Chest press', description: 'Esercizio per rafforzare petto e tricipiti' },
     'Back Rows': { name: 'Rematore', description: 'Esercizio per rafforzare schiena e bicipiti' },
     'Shoulder Press': { name: 'Shoulder press', description: 'Esercizio di forza per spalle e parte superiore del corpo' },
     'Bicep Curls': { name: 'Curl bicipiti', description: 'Esercizio di isolamento per braccia e bicipiti' },
-    'Tricep Dips': { name: 'Dip tricipiti', description: 'Esercizio a corpo libero per i tricipiti' }
+    'Tricep Dips': { name: 'Dip tricipiti', description: 'Esercizio a corpo libero per i tricipiti' },
+    'Neck Flexion': { name: 'Flessione del collo', description: 'Rinforza la parte anteriore del collo con flessione controllata' },
+    'Neck Extension': { name: 'Estensione del collo', description: 'Rinforza la parte posteriore del collo con estensione controllata' },
+    'Dumbbell Shrugs': { name: 'Scrollate con manubri', description: 'Rinforza trapezi e muscoli di supporto del collo' }
   }
 };
 
@@ -400,12 +573,12 @@ const getExercisesFromWorkouts = (plans) => {
   
   // Common exercises in Full Body, Upper Body, Lower Body, etc.
   const workoutExercises = {
-    'Full Body': ['Push-ups', 'Squats', 'Deadlifts', 'Bench Press', 'Chest Press'],
-    'Upper Body': ['Push-ups', 'Pull-ups', 'Bench Press', 'Chest Press', 'Dumbbell Curls'],
-    'Lower Body': ['Squats', 'Lunges', 'Deadlifts'],
-    'Core': ['Plank', 'Leg Raises', 'Mountain Climbers', 'Bicycle Crunches', 'Russian Twists', 'Push-ups'],
-    'Cardio': ['Lunges', 'Squats'],
-    'Strength': ['Deadlifts', 'Bench Press', 'Chest Press', 'Pull-ups']
+    'Full Body': ['Push-ups', 'Squats', 'Deadlifts', 'Bench Press', 'Chest Press', 'Dumbbell Shrugs', 'Romanian Deadlift', 'Calf Raises', 'Dragon Flag'],
+    'Upper Body': ['Push-ups', 'Pull-ups', 'Bench Press', 'Chest Press', 'Dumbbell Curls', 'Neck Flexion', 'Neck Extension', 'Dumbbell Shrugs', 'Handstand Push-up', 'Muscle-Up'],
+    'Lower Body': ['Squats', 'Lunges', 'Deadlifts', 'Leg Press', 'Romanian Deadlift', 'Calf Raises', 'Bulgarian Split Squat'],
+    'Core': ['Plank', 'Leg Raises', 'Mountain Climbers', 'Bicycle Crunches', 'Russian Twists', 'Push-ups', 'Dragon Flag'],
+    'Cardio': ['Lunges', 'Squats', 'Calf Raises'],
+    'Strength': ['Deadlifts', 'Bench Press', 'Chest Press', 'Pull-ups', 'Dumbbell Shrugs', 'Romanian Deadlift', 'Leg Press', 'Handstand Push-up', 'Muscle-Up', 'Dragon Flag']
   };
 
   Object.values(plans).forEach(plan => {
@@ -418,19 +591,21 @@ const getExercisesFromWorkouts = (plans) => {
 };
 
 const MUSCLE_EXERCISE_MAP = {
-  chest: ['Push-ups', 'Bench Press', 'Chest Press'],
-  shoulders: ['Push-ups', 'Shoulder Press', 'Bench Press'],
-  biceps: ['Dumbbell Curls', 'Bicep Curls', 'Back Rows', 'Pull-ups'],
-  triceps: ['Push-ups', 'Tricep Dips', 'Bench Press', 'Chest Press'],
-  back: ['Pull-ups', 'Back Rows', 'Deadlifts'],
-  core: ['Plank', 'Leg Raises', 'Mountain Climbers', 'Bicycle Crunches', 'Russian Twists', 'Push-ups', 'Deadlifts'],
+  chest: ['Push-ups', 'Bench Press', 'Chest Press', 'Muscle-Up'],
+  shoulders: ['Push-ups', 'Shoulder Press', 'Bench Press', 'Handstand Push-up'],
+  neck: ['Shoulder Press', 'Back Rows', 'Deadlifts', 'Neck Flexion', 'Neck Extension', 'Dumbbell Shrugs'],
+  biceps: ['Dumbbell Curls', 'Bicep Curls', 'Back Rows', 'Pull-ups', 'Muscle-Up'],
+  triceps: ['Push-ups', 'Tricep Dips', 'Bench Press', 'Chest Press', 'Handstand Push-up'],
+  back: ['Pull-ups', 'Back Rows', 'Deadlifts', 'Muscle-Up'],
+  core: ['Plank', 'Leg Raises', 'Mountain Climbers', 'Bicycle Crunches', 'Russian Twists', 'Push-ups', 'Deadlifts', 'Dragon Flag', 'Handstand Push-up'],
   glutes: ['Squats', 'Lunges', 'Deadlifts'],
-  legs: ['Squats', 'Lunges', 'Deadlifts']
+  legs: ['Squats', 'Lunges', 'Deadlifts', 'Leg Press', 'Romanian Deadlift', 'Calf Raises', 'Bulgarian Split Squat']
 };
 
 const BODY_MAP_AREAS = [
   { key: 'chest' },
   { key: 'shoulders' },
+  { key: 'neck' },
   { key: 'biceps' },
   { key: 'triceps' },
   { key: 'core' },
@@ -441,21 +616,25 @@ const BODY_MAP_AREAS = [
 
 const BODY_HOTSPOTS = [
   // Front body
-  { key: 'shoulders', label: 'Shoulders', side: 'front', left: '18.2%', top: '23.2%', width: '8.2%', height: '7.4%' },
-  { key: 'shoulders', label: 'Shoulders', side: 'front', left: '31.4%', top: '23.2%', width: '8.2%', height: '7.4%' },
-  { key: 'chest', label: 'Chest', side: 'front', left: '18.8%', top: '28.6%', width: '8%', height: '7.8%' },
-  { key: 'chest', label: 'Chest', side: 'front', left: '27.2%', top: '28.6%', width: '8%', height: '7.8%' },
+  { key: 'neck', label: 'Neck', side: 'front', left: '23%', top: '22.7%', width: '6.4%', height: '7.4%' },
+  { key: 'shoulders', label: 'Shoulders', side: 'front', left: '16.1%', top: '23.2%', width: '8.2%', height: '7.4%' },
+  { key: 'shoulders', label: 'Shoulders', side: 'front', left: '29.3%', top: '23.2%', width: '8.2%', height: '7.4%' },
+  { key: 'chest', label: 'Chest', side: 'front', left: '18.2%', top: '28.6%', width: '8%', height: '7.8%' },
+  { key: 'chest', label: 'Chest', side: 'front', left: '26.6%', top: '28.6%', width: '8%', height: '7.8%' },
   { key: 'biceps', label: 'Biceps', side: 'front', left: '12.5%', top: '29.5%', width: '8%', height: '11%' },
   { key: 'core', label: 'Core', side: 'front', left: '21.8%', top: '35%', width: '10%', height: '16%' },
-  { key: 'legs', label: 'Legs', side: 'front', left: '24%', top: '56%', width: '16%', height: '26%' },
+  { key: 'legs', label: 'Legs', side: 'front', left: '14.8%', top: '55.5%', width: '9.4%', height: '27%' },
+  { key: 'legs', label: 'Legs', side: 'front', left: '29.2%', top: '55.5%', width: '9.4%', height: '27%' },
 
   // Back body
-  { key: 'shoulders', label: 'Shoulders', side: 'back', left: '60.5%', top: '22.5%', width: '10%', height: '6.5%' },
-  { key: 'shoulders', label: 'Shoulders', side: 'back', left: '74.5%', top: '22.5%', width: '10%', height: '6.5%' },
-  { key: 'back', label: 'Back', side: 'back', left: '65%', top: '28%', width: '14%', height: '22%' },
+  { key: 'neck', label: 'Neck', side: 'back', left: '69.4%', top: '21.1%', width: '6.4%', height: '7.4%' },
+  { key: 'shoulders', label: 'Shoulders', side: 'back', left: '61.6%', top: '22.5%', width: '10%', height: '6.5%' },
+  { key: 'shoulders', label: 'Shoulders', side: 'back', left: '75.6%', top: '22.5%', width: '10%', height: '6.5%' },
+  { key: 'back', label: 'Back', side: 'back', left: '66%', top: '28%', width: '14%', height: '22%' },
   { key: 'triceps', label: 'Triceps', side: 'back', left: '81%', top: '30%', width: '8%', height: '11%' },
-  { key: 'glutes', label: 'Glutes', side: 'back', left: '66.5%', top: '45.4%', width: '12.5%', height: '11%' },
-  { key: 'legs', label: 'Legs', side: 'back', left: '63.5%', top: '56%', width: '16%', height: '26%' }
+  { key: 'glutes', label: 'Glutes', side: 'back', left: '66.5%', top: '44.4%', width: '12.5%', height: '11%' },
+  { key: 'legs', label: 'Legs', side: 'back', left: '60%', top: '55.5%', width: '9.4%', height: '27%' },
+  { key: 'legs', label: 'Legs', side: 'back', left: '75%', top: '55.5%', width: '9.4%', height: '27%' }
 ];
 
 export default function Tutorials({ isAuthenticated }) {
@@ -482,7 +661,9 @@ export default function Tutorials({ isAuthenticated }) {
   const muscleLabel = (muscleKey) => {
     if (!muscleKey) return '';
     const normalized = muscleKey.charAt(0).toUpperCase() + muscleKey.slice(1);
-    return tt(`muscle${normalized}`);
+    const key = `muscle${normalized}`;
+    const translated = tt(key);
+    return translated && translated !== key ? translated : normalized;
   };
 
   const difficultyLabel = (difficulty) => {

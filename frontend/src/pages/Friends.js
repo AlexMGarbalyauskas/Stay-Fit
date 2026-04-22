@@ -99,7 +99,11 @@ export default function Friends({ refreshTrigger }) {
         <div className="max-w-md mx-auto px-4">
           <button
             onClick={() => navigate(-1)}
-            className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-800"
+            className={`mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${
+              isDark
+                ? 'bg-gray-800 text-gray-300 shadow-gray-800 hover:bg-gray-700'
+                : 'bg-white text-slate-700 shadow-slate-200 hover:bg-slate-50'
+            }`}
           >
             <ArrowLeft size={16} /> {t('back')}
           </button>

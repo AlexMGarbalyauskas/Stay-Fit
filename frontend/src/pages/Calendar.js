@@ -316,7 +316,11 @@ export default function CalendarPage() {
         <div className="flex items-center mb-4">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-800"
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition ${
+              isDark
+                ? 'bg-gray-800 text-gray-300 shadow-gray-800 hover:bg-gray-700'
+                : 'bg-white text-slate-700 shadow-slate-200 hover:bg-slate-50'
+            }`}
           >
             <ArrowLeft size={16} /> {t('back')}
           </button>
@@ -327,14 +331,14 @@ export default function CalendarPage() {
             <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
               <Dumbbell className="w-7 h-7" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Workout Planner</h2>
-            <p className="text-sm text-gray-500 mb-2">Plan your weekly workouts, set reminder times, and stay consistent.</p>
-            <p className="text-sm text-gray-600 mb-5">Press the button below to open your calendar workout plan.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('workoutPlannerTitle')}</h2>
+            <p className="text-sm text-gray-500 mb-2">{t('workoutPlannerIntro')}</p>
+            <p className="text-sm text-gray-600 mb-5">{t('workoutPlannerOpenHint')}</p>
             <button
               onClick={() => setPlannerActivated(true)}
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-700"
             >
-              <Dumbbell size={16} /> Open Planner
+              <Dumbbell size={16} /> {t('openPlanner')}
             </button>
           </div>
         ) : (
@@ -367,8 +371,8 @@ export default function CalendarPage() {
                 <div className="flex items-center justify-center gap-3">
                   <Flame className="w-8 h-8 fill-white" />
                   <div className="text-center">
-                    <p className="text-sm font-semibold uppercase tracking-wide">Posting Streak</p>
-                    <p className="text-3xl font-bold">{currentStreak} {currentStreak === 1 ? 'day' : 'days'}</p>
+                    <p className="text-sm font-semibold uppercase tracking-wide">{t('postingStreak')}</p>
+                    <p className="text-3xl font-bold">{currentStreak} {currentStreak === 1 ? t('daySingular') : t('days')}</p>
                   </div>
                   <Flame className="w-8 h-8 fill-white" />
                 </div>
@@ -415,7 +419,7 @@ export default function CalendarPage() {
                           onClick={() => handleSelectDay(year, idx, day)}
                           className={`h-9 rounded-md text-center transition relative ${day ? 'hover:bg-blue-50' : ''} ${active ? 'bg-blue-100 text-blue-700 font-semibold' : ''}`}
                           disabled={!day}
-                          title={posted ? 'Posted today!' : ''}
+                          title={posted ? t('postedToday') : ''}
                         >
                           <div className={`flex items-center justify-center gap-0.5 relative ${!day ? 'text-transparent' : ''}`}>
                             <span className="leading-none">{day || ''}</span>
