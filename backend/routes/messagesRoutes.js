@@ -4,6 +4,79 @@ const db = require('../db');
 
 const router = express.Router();
 
+// Get messaging block status with a user
+router.get('/blocks/:userId/status', auth, (req, res) => {
+  const me = req.user.id;
+  const other = Number(req.params.userId);
+
+  if (!other || Number.isNaN(other)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  db.get(
+    `SELECT
+      EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blockedByMe,
+      EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blockedMe`,
+    [me, other, other, me],
+    (err, row) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
+      const blockedByMe = !!row?.blockedByMe;
+      const blockedMe = !!row?.blockedMe;
+      res.json({ blockedByMe, blockedMe, blockedEither: blockedByMe || blockedMe });
+    }
+  );
+});
+
+// Block a user from messaging you
+router.post('/blocks/:userId', auth, (req, res) => {
+  const me = req.user.id;
+  const other = Number(req.params.userId);
+
+  if (!other || Number.isNaN(other)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+  if (me === other) {
+    return res.status(400).json({ error: 'You cannot block yourself' });
+  }
+
+  db.run('INSERT OR IGNORE INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)', [me, other], (err) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+
+    // Optional: remove friendship and pending friend requests in both directions
+    db.run('DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)', [me, other, other, me]);
+    db.run('DELETE FROM friend_requests WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)', [me, other, other, me]);
+
+    res.json({ success: true, blockedByMe: true, blockedMe: false, blockedEither: true });
+  });
+});
+
+// Unblock a user
+router.delete('/blocks/:userId', auth, (req, res) => {
+  const me = req.user.id;
+  const other = Number(req.params.userId);
+
+  if (!other || Number.isNaN(other)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  db.run('DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?', [me, other], (err) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+
+    db.get(
+      `SELECT
+        EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blockedByMe,
+        EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blockedMe`,
+      [me, other, other, me],
+      (statusErr, row) => {
+        if (statusErr) return res.status(500).json({ error: 'DB error' });
+        const blockedByMe = !!row?.blockedByMe;
+        const blockedMe = !!row?.blockedMe;
+        res.json({ success: true, blockedByMe, blockedMe, blockedEither: blockedByMe || blockedMe });
+      }
+    );
+  });
+});
+
 // Get chat history with a user
 router.get('/:userId', auth, (req, res) => {
   const me = req.user.id;

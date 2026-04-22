@@ -2,12 +2,19 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getUser } from '../api';
 import { io } from 'socket.io-client';
-import api, { API_BASE, toggleMessageReaction, deleteMessage as apiDeleteMessage } from '../api';
+import api, {
+  API_BASE,
+  toggleMessageReaction,
+  deleteMessage as apiDeleteMessage,
+  getMessageBlockStatus,
+  blockMessageUser,
+  unblockMessageUser,
+} from '../api';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import EmojiPickerModal from '../components/EmojiPickerModal';
 import dayjs from 'dayjs';
-import { User, Image as ImageIcon, ChevronDown, Lock, MessageCircle, Smile } from 'lucide-react';
+import { User, Image as ImageIcon, ChevronDown, Lock, MessageCircle, Smile, ShieldBan } from 'lucide-react';
 import { encryptMessage, decryptMessage, isEncryptionReady, initializeEncryption } from '../utils/crypto';
 import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 import { useLanguage } from '../context/LanguageContext';
@@ -43,6 +50,8 @@ export default function ChatPage() {
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, messageId: null, isMine: false });
   const [isMobile, setIsMobile] = useState(false);
   const [mobileView, setMobileView] = useState('list');
+  const [blockStatus, setBlockStatus] = useState({ blockedByMe: false, blockedMe: false, blockedEither: false });
+  const [chatNotice, setChatNotice] = useState('');
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
   const activeFriendRef = useRef(null);
@@ -135,11 +144,20 @@ export default function ChatPage() {
       setReactionsMap(prev => { const copy = { ...prev }; delete copy[messageId]; return copy; });
     });
 
+    s.on('message:blocked', ({ reason }) => {
+      if (reason === 'blocked_by_you') {
+        setChatNotice('You blocked this user. Unblock to send messages.');
+      } else {
+        setChatNotice('This user blocked you. You cannot send messages.');
+      }
+    });
+
     return () => {
       s.off('connect_error');
       s.off('receive_message');
       s.off('reaction:update');
       s.off('message:deleted');
+      s.off('message:blocked');
       s.disconnect();
     };
   }, [token, isAuthenticated]);
@@ -240,6 +258,19 @@ export default function ChatPage() {
       .catch(err => console.error('Messages load error', err));
   }, [isAuthenticated, activeFriend]);
 
+  useEffect(() => {
+    if (!isAuthenticated || !activeFriend?.id) return;
+    getMessageBlockStatus(activeFriend.id)
+      .then((res) => {
+        setBlockStatus(res.data || { blockedByMe: false, blockedMe: false, blockedEither: false });
+        setChatNotice('');
+      })
+      .catch((err) => {
+        console.error('Failed to load block status:', err);
+        setBlockStatus({ blockedByMe: false, blockedMe: false, blockedEither: false });
+      });
+  }, [isAuthenticated, activeFriend?.id]);
+
   // Auth guard render
   if (!isAuthenticated) {
     return (
@@ -283,6 +314,10 @@ export default function ChatPage() {
   const sendMessage = async () => {
     const hasText = text.trim().length > 0;
     if (!activeFriend || !socketRef.current || !hasText) return;
+    if (blockStatus.blockedEither) {
+      setChatNotice(blockStatus.blockedByMe ? 'You blocked this user. Unblock to send messages.' : 'This user blocked you. You cannot send messages.');
+      return;
+    }
     
     try {
       // Always encrypt messages if encryption is ready
@@ -322,6 +357,10 @@ export default function ChatPage() {
 
   const sendGif = (url, gifId) => {
     if (!activeFriend || !socketRef.current || !url) return;
+    if (blockStatus.blockedEither) {
+      setChatNotice(blockStatus.blockedByMe ? 'You blocked this user. Unblock to send messages.' : 'This user blocked you. You cannot send messages.');
+      return;
+    }
     socketRef.current.emit('send_message', {
       receiverId: activeFriend.id,
       content: '',
@@ -362,6 +401,28 @@ export default function ChatPage() {
       setGifResults([]);
     } finally {
       setGifLoading(false);
+    }
+  };
+
+  const handleToggleBlockUser = async () => {
+    if (!activeFriend?.id) return;
+
+    try {
+      if (blockStatus.blockedByMe) {
+        const res = await unblockMessageUser(activeFriend.id);
+        setBlockStatus(res.data || { blockedByMe: false, blockedMe: false, blockedEither: false });
+        setChatNotice('User unblocked. You can message again.');
+      } else {
+        const confirmed = window.confirm(`Block ${activeFriend.nickname || activeFriend.username} from sending messages?`);
+        if (!confirmed) return;
+
+        const res = await blockMessageUser(activeFriend.id);
+        setBlockStatus(res.data || { blockedByMe: true, blockedMe: false, blockedEither: true });
+        setChatNotice('User blocked. They can no longer send messages to you.');
+      }
+    } catch (err) {
+      console.error('Failed to update block status:', err);
+      alert(err?.response?.data?.error || 'Failed to update block setting');
     }
   };
 
@@ -442,18 +503,41 @@ export default function ChatPage() {
                     <div className="text-xs text-gray-500 truncate">@{activeFriend.username}</div>
                   </div>
                 </div>
-                <div
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
-                    isDark
-                      ? 'bg-green-900/30 text-green-400 border border-green-700'
-                      : 'bg-green-100 text-green-700'
-                  }`}
-                  title="End-to-end encrypted - Messages are secure"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t('encrypted')}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleToggleBlockUser}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition ${
+                      blockStatus.blockedByMe
+                        ? isDark
+                          ? 'bg-red-900/40 text-red-300 border-red-700 hover:bg-red-900/60'
+                          : 'bg-red-100 text-red-700 border-red-200 hover:bg-red-200'
+                        : isDark
+                        ? 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+                    }`}
+                    title={blockStatus.blockedByMe ? 'Unblock user' : 'Block user'}
+                  >
+                    <ShieldBan className="w-4 h-4" />
+                    <span className="hidden sm:inline">{blockStatus.blockedByMe ? 'Unblock' : 'Block'}</span>
+                  </button>
+                  <div
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+                      isDark
+                        ? 'bg-green-900/30 text-green-400 border border-green-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                    title="End-to-end encrypted - Messages are secure"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span className="hidden sm:inline">{t('encrypted')}</span>
+                  </div>
                 </div>
               </div>
+              {(blockStatus.blockedEither || chatNotice) && (
+                <div className={`px-4 py-2 text-sm border-b ${isDark ? 'bg-amber-900/20 text-amber-200 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
+                  {chatNotice || (blockStatus.blockedByMe ? 'You blocked this user. Unblock to send messages.' : 'This user blocked you. You cannot send messages.')}
+                </div>
+              )}
               <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
                 {messages.map((msg, idx) => {
                   const isMine = Number(msg.sender_id) === Number(currentUser.id);
@@ -553,24 +637,31 @@ export default function ChatPage() {
                   value={text}
                   onChange={e => setText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                  placeholder={t('typeMessage')}
-                  className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 min-w-0 md:min-w-[150px]"
+                  disabled={blockStatus.blockedEither}
+                  placeholder={blockStatus.blockedByMe ? 'Unblock user to message' : blockStatus.blockedMe ? 'You cannot message this user' : t('typeMessage')}
+                  className={`flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 min-w-0 md:min-w-[150px] ${blockStatus.blockedEither ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
                 />
                 <button
                   onClick={() => setEmojiPickerOpen(true)}
-                  className={`inline-flex items-center gap-1 p-2 rounded transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'}`}
+                  disabled={blockStatus.blockedEither}
+                  className={`inline-flex items-center gap-1 p-2 rounded transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'} ${blockStatus.blockedEither ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title="Add emoji"
                 >
                   <Smile className="h-5 w-5 text-yellow-500" />
                 </button>
                 <button
                   onClick={() => setGifPanelOpen(!gifPanelOpen)}
-                  className={`inline-flex items-center gap-1 p-2 rounded transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'}`}
+                  disabled={blockStatus.blockedEither}
+                  className={`inline-flex items-center gap-1 p-2 rounded transition ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'} ${blockStatus.blockedEither ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title="Toggle GIF search"
                 >
                   <ImageIcon className="h-5 w-5 text-blue-600" />
                 </button>
-                <button onClick={sendMessage} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition min-w-[76px]">
+                <button
+                  onClick={sendMessage}
+                  disabled={blockStatus.blockedEither}
+                  className={`bg-blue-600 text-white px-4 py-2 rounded transition min-w-[76px] ${blockStatus.blockedEither ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+                >
                   {t('send')}
                 </button>
               </div>

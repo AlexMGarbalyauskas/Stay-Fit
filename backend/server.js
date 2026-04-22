@@ -71,54 +71,79 @@ io.on('connection', (socket) => {
         const cleanedContent = (content || '').trim();
         if (!cleanedContent && !mediaUrl && !encrypted) return; // need something to send
 
-        const createdAt = new Date().toISOString();
-        const finalContent = cleanedContent || (mediaUrl ? '[gif]' : '');
-        
-        // Handle encrypted messages
-        const encryptedContent = isEncrypted ? encrypted : null;
-        const encryptedIv = isEncrypted ? iv : null;
-        const isEncryptedFlag = isEncrypted ? 1 : 0;
-
-        db.run(
-          'INSERT INTO messages (sender_id, receiver_id, content, message_type, media_url, encrypted_content, iv, is_encrypted, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [userId, receiverId, finalContent, type, mediaUrl || null, encryptedContent, encryptedIv, isEncryptedFlag, createdAt],
-          function (err) {
-            if (err) {
-              console.error('Error saving message:', err);
+        // Stop messaging when either side has blocked the other.
+        db.get(
+          `SELECT
+            EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blockedByReceiver,
+            EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blockedBySender`,
+          [receiverId, userId, userId, receiverId],
+          (blockErr, blockRow) => {
+            if (blockErr) {
+              console.error('Error checking message block status:', blockErr);
               return;
             }
-            const messageId = this.lastID;
 
-            db.get('SELECT profile_picture FROM users WHERE id = ?', [userId], (profileErr, senderRow) => {
-              if (profileErr) {
-                console.error('Error loading sender profile picture:', profileErr);
-              }
-
-              const message = {
-                id: messageId,
-                sender_id: userId,
-                receiver_id: receiverId,
-                content: finalContent,
-                message_type: type,
-                media_url: mediaUrl || null,
-                encrypted_content: encryptedContent,
-                iv: encryptedIv,
-                is_encrypted: isEncryptedFlag,
-                created_at: createdAt,
-                sender_profile_picture: senderRow?.profile_picture || null
-              };
-
-              io.to(`user:${receiverId}`).emit('receive_message', message);
-              socket.emit('receive_message', message);
-
-              // Create a notification for the receiver
-              const preview = mediaUrl ? '[GIF]' : finalContent.slice(0, 200);
-              db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: preview })], (err) => {
-                if (err) console.error('Failed to create message notification', err);
-                // include preview content in the socket event for toast
-                io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
+            const blockedByReceiver = !!blockRow?.blockedByReceiver;
+            const blockedBySender = !!blockRow?.blockedBySender;
+            if (blockedByReceiver || blockedBySender) {
+              socket.emit('message:blocked', {
+                receiverId,
+                reason: blockedByReceiver ? 'blocked_by_receiver' : 'blocked_by_you',
               });
-            });
+              return;
+            }
+
+            const createdAt = new Date().toISOString();
+            const finalContent = cleanedContent || (mediaUrl ? '[gif]' : '');
+        
+            // Handle encrypted messages
+            const encryptedContent = isEncrypted ? encrypted : null;
+            const encryptedIv = isEncrypted ? iv : null;
+            const isEncryptedFlag = isEncrypted ? 1 : 0;
+
+            db.run(
+              'INSERT INTO messages (sender_id, receiver_id, content, message_type, media_url, encrypted_content, iv, is_encrypted, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              [userId, receiverId, finalContent, type, mediaUrl || null, encryptedContent, encryptedIv, isEncryptedFlag, createdAt],
+              function (err) {
+                if (err) {
+                  console.error('Error saving message:', err);
+                  return;
+                }
+                const messageId = this.lastID;
+
+                db.get('SELECT profile_picture FROM users WHERE id = ?', [userId], (profileErr, senderRow) => {
+                  if (profileErr) {
+                    console.error('Error loading sender profile picture:', profileErr);
+                  }
+
+                  const message = {
+                    id: messageId,
+                    sender_id: userId,
+                    receiver_id: receiverId,
+                    content: finalContent,
+                    message_type: type,
+                    media_url: mediaUrl || null,
+                    encrypted_content: encryptedContent,
+                    iv: encryptedIv,
+                    is_encrypted: isEncryptedFlag,
+                    created_at: createdAt,
+                    sender_profile_picture: senderRow?.profile_picture || null
+                  };
+
+                  io.to(`user:${receiverId}`).emit('receive_message', message);
+                  socket.emit('receive_message', message);
+
+                  // Create a notification for the receiver
+                  const preview = mediaUrl ? '[GIF]' : finalContent.slice(0, 200);
+                  db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: preview })], (err) => {
+                    if (err) console.error('Failed to create message notification', err);
+                    // include preview content in the socket event for toast
+                    io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
+                  });
+                });
+              });
+          }
+        );
           }
         );
       } catch (err) {

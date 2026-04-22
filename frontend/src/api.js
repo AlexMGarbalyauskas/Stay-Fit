@@ -79,6 +79,9 @@ export const getMessages = userId => api.get(`/api/messages/${userId}`);
 export const getMessageReactions = messageId => api.get(`/api/messages/${messageId}/reactions`);
 export const toggleMessageReaction = (messageId, emoji) => api.post(`/api/messages/${messageId}/reactions`, { emoji });
 export const deleteMessage = messageId => api.delete(`/api/messages/${messageId}`);
+export const getMessageBlockStatus = userId => api.get(`/api/messages/blocks/${userId}/status`);
+export const blockMessageUser = userId => api.post(`/api/messages/blocks/${userId}`);
+export const unblockMessageUser = userId => api.delete(`/api/messages/blocks/${userId}`);
 
 // NOTIFICATIONS
 export const getNotifications = (type) => api.get(`/api/notifications${type ? `?type=${type}` : ''}`);
