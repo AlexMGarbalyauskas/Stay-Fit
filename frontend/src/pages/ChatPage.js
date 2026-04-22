@@ -41,6 +41,8 @@ export default function ChatPage() {
   const [pickerOpenFor, setPickerOpenFor] = useState(null);
   const [pickerContextIsMine, setPickerContextIsMine] = useState(false);
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, messageId: null, isMine: false });
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileView, setMobileView] = useState('list');
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
   const activeFriendRef = useRef(null);
@@ -53,6 +55,21 @@ export default function ChatPage() {
       localStorage.setItem(getLastChatFriendKey(currentUser?.id), String(activeFriend.id));
     }
   }, [activeFriend, currentUser?.id]);
+
+  useEffect(() => {
+    const updateIsMobile = () => setIsMobile(window.innerWidth < 768);
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+    return () => window.removeEventListener('resize', updateIsMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileView('list');
+      return;
+    }
+    setMobileView(activeFriend ? 'chat' : 'list');
+  }, [activeFriend, isMobile]);
 
   useEffect(() => {
     activeFriendRef.current = activeFriend;
@@ -369,13 +386,14 @@ export default function ChatPage() {
 
   return (
     <>
-      <div className={`flex h-[calc(100vh-56px)] pt-2 bg-gradient-to-br relative ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`} onClick={() => { if (pickerOpenFor) setPickerOpenFor(null); if (contextMenu.open) setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false }); }}>
-        <div className={`w-1/3 border-r overflow-y-auto ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+      <div className={`flex flex-col md:flex-row h-[calc(100vh-56px)] pt-2 bg-gradient-to-br relative ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`} onClick={() => { if (pickerOpenFor) setPickerOpenFor(null); if (contextMenu.open) setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false }); }}>
+        <div className={`md:w-1/3 border-r overflow-y-auto ${mobileView === 'chat' ? 'hidden md:block' : 'block'} ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
           {friends.map(friend => (
             <button
               key={friend.id}
               onClick={() => {
                 setActiveFriend(friend);
+                setMobileView('chat');
                 navigate(`/chat/${friend.id}`);
               }}
               className={`w-full text-left px-4 py-3 border-b hover:bg-gray-100 flex items-center gap-3 ${activeFriend?.id === friend.id ? 'bg-gray-100' : ''}`}
@@ -399,17 +417,30 @@ export default function ChatPage() {
           ))}
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className={`${mobileView === 'list' && isMobile ? 'hidden' : 'flex'} flex-1 flex-col min-w-0`}>
           {!activeFriend ? (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              {t('selectFriendToChat')}
+            <div className="flex items-center justify-center h-full text-gray-400 px-6 text-center">
+              <div>
+                <p className="text-lg font-semibold mb-2">{t('selectFriendToChat')}</p>
+                <p className="text-sm opacity-70 md:hidden">Pick a friend to open the chat.</p>
+              </div>
             </div>
           ) : (
             <>
-              <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
-                <div>
-                  <div className="font-semibold text-lg">{activeFriend.nickname || activeFriend.username}</div>
-                  <div className="text-xs text-gray-500">@{activeFriend.username}</div>
+              <div className={`p-4 border-b flex items-center justify-between gap-3 ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  {isMobile && (
+                    <button
+                      onClick={() => setMobileView('list')}
+                      className={`md:hidden rounded-full px-3 py-1.5 text-sm font-medium border ${isDark ? 'border-gray-700 bg-gray-800 text-gray-200' : 'border-gray-200 bg-white text-gray-700'}`}
+                    >
+                      Back
+                    </button>
+                  )}
+                  <div className="min-w-0">
+                    <div className="font-semibold text-lg truncate">{activeFriend.nickname || activeFriend.username}</div>
+                    <div className="text-xs text-gray-500 truncate">@{activeFriend.username}</div>
+                  </div>
                 </div>
                 <div
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
@@ -423,7 +454,7 @@ export default function ChatPage() {
                   <span className="hidden sm:inline">{t('encrypted')}</span>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
                 {messages.map((msg, idx) => {
                   const isMine = Number(msg.sender_id) === Number(currentUser.id);
                   const isGif = msg.message_type === 'gif' || msg.media_url;
@@ -455,7 +486,7 @@ export default function ChatPage() {
                       </div>
 
                       {/* Message Bubble */}
-                      <div className="max-w-xs">
+                      <div className="max-w-[82%] md:max-w-xs">
                         <div
                           onContextMenu={(e) => {
                             e.preventDefault();
@@ -481,7 +512,7 @@ export default function ChatPage() {
                               )}
                             </div>
                           ) : (
-                            <p className="text-sm">{msg.content}</p>
+                            <p className="text-sm leading-5">{msg.content}</p>
                           )}
                           <span className={`text-xs mt-1 block text-right opacity-70`}>
                             {dayjs(msg.created_at).format('HH:mm')}
@@ -517,13 +548,13 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className={`p-3 border-t flex gap-2 items-center flex-wrap ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+              <div className={`p-3 border-t flex gap-2 items-center flex-wrap ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'} sticky bottom-0`}>
                 <input
                   value={text}
                   onChange={e => setText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && sendMessage()}
                   placeholder={t('typeMessage')}
-                  className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 min-w-[150px]"
+                  className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 min-w-0 md:min-w-[150px]"
                 />
                 <button
                   onClick={() => setEmojiPickerOpen(true)}
@@ -539,7 +570,7 @@ export default function ChatPage() {
                 >
                   <ImageIcon className="h-5 w-5 text-blue-600" />
                 </button>
-                <button onClick={sendMessage} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                <button onClick={sendMessage} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition min-w-[76px]">
                   {t('send')}
                 </button>
               </div>

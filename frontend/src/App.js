@@ -393,6 +393,8 @@ function App() {
       const handleNotification = (data) => {
         if (!data) return;
         playNotificationSound(data.type === 'message' ? 'message' : 'notification');
+        
+        // Extract payload from either nested data.data (DB format) or directly from data (socket format)
         let payload = data.data || {};
         if (typeof payload === 'string') {
           try {
@@ -401,6 +403,17 @@ function App() {
             payload = { content: payload };
           }
         }
+        
+        // For message notifications, ensure fromUserId is available (comes directly from socket event)
+        if (data.type === 'message' && !payload.fromUserId && data.fromUserId) {
+          payload = {
+            fromUserId: data.fromUserId,
+            messageId: data.messageId,
+            content: data.content,
+            ...payload
+          };
+        }
+        
         setToast({ type: data.type || 'notification', payload });
       };
 
