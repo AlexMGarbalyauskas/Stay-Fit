@@ -29,6 +29,7 @@ export default function PostComments() {
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const [pickerOpen, setPickerOpen] = useState(false);
   const gifSearchTimeoutRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     // Get current user
@@ -36,6 +37,13 @@ export default function PostComments() {
       const user = JSON.parse(localStorage.getItem('user'));
       setCurrentUser(user);
     } catch {}
+  }, []);
+
+  useEffect(() => {
+    const updateIsMobile = () => setIsMobile(window.innerWidth < 640);
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+    return () => window.removeEventListener('resize', updateIsMobile);
   }, []);
 
   const searchGifs = async (query) => {
@@ -232,7 +240,7 @@ export default function PostComments() {
     return (
     <div 
       key={comment.id} 
-      className={`flex gap-3 items-start ${isReply ? 'ml-8 bg-gray-25 border-l-2 border-gray-200' : 'bg-gray-50'} p-3 rounded`}
+      className={`flex gap-3 items-start ${isReply ? `${isMobile ? 'ml-3' : 'ml-8'} bg-gray-25 border-l-2 border-gray-200` : 'bg-gray-50'} p-3 rounded-lg`}
       onContextMenu={(e) => {
         e.preventDefault();
         if (currentUser?.id === comment.user_id) {
@@ -248,19 +256,19 @@ export default function PostComments() {
         )}
       </div>
       <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <div className="text-sm font-medium">{comment.nickname || comment.username}</div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="text-sm font-medium break-all">{comment.nickname || comment.username}</div>
           {comment.nickname && <span className="text-xs text-gray-400">@{comment.username}</span>}
           {isReply && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{t('reply')}</span>}
         </div>
-        <div className="text-sm text-gray-700 mt-1">
+        <div className="text-sm text-gray-700 mt-1 break-words">
           {textContent && <p>{textContent}</p>}
           {gifUrl && <img src={gifUrl} alt="GIF" className="max-h-48 rounded-lg object-contain mt-2" />}
         </div>
-        <div className="flex items-center gap-3 mt-2 flex-wrap">
+        <div className="flex items-center gap-3 mt-2 flex-wrap text-xs">
           <button
             onClick={() => handleLikeComment(comment.id)}
-            className={`flex items-center gap-1 text-xs ${comment.liked_by_me ? 'text-red-500' : 'text-gray-400'} hover:text-red-500`}
+            className={`flex items-center gap-1 ${comment.liked_by_me ? 'text-red-500' : 'text-gray-400'} hover:text-red-500`}
           >
             <Heart className="w-3 h-3" />
             <span>{comment.likes_count || 0}</span>
@@ -284,14 +292,14 @@ export default function PostComments() {
   if (!post) return <p className="text-center mt-20 text-gray-500">{t('postNotFound')}</p>;
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-16 pb-16">
-      <div className="max-w-2xl mx-auto p-4">
+    <div className={`min-h-screen bg-gray-100 pt-16 pb-16 ${isMobile ? 'px-2' : 'px-0'}`}>
+      <div className="max-w-2xl mx-auto p-2 sm:p-4">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-700 mb-4 hover:text-blue-600">
           <ArrowLeft className="w-4 h-4" />
           <span>{t('backToProfile')}</span>
         </button>
 
-        <div className="bg-white rounded shadow p-4">
+        <div className="bg-white rounded-xl shadow p-3 sm:p-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
               {post.profile_picture ? (
@@ -303,8 +311,8 @@ export default function PostComments() {
               )}
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <div className="font-medium">{post.nickname || post.username}</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="font-medium break-all">{post.nickname || post.username}</div>
                 {post.nickname && <span className="text-xs text-gray-500">@{post.username}</span>}
               </div>
               <div className="text-xs text-gray-500">{new Date(post.created_at).toLocaleString()}</div>
@@ -347,7 +355,7 @@ export default function PostComments() {
                     <div className="mt-2">
                       <button
                         onClick={() => toggleRepliesExpanded(c.id)}
-                        className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 ml-8 mb-2"
+                        className={`flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 ${isMobile ? 'ml-3' : 'ml-8'} mb-2`}
                       >
                         {expandedReplies.has(c.id) ? (
                           <>
@@ -412,7 +420,7 @@ export default function PostComments() {
 
             {/* Reply indicator */}
             {replyingTo && (
-              <div className="mt-3 p-2 bg-blue-50 border-l-4 border-blue-500 text-sm text-blue-800 flex justify-between items-center">
+              <div className="mt-3 p-2 bg-blue-50 border-l-4 border-blue-500 text-sm text-blue-800 flex justify-between items-center gap-2 flex-wrap">
                 <span>{t('replyingTo')}: <strong>{comments.find(c => c.id === replyingTo)?.nickname || comments.find(c => c.id === replyingTo)?.username}</strong></span>
                 <button onClick={() => setReplyingTo(null)} className="text-blue-600 hover:text-blue-800 font-semibold">×</button>
               </div>
@@ -420,8 +428,8 @@ export default function PostComments() {
 
             {/* Selected GIF preview */}
             {selectedGif && (
-              <div className="mt-3 relative inline-block">
-                <img src={selectedGif.url} alt="Selected GIF" className="max-h-32 rounded-lg" />
+              <div className="mt-3 relative inline-block max-w-full">
+                <img src={selectedGif.url} alt="Selected GIF" className="max-h-32 rounded-lg max-w-full object-contain" />
                 <button
                   onClick={() => setSelectedGif(null)}
                   className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
@@ -443,7 +451,7 @@ export default function PostComments() {
                 />
                 {gifLoading && <p className="text-sm text-gray-500">{t('searching')}</p>}
                 {gifResults.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                     {gifResults.map((gif) => (
                       <button
                         key={gif.id}
@@ -461,18 +469,18 @@ export default function PostComments() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2">
-              <div className="flex gap-2">
+            <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2 sticky bottom-0 bg-white pb-2 pt-2">
+              <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                 <input 
                   value={newComment} 
                   onChange={e => setNewComment(e.target.value)} 
-                  className="flex-1 p-2 border rounded" 
+                  className="flex-1 p-3 border rounded min-w-0" 
                   placeholder={replyingTo ? t('writeYourReply') : t('writeCommentPlaceholder')} 
                 />
                 <button
                   type="button"
                   onClick={() => setPickerOpen(true)}
-                  className="p-2 border rounded hover:bg-gray-100"
+                  className="p-2 border rounded hover:bg-gray-100 min-w-11 min-h-11"
                   title={t('addEmoji')}
                 >
                   <Smile className="w-5 h-5 text-gray-600" />
@@ -480,12 +488,12 @@ export default function PostComments() {
                 <button
                   type="button"
                   onClick={() => setGifPanelOpen(!gifPanelOpen)}
-                  className="p-2 border rounded hover:bg-gray-100"
+                  className="p-2 border rounded hover:bg-gray-100 min-w-11 min-h-11"
                   title={t('addGif')}
                 >
                   <ImageIcon className="w-5 h-5 text-gray-600" />
                 </button>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">{t('post')}</button>
+                <button type="submit" className="bg-blue-500 text-white px-4 py-3 rounded hover:bg-blue-600 min-w-[84px]">{t('post')}</button>
               </div>
             </form>
 

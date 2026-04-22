@@ -6,8 +6,16 @@ export default function CommentsModal({ postId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => { fetch(); }, []);
+
+  useEffect(() => {
+    const updateIsMobile = () => setIsMobile(window.innerWidth < 640);
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+    return () => window.removeEventListener('resize', updateIsMobile);
+  }, []);
 
   const fetch = async () => {
     setLoading(true);
@@ -34,28 +42,28 @@ export default function CommentsModal({ postId, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded p-4 w-full max-w-md max-h-[80vh] overflow-auto">
-        <div className="flex justify-between items-center mb-2">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black bg-opacity-50">
+      <div className={`bg-white ${isMobile ? 'rounded-t-2xl' : 'rounded'} p-4 w-full sm:max-w-md max-h-[92vh] flex flex-col overflow-hidden`}>
+        <div className="flex justify-between items-center mb-2 gap-3">
           <h3 className="font-semibold">Comments</h3>
-          <button onClick={onClose} className="text-sm text-gray-600">Close</button>
+          <button onClick={onClose} className="text-sm text-gray-600 px-2 py-1 rounded hover:bg-gray-100">Close</button>
         </div>
 
         {loading ? <div className="text-gray-600">Loading…</div> : (
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 overflow-y-auto pr-1">
             {comments.length === 0 && <div className="text-sm text-gray-500">No comments yet</div>}
             {comments.map(c => (
               <div key={c.id} className="border-b pb-2">
                 <div className="text-sm font-medium">{c.username}</div>
-                <div className="text-sm text-gray-700">{c.content}</div>
+                <div className="text-sm text-gray-700 break-words">{c.content}</div>
                 <div className="text-xs text-gray-500 mt-1">{new Date(c.created_at).toLocaleString()}</div>
               </div>
             ))}
 
-            <div className="mt-3">
-              <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Write a comment..." className="w-full border rounded p-2 text-sm" rows={3}></textarea>
+            <div className="mt-3 pt-3 border-t bg-white sticky bottom-0">
+              <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Write a comment..." className="w-full border rounded p-3 text-sm min-h-24" rows={3}></textarea>
               <div className="flex justify-end gap-2 mt-2">
-                <button onClick={handleSubmit} disabled={submitting} className="bg-blue-500 text-white px-3 py-1 rounded text-sm">{submitting ? 'Posting…' : 'Post'}</button>
+                <button onClick={handleSubmit} disabled={submitting} className="bg-blue-500 text-white px-4 py-2 rounded text-sm min-w-20">{submitting ? 'Posting…' : 'Post'}</button>
               </div>
             </div>
           </div>
