@@ -141,9 +141,8 @@ io.on('connection', (socket) => {
                     io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
                   });
                 });
-              });
-          }
-        );
+              }
+            );
           }
         );
       } catch (err) {
