@@ -42,10 +42,6 @@ router.post('/blocks/:userId', auth, (req, res) => {
   db.run('INSERT OR IGNORE INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)', [me, other], (err) => {
     if (err) return res.status(500).json({ error: 'DB error' });
 
-    // Optional: remove friendship and pending friend requests in both directions
-    db.run('DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)', [me, other, other, me]);
-    db.run('DELETE FROM friend_requests WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)', [me, other, other, me]);
-
     res.json({ success: true, blockedByMe: true, blockedMe: false, blockedEither: true });
   });
 });

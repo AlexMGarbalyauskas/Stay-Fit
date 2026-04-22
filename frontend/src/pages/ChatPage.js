@@ -52,6 +52,8 @@ export default function ChatPage() {
   const [mobileView, setMobileView] = useState('list');
   const [blockStatus, setBlockStatus] = useState({ blockedByMe: false, blockedMe: false, blockedEither: false });
   const [chatNotice, setChatNotice] = useState('');
+  const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
   const activeFriendRef = useRef(null);
@@ -146,9 +148,9 @@ export default function ChatPage() {
 
     s.on('message:blocked', ({ reason }) => {
       if (reason === 'blocked_by_you') {
-        setChatNotice('You blocked this user. Unblock to send messages.');
+        setChatNotice(t('chatBlockedByYou'));
       } else {
-        setChatNotice('This user blocked you. You cannot send messages.');
+        setChatNotice(t('chatBlockedByUser'));
       }
     });
 
@@ -160,7 +162,7 @@ export default function ChatPage() {
       s.off('message:blocked');
       s.disconnect();
     };
-  }, [token, isAuthenticated]);
+  }, [token, isAuthenticated, t]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -315,7 +317,7 @@ export default function ChatPage() {
     const hasText = text.trim().length > 0;
     if (!activeFriend || !socketRef.current || !hasText) return;
     if (blockStatus.blockedEither) {
-      setChatNotice(blockStatus.blockedByMe ? 'You blocked this user. Unblock to send messages.' : 'This user blocked you. You cannot send messages.');
+      setChatNotice(blockStatus.blockedByMe ? t('chatBlockedByYou') : t('chatBlockedByUser'));
       return;
     }
     
@@ -358,7 +360,7 @@ export default function ChatPage() {
   const sendGif = (url, gifId) => {
     if (!activeFriend || !socketRef.current || !url) return;
     if (blockStatus.blockedEither) {
-      setChatNotice(blockStatus.blockedByMe ? 'You blocked this user. Unblock to send messages.' : 'This user blocked you. You cannot send messages.');
+      setChatNotice(blockStatus.blockedByMe ? t('chatBlockedByYou') : t('chatBlockedByUser'));
       return;
     }
     socketRef.current.emit('send_message', {
@@ -409,20 +411,34 @@ export default function ChatPage() {
 
     try {
       if (blockStatus.blockedByMe) {
+        setBlockBusy(true);
         const res = await unblockMessageUser(activeFriend.id);
         setBlockStatus(res.data || { blockedByMe: false, blockedMe: false, blockedEither: false });
-        setChatNotice('User unblocked. You can message again.');
+        setChatNotice(t('chatUnblockedSuccess'));
       } else {
-        const confirmed = window.confirm(`Block ${activeFriend.nickname || activeFriend.username} from sending messages?`);
-        if (!confirmed) return;
-
-        const res = await blockMessageUser(activeFriend.id);
-        setBlockStatus(res.data || { blockedByMe: true, blockedMe: false, blockedEither: true });
-        setChatNotice('User blocked. They can no longer send messages to you.');
+        setConfirmBlockOpen(true);
       }
     } catch (err) {
       console.error('Failed to update block status:', err);
-      alert(err?.response?.data?.error || 'Failed to update block setting');
+      alert(err?.response?.data?.error || t('chatUpdateBlockFailed'));
+    } finally {
+      setBlockBusy(false);
+    }
+  };
+
+  const confirmBlockUser = async () => {
+    if (!activeFriend?.id) return;
+    try {
+      setBlockBusy(true);
+      const res = await blockMessageUser(activeFriend.id);
+      setBlockStatus(res.data || { blockedByMe: true, blockedMe: false, blockedEither: true });
+      setChatNotice(t('chatBlockedSuccess'));
+      setConfirmBlockOpen(false);
+    } catch (err) {
+      console.error('Failed to update block status:', err);
+      alert(err?.response?.data?.error || t('chatUpdateBlockFailed'));
+    } finally {
+      setBlockBusy(false);
     }
   };
 
@@ -483,7 +499,7 @@ export default function ChatPage() {
             <div className="flex items-center justify-center h-full text-gray-400 px-6 text-center">
               <div>
                 <p className="text-lg font-semibold mb-2">{t('selectFriendToChat')}</p>
-                <p className="text-sm opacity-70 md:hidden">Pick a friend to open the chat.</p>
+                <p className="text-sm opacity-70 md:hidden">{t('chatPickFriendHint')}</p>
               </div>
             </div>
           ) : (
@@ -495,7 +511,7 @@ export default function ChatPage() {
                       onClick={() => setMobileView('list')}
                       className={`md:hidden rounded-full px-3 py-1.5 text-sm font-medium border ${isDark ? 'border-gray-700 bg-gray-800 text-gray-200' : 'border-gray-200 bg-white text-gray-700'}`}
                     >
-                      Back
+                      {t('back')}
                     </button>
                   )}
                   <div className="min-w-0">
@@ -506,6 +522,7 @@ export default function ChatPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleToggleBlockUser}
+                    disabled={blockBusy}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition ${
                       blockStatus.blockedByMe
                         ? isDark
@@ -514,11 +531,11 @@ export default function ChatPage() {
                         : isDark
                         ? 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700'
                         : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
-                    }`}
-                    title={blockStatus.blockedByMe ? 'Unblock user' : 'Block user'}
+                    } ${blockBusy ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    title={blockStatus.blockedByMe ? t('chatUnblockUserTitle') : t('chatBlockUserTitle')}
                   >
                     <ShieldBan className="w-4 h-4" />
-                    <span className="hidden sm:inline">{blockStatus.blockedByMe ? 'Unblock' : 'Block'}</span>
+                    <span className="hidden sm:inline">{blockStatus.blockedByMe ? t('chatUnblock') : t('chatBlock')}</span>
                   </button>
                   <div
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
@@ -535,7 +552,7 @@ export default function ChatPage() {
               </div>
               {(blockStatus.blockedEither || chatNotice) && (
                 <div className={`px-4 py-2 text-sm border-b ${isDark ? 'bg-amber-900/20 text-amber-200 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
-                  {chatNotice || (blockStatus.blockedByMe ? 'You blocked this user. Unblock to send messages.' : 'This user blocked you. You cannot send messages.')}
+                  {chatNotice || (blockStatus.blockedByMe ? t('chatBlockedByYou') : t('chatBlockedByUser'))}
                 </div>
               )}
               <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
@@ -638,7 +655,7 @@ export default function ChatPage() {
                   onChange={e => setText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && sendMessage()}
                   disabled={blockStatus.blockedEither}
-                  placeholder={blockStatus.blockedByMe ? 'Unblock user to message' : blockStatus.blockedMe ? 'You cannot message this user' : t('typeMessage')}
+                  placeholder={blockStatus.blockedByMe ? t('chatPlaceholderBlockedByYou') : blockStatus.blockedMe ? t('chatPlaceholderBlockedByUser') : t('typeMessage')}
                   className={`flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 min-w-0 md:min-w-[150px] ${blockStatus.blockedEither ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
                 />
                 <button
@@ -783,6 +800,32 @@ export default function ChatPage() {
           )}
         </div>
       </div>
+      {confirmBlockOpen && activeFriend && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4">
+          <div className={`w-full max-w-md rounded-2xl shadow-xl border p-4 ${isDark ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-900'}`}>
+            <h3 className="text-lg font-semibold mb-2">{t('chatBlock')}</h3>
+            <p className="text-sm mb-4">
+              {t('chatBlockConfirm')} <span className="font-semibold">{activeFriend.nickname || activeFriend.username}</span>?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmBlockOpen(false)}
+                disabled={blockBusy}
+                className={`px-4 py-2 rounded border ${isDark ? 'border-gray-600 text-gray-200 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} ${blockBusy ? 'opacity-60 cursor-not-allowed' : ''}`}
+              >
+                {t('no')}
+              </button>
+              <button
+                onClick={confirmBlockUser}
+                disabled={blockBusy}
+                className={`px-4 py-2 rounded text-white ${blockBusy ? 'bg-red-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
+              >
+                {t('yes')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Navbar />
     </>
   );
