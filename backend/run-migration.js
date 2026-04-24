@@ -19,7 +19,7 @@ migrations.forEach((migrationFile) => {
           console.error(`Migration ${migrationFile} failed:`, err);
         }
       } else {
-        console.log(`✅ Migration completed: ${migrationFile}`);
+        console.log(`Migration completed: ${migrationFile}`);
       }
     });
   }
@@ -27,5 +27,5 @@ migrations.forEach((migrationFile) => {
 
 setTimeout(() => {
   db.close();
-  console.log('✅ All migrations completed');
+  console.log('All migrations completed');
 }, 1000);

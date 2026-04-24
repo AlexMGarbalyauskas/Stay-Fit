@@ -13,7 +13,7 @@ if (!fs.existsSync(path.dirname(DB_FILE))) {
 
 const db = new sqlite3.Database(DB_FILE, (err) => {
   if (err) console.error('DB connection error', err);
-  else console.log('✅ SQLite DB connected');
+  else console.log('SQLite DB connected');
 });
 
 // Initialize tables
@@ -136,7 +136,7 @@ db.exec(initSql, (err) => {
           console.error(`Migration error for ${file}:`, err);
         }
       } else {
-        console.log(`✅ Migration ${file} completed`);
+        console.log(`Migration ${file} completed`);
       }
     });
   });
@@ -148,7 +148,7 @@ db.exec(initSql, (err) => {
     if (!hasNickname) {
       db.run("ALTER TABLE users ADD COLUMN nickname TEXT", err3 => {
         if (err3) console.error('Failed to add nickname column', err3);
-        else console.log('✅ Added nickname column to users');
+        else console.log('Added nickname column to users');
       });
     }
   });
@@ -160,7 +160,7 @@ db.exec(initSql, (err) => {
     if (!hasTitle) {
       db.run("ALTER TABLE posts ADD COLUMN title TEXT", err5 => {
         if (err5) console.error('Failed to add title column to posts', err5);
-        else console.log('✅ Added title column to posts');
+        else console.log('Added title column to posts');
       });
     }
   });
@@ -172,35 +172,35 @@ db.exec(initSql, (err) => {
     if (!hasType) {
       db.run("ALTER TABLE messages ADD COLUMN message_type TEXT DEFAULT 'text'", err7 => {
         if (err7) console.error('Failed to add message_type column to messages', err7);
-        else console.log('✅ Added message_type column to messages');
+        else console.log('Added message_type column to messages');
       });
     }
     const hasMedia = cols3 && cols3.some(c => c.name === 'media_url');
     if (!hasMedia) {
       db.run("ALTER TABLE messages ADD COLUMN media_url TEXT", err8 => {
         if (err8) console.error('Failed to add media_url column to messages', err8);
-        else console.log('✅ Added media_url column to messages');
+        else console.log('Added media_url column to messages');
       });
     }
     const hasEncryptedContent = cols3 && cols3.some(c => c.name === 'encrypted_content');
     if (!hasEncryptedContent) {
       db.run("ALTER TABLE messages ADD COLUMN encrypted_content TEXT", err9 => {
         if (err9) console.error('Failed to add encrypted_content column to messages', err9);
-        else console.log('✅ Added encrypted_content column to messages');
+        else console.log('Added encrypted_content column to messages');
       });
     }
     const hasIv = cols3 && cols3.some(c => c.name === 'iv');
     if (!hasIv) {
       db.run("ALTER TABLE messages ADD COLUMN iv TEXT", err10 => {
         if (err10) console.error('Failed to add iv column to messages', err10);
-        else console.log('✅ Added iv column to messages');
+        else console.log('Added iv column to messages');
       });
     }
     const hasEncryptedFlag = cols3 && cols3.some(c => c.name === 'is_encrypted');
     if (!hasEncryptedFlag) {
       db.run("ALTER TABLE messages ADD COLUMN is_encrypted INTEGER DEFAULT 0", err11 => {
         if (err11) console.error('Failed to add is_encrypted column to messages', err11);
-        else console.log('✅ Added is_encrypted column to messages');
+        else console.log('Added is_encrypted column to messages');
       });
     }
   });
