@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, BarChart3, BookOpen, Bot, Volume2 } from 'lucide-react';
+import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, BarChart3, BookOpen, Bot, Volume2, Download } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import AIHelperModal from '../components/AIHelperModal';
@@ -22,7 +22,11 @@ export default function Settings() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [soundsEnabled, setSoundsEnabled] = useState(isSoundEnabled());
   const [showShareNotification, setShowShareNotification] = useState(false);
+  const [showInstallNotification, setShowInstallNotification] = useState(false);
+  const [installNotificationText, setInstallNotificationText] = useState('');
   const [showAIHelper, setShowAIHelper] = useState(false);
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
+  const [canInstallPwa, setCanInstallPwa] = useState(false);
   const isDark = theme === 'dark';
   const iconClass = isDark ? 'text-gray-200' : 'text-black';
   const navigate = useNavigate();
@@ -58,6 +62,30 @@ export default function Settings() {
       })
       .catch(err => console.error('Error fetching user:', err));
   }, [token, API_URL]);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setDeferredInstallPrompt(event);
+      setCanInstallPwa(true);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredInstallPrompt(null);
+      setCanInstallPwa(false);
+      setInstallNotificationText(t('appInstalledSuccess'));
+      setShowInstallNotification(true);
+      setTimeout(() => setShowInstallNotification(false), 3000);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, [t]);
 
   // Update current time every second based on timezone
   useEffect(() => {
@@ -125,6 +153,33 @@ export default function Settings() {
 
   const handleRateApp = () => {
     window.open('https://alexmgarbalyauskas.github.io/Rating-Webpage-/', '_blank');
+  };
+
+  const handleInstallApp = async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const choiceResult = await deferredInstallPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        setInstallNotificationText(t('appInstalledSuccess'));
+        setShowInstallNotification(true);
+        setTimeout(() => setShowInstallNotification(false), 3000);
+      }
+      setDeferredInstallPrompt(null);
+      setCanInstallPwa(false);
+      return;
+    }
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      setInstallNotificationText(t('installAppIosHint'));
+      setShowInstallNotification(true);
+      setTimeout(() => setShowInstallNotification(false), 4500);
+      return;
+    }
+
+    setInstallNotificationText(t('installAppNotAvailable'));
+    setShowInstallNotification(true);
+    setTimeout(() => setShowInstallNotification(false), 3000);
   };
 
   const handlePrivacyChange = (newPrivacy) => {
@@ -419,6 +474,19 @@ export default function Settings() {
             <Share2 size={20} className={iconClass} /> {t('shareApp')}
           </button>
           <button
+            onClick={handleInstallApp}
+            className={`flex items-center justify-between gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
+          >
+            <span className="flex items-center gap-2">
+              <Download size={20} className={iconClass} /> {t('installApp')}
+            </span>
+            {canInstallPwa && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-green-900/40 text-green-300' : 'bg-green-100 text-green-700'}`}>
+                {t('done')}
+              </span>
+            )}
+          </button>
+          <button
             onClick={handleRateApp}
             className={`flex items-center gap-2 py-2 w-full text-left rounded transition ${isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-900 hover:bg-gray-100'}`}
           >
@@ -577,6 +645,15 @@ export default function Settings() {
           <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
             <Check className="w-5 h-5" />
             <span className="font-semibold">{t('profileLinkCopied')}</span>
+          </div>
+        </div>
+      )}
+
+      {showInstallNotification && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slideDown px-4">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 max-w-md">
+            <Check className="w-5 h-5 flex-shrink-0" />
+            <span className="font-semibold text-sm">{installNotificationText}</span>
           </div>
         </div>
       )}

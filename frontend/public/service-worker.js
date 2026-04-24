@@ -1,13 +1,12 @@
 // This service worker enables the app to work offline and be installable as a PWA
 
-const CACHE_NAME = 'stayfit-v1';
+const CACHE_NAME = 'stayfit-v2';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/static/css/main.css',
-  '/static/js/main.js',
   '/manifest.json',
-  '/logofit.png'
+  '/logofit.png',
+  '/favicon.ico'
 ];
 
 // Install service worker
@@ -37,6 +36,11 @@ self.addEventListener('activate', event => {
 // Fetch with network-first strategy
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+
+  // Ignore unsupported schemes (e.g. chrome-extension://) to avoid Cache API errors.
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return;
+  }
   
   // Skip service worker entirely for API calls, non-GET requests, or external domains
   if (

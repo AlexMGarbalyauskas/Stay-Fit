@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const db = require('./db');
 
-require('dotenv').config();
+require('dotenv').config({ override: true });
 const app = express();
 
 // ===== Middleware =====

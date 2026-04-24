@@ -42,7 +42,22 @@ export default function AIHelperModal({ open, onClose }) {
       if (status === 404) {
         setError(t('aiEndpointNotFound'));
       } else if (status === 429) {
-        setError(t('aiRateLimited'));
+        const code = err?.response?.data?.code;
+        const retryAt = err?.response?.data?.retryAt;
+
+        if (code === 'ai_insufficient_quota') {
+          setError(t('aiNoCredits'));
+        } else if (retryAt) {
+          const retryDate = new Date(retryAt);
+          if (!Number.isNaN(retryDate.getTime())) {
+            const localRetryTime = retryDate.toLocaleString();
+            setError(t('aiRateLimitedRetryAt').replace('{time}', localRetryTime));
+          } else {
+            setError(t('aiRateLimited'));
+          }
+        } else {
+          setError(t('aiRateLimited'));
+        }
       } else {
         setError(err?.response?.data?.error || t('aiHelperError'));
       }

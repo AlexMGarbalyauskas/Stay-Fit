@@ -3,6 +3,23 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+const parseRetryAfterHeader = (value) => {
+  if (!value) return null;
+
+  const asNumber = Number(value);
+  if (Number.isFinite(asNumber) && asNumber >= 0) {
+    return Math.ceil(asNumber);
+  }
+
+  const asDate = new Date(value);
+  if (!Number.isNaN(asDate.getTime())) {
+    const diffSeconds = Math.ceil((asDate.getTime() - Date.now()) / 1000);
+    return diffSeconds > 0 ? diffSeconds : 0;
+  }
+
+  return null;
+};
+
 const extractReplyText = (data) => {
   if (typeof data?.output_text === 'string' && data.output_text.trim()) {
     return data.output_text.trim();
@@ -82,9 +99,25 @@ router.post('/helper', auth, async (req, res) => {
       const providerMessage = data?.error?.message || 'AI provider request failed';
 
       if (response.status === 429 || providerCode === 'insufficient_quota' || providerCode === 'rate_limit_exceeded') {
+        const retryAfterSeconds = parseRetryAfterHeader(response.headers.get('retry-after'));
+        const retryAt = Number.isFinite(retryAfterSeconds)
+          ? new Date(Date.now() + (retryAfterSeconds * 1000)).toISOString()
+          : null;
+
+        if (providerCode === 'insufficient_quota') {
+          return res.status(429).json({
+            error: 'AI helper credits are exhausted. Please add credits/billing and try again.',
+            code: 'ai_insufficient_quota',
+            retryAfterSeconds,
+            retryAt,
+          });
+        }
+
         return res.status(429).json({
-          error: 'AI helper is temporarily unavailable due to API quota or rate limits. Please try again later.',
-          code: 'ai_quota_or_rate_limited',
+          error: 'AI helper is temporarily unavailable due to API rate limits. Please try again later.',
+          code: 'ai_rate_limited',
+          retryAfterSeconds,
+          retryAt,
         });
       }
 

@@ -14,6 +14,7 @@ export default function StatsSettings() {
   const [showChart, setShowChart] = useState(false);
   const [postsData, setPostsData] = useState(null);
   const [monthlyPosts, setMonthlyPosts] = useState([]);
+  const [weeklyPostingDays, setWeeklyPostingDays] = useState(0);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
@@ -63,6 +64,17 @@ export default function StatsSettings() {
             dates.add(key);
           }
         });
+
+        // Count how many unique posting days happened in the last 7 days (including today)
+        let last7DaysPosted = 0;
+        const weekAnchor = new Date();
+        for (let i = 0; i < 7; i++) {
+          const checkDate = new Date(weekAnchor);
+          checkDate.setDate(checkDate.getDate() - i);
+          const key = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+          if (dates.has(key)) last7DaysPosted++;
+        }
+        setWeeklyPostingDays(last7DaysPosted);
 
         let streak = 0;
         const currentDate = new Date();
@@ -408,12 +420,32 @@ export default function StatsSettings() {
               </div>
             )}
 
+            {weeklyPostingDays >= 5 && (
+              <div className={`p-3 rounded flex items-center gap-3 ${isDark ? 'bg-indigo-900/30 border border-indigo-700' : 'bg-indigo-50 border border-indigo-200'}`}>
+                <span className="text-2xl">🏅</span>
+                <div>
+                  <p className={`text-sm font-semibold ${isDark ? 'text-indigo-200' : 'text-indigo-700'}`}>{t('fiveDayWeekChampion')}</p>
+                  <p className={`text-xs ${isDark ? 'text-indigo-300/70' : 'text-indigo-600/70'}`}>{t('postedFiveDaysThisWeek')}</p>
+                </div>
+              </div>
+            )}
+
             {stats.streak >= 3 && (
               <div className={`p-3 rounded flex items-center gap-3 ${isDark ? 'bg-orange-900/30 border border-orange-700' : 'bg-orange-50 border border-orange-200'}`}>
                 <span className="text-2xl">🔥</span>
                 <div>
                   <p className={`text-sm font-semibold ${isDark ? 'text-orange-200' : 'text-orange-700'}`}>{t('onFire')}</p>
                   <p className={`text-xs ${isDark ? 'text-orange-300/70' : 'text-orange-600/70'}`}>{t('dayPostingStreak').replace('{count}', stats.streak)}</p>
+                </div>
+              </div>
+            )}
+
+            {stats.streak >= 30 && (
+              <div className={`p-3 rounded flex items-center gap-3 ${isDark ? 'bg-yellow-900/30 border border-yellow-700' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <span className="text-2xl">⭐</span>
+                <div>
+                  <p className={`text-sm font-semibold ${isDark ? 'text-yellow-200' : 'text-yellow-700'}`}>{t('monthStreakStar')}</p>
+                  <p className={`text-xs ${isDark ? 'text-yellow-300/70' : 'text-yellow-600/70'}`}>{t('postedMonthStraight')}</p>
                 </div>
               </div>
             )}

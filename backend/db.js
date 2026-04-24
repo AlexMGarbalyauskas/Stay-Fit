@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-require('dotenv').config();
+require('dotenv').config({ override: true });
 
 const DB_FILE = process.env.DATABASE_FILE || path.join(__dirname, 'data.sqlite');
 
