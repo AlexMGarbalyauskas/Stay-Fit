@@ -1,3 +1,12 @@
+//PURPOSE: Header component with notifications and AI helper
+//NOTES:
+// - Displays app title centered, with notification and tutorial icons on the right
+// - Shows a red dot on the notification icon if there are unread notifications
+// - Clicking the notification icon navigates to the notifications page
+
+
+
+//import 
 import { useEffect, useRef, useState } from 'react';
 import { Bell, BookOpen, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +15,12 @@ import { io } from 'socket.io-client';
 import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 import { useLanguage } from '../context/LanguageContext';
 import AIHelperModal from './AIHelperModal';
+// import end 
 
+
+
+
+// Header component with notifications and AI helper
 export default function Header({ disableNotifications = false }) {
   const { t } = useLanguage();
   const navigate = useNavigate();

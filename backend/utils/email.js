@@ -1,34 +1,62 @@
+//const
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
-
 const useMailSender = !!(process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY);
 const useResend = !!process.env.RESEND_API_KEY;
 const hasSmtpCredentials = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
 const emailProviderMode = (process.env.EMAIL_PROVIDER || '').trim().toLowerCase();
-
 const mailSenderToken = process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY;
-
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_SEND_TIMEOUT_MS = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 12000);
 const EMAIL_DIAGNOSTICS_MAX = 50;
 const emailDiagnostics = [];
+//const end 
 
+
+
+//block 1 
+// Helper functions for diagnostics and error logging
 function pushEmailDiagnostic(entry) {
+
+  // Add timestamp and ensure diagnostics array doesn't exceed max length
   emailDiagnostics.unshift({
     at: new Date().toISOString(),
     ...entry,
   });
+
+  // Trim diagnostics array if it exceeds the maximum length
   if (emailDiagnostics.length > EMAIL_DIAGNOSTICS_MAX) {
     emailDiagnostics.length = EMAIL_DIAGNOSTICS_MAX;
   }
 }
+//block 1 end
 
+
+
+
+
+
+
+
+
+//block 2 
 function getEmailDiagnostics(limit = 20) {
   const safeLimit = Math.max(1, Math.min(Number(limit) || 20, EMAIL_DIAGNOSTICS_MAX));
   return emailDiagnostics.slice(0, safeLimit);
 }
+//block 2 end
 
+
+
+
+
+
+
+
+//block 3
 function logEmailProviderError(provider, email, fromAddress, error) {
+
+  // Construct a detailed error object for logging
   const providerError = {
     provider,
     email,
@@ -54,10 +82,23 @@ function logEmailProviderError(provider, email, fromAddress, error) {
     responseBody: providerError.responseBody,
   });
 
-  console.error('❌ Verification email provider error:', providerError);
+  console.error('Verification email provider error:', providerError);
 }
+//block 3 end
 
+
+
+
+
+
+
+
+
+
+//block 4
 function withTimeout(promise, timeoutMs, label) {
+
+  // Create a timeout promise that rejects after the specified time
   let timeoutId;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -67,7 +108,12 @@ function withTimeout(promise, timeoutMs, label) {
 
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 }
+//block 4 end
 
+
+
+
+//block 5
 // SMTP transporter (fallback for local/dev)
 const transporter = hasSmtpCredentials
   ? nodemailer.createTransport({
@@ -78,6 +124,9 @@ const transporter = hasSmtpCredentials
       },
     })
   : null;
+//block 5 end
+
+
 
 // Alternative: For development/testing, you can use Mailtrap or similar
 // const transporter = nodemailer.createTransport({
@@ -89,8 +138,15 @@ const transporter = hasSmtpCredentials
 //   },
 // });
 
+
+
+//block 6
 async function sendVerificationEmail(email, username, verificationCode) {
+
+  // Construct email content
   const subject = 'Verify Your Stay Fit Account';
+
+  // HTML email template with inline styles for better compatibility across email clients
   const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -121,7 +177,10 @@ async function sendVerificationEmail(email, username, verificationCode) {
         </div>
       `;
 
+      // Determine provider queue based on configuration
   const providerQueue = [];
+
+  // If a specific provider mode is set, use only that provider
   if (emailProviderMode === 'mailsender') {
     providerQueue.push('mailsender');
   } else if (emailProviderMode === 'resend') {
@@ -134,8 +193,9 @@ async function sendVerificationEmail(email, username, verificationCode) {
     if (transporter) providerQueue.push('smtp');
   }
 
+  // If no providers are configured, log an error and return
   if (providerQueue.length === 0) {
-    console.error('❌ No email provider configured. Set MAILSENDER_API_TOKEN (or MAILERSEND_API_KEY), RESEND_API_KEY, or EMAIL_USER/EMAIL_PASSWORD.');
+    console.error('No email provider configured. Set MAILSENDER_API_TOKEN (or MAILERSEND_API_KEY), RESEND_API_KEY, or EMAIL_USER/EMAIL_PASSWORD.');
     pushEmailDiagnostic({
       type: 'provider-config-error',
       provider: 'none',
@@ -159,7 +219,7 @@ async function sendVerificationEmail(email, username, verificationCode) {
       }
 
       if (provider === 'mailsender') {
-        console.log(`📧 Sending email via MailSender to ${email} from ${fromAddress}`);
+        console.log(`Sending email via MailSender to ${email} from ${fromAddress}`);
         const response = await withTimeout(
           fetch('https://api.mailersend.com/v1/email', {
             method: 'POST',
@@ -178,6 +238,8 @@ async function sendVerificationEmail(email, username, verificationCode) {
           'MailSender email send'
         );
 
+        // MailSender's API may return a 200 status code even if the email wasn't accepted for delivery,
+        //  so we check the response status and log accordingly
         if (!response.ok) {
           const errorBody = await response.text().catch(() => null);
           const mailSenderError = new Error(`MailSender request failed with status ${response.status}`);
@@ -194,6 +256,9 @@ async function sendVerificationEmail(email, username, verificationCode) {
           statusCode: response.status,
           messageId: response.headers.get('x-message-id') || null,
         });
+
+        // Note: MailSender's API may not return a message ID or may 
+        // not throw on all errors, so we check the response status and log accordingly
       } else if (provider === 'resend') {
         console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);
         const response = await withTimeout(
@@ -206,7 +271,7 @@ async function sendVerificationEmail(email, username, verificationCode) {
           EMAIL_SEND_TIMEOUT_MS,
           'Resend email send'
         );
-        console.log('✅ Resend response:', response);
+        console.log('Resend response:', response);
         pushEmailDiagnostic({
           type: 'provider-success',
           provider,
@@ -214,22 +279,29 @@ async function sendVerificationEmail(email, username, verificationCode) {
           fromAddress,
           resendId: response?.data?.id || response?.id || null,
         });
+
+        // Note: Resend's send method may not throw on all errors, 
+        // so we check the response for success indicators
       } else if (provider === 'smtp') {
         if (!transporter) {
           throw new Error('SMTP provider selected but EMAIL_USER/EMAIL_PASSWORD are not configured.');
         }
-        console.log(`📧 Sending email via SMTP to ${email} from ${fromAddress}`);
+        console.log(`Sending email via SMTP to ${email} from ${fromAddress}`);
         const mailOptions = {
           from: fromAddress,
           to: email,
           subject,
           html,
         };
+
+        // Wrap sendMail in a timeout to prevent hanging
         await withTimeout(
           transporter.sendMail(mailOptions),
           EMAIL_SEND_TIMEOUT_MS,
           'SMTP email send'
         );
+
+        // Log success for SMTP
         pushEmailDiagnostic({
           type: 'provider-success',
           provider,
@@ -238,15 +310,17 @@ async function sendVerificationEmail(email, username, verificationCode) {
         });
       }
 
-      console.log(`✅ Verification email sent to ${email} using ${provider}`);
+      // If we reach here, the email was sent successfully with the current provider, so we can return
+      console.log(`Verification email sent to ${email} using ${provider}`);
       return true;
     } catch (error) {
       logEmailProviderError(provider, email, fromAddress, error);
-      console.error(`❌ Email send failed via ${provider}, trying next provider if available.`);
+      console.error(`Email send failed via ${provider}, trying next provider if available.`);
     }
   }
 
-  console.error(`❌ All email providers failed for ${email}`);
+  // If we exhaust all providers and fail, log a final error
+  console.error(`All email providers failed for ${email}`);
   pushEmailDiagnostic({
     type: 'all-providers-failed',
     provider: 'all',
@@ -255,5 +329,10 @@ async function sendVerificationEmail(email, username, verificationCode) {
   });
   return false;
 }
+//block 6 end
+
+
+
+
 
 module.exports = { sendVerificationEmail, getEmailDiagnostics };

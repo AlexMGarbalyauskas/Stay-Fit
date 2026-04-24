@@ -1,7 +1,11 @@
+// Main application component that sets up routing, authentication state, 
+// and global UI elements like the workout prompt and notification toast.
+
+
+//Import necessary libraries and components
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
@@ -44,6 +48,13 @@ import { playNotificationSound } from './utils/sounds';
 import { Dumbbell, X as Close, BellRing } from 'lucide-react';
 import { log, error as logError } from './utils/logger';
 
+
+
+
+
+
+
+// Main application component that sets up routing, authentication state,
 function App() {
   // Tracks updates that should refresh the friends list page.
   const [refreshFriends, setRefreshFriends] = useState(0);
@@ -89,17 +100,21 @@ function App() {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
+  // Clears auth state and encryption keys on logout.
   const handleLogout = () => {
     localStorage.clear();
     clearEncryption(); // Clear encryption keys
     setIsAuthenticated(false);
   };
 
+  // Simulate boot delay to show splash screen on app load.
   useEffect(() => {
     const timer = setTimeout(() => setBooting(false), 1200);
     return () => clearTimeout(timer);
   }, []);
 
+
+  // Main render with routing and global providers
   return (
     <Router>
       <LanguageProvider>
@@ -175,10 +190,17 @@ function App() {
     const lastPromptSoundKeyRef = useRef(null);
     const isDark = theme === 'dark';
 
-    log('🏋️ GlobalWorkoutPrompt state:', { showWorkoutPrompt, todayWorkout });
 
+    // log the workout prompt state for debugging purposes
+    log('GlobalWorkoutPrompt state:', { showWorkoutPrompt, todayWorkout });
+
+
+    // Play notification sound when a new workout prompt or invite is shown,
+    // but only if it's different from the last one (to avoid replaying sound on re-renders).
     useEffect(() => {
       if (!showWorkoutPrompt || !todayWorkout) return;
+
+      // Create a unique key for the current workout prompt based on its properties
       const soundKey = `${todayWorkout.scheduleId || todayWorkout.date || todayWorkout.time || todayWorkout.workout || 'workout'}:${todayWorkout.isInvite ? 'invite' : 'workout'}`;
       if (lastPromptSoundKeyRef.current === soundKey) return;
       lastPromptSoundKeyRef.current = soundKey;
@@ -187,7 +209,10 @@ function App() {
 
     if (!showWorkoutPrompt || !todayWorkout) return null;
 
+
+    // Removes the local workout plan for today when user cancels/skips their own workout.
     const removeLocalPlan = () => {
+
       try {
         const stored = localStorage.getItem('workout-plans');
         if (!stored) return;
@@ -197,13 +222,18 @@ function App() {
         const key = todayWorkout?.date || todayKey;
         delete plans[key];
         localStorage.setItem('workout-plans', JSON.stringify(plans));
+
+        // Also remove the workout reminder from localStorage to prevent it from showing again
       } catch (e) {
         logError('Failed to clean local plan on cancel:', e);
       }
     };
 
+    // Calls the server to cancel the workout schedule when user cancels/skips their own workout.
     const cancelWorkoutServer = async (reason) => {
       if (!todayWorkout?.scheduleId) return;
+
+      // For invites, we only decline but do not delete the schedule, so no need to call cancel endpoint
       try {
         const res = await fetch(`${API_BASE.replace('/api', '')}/api/workout-schedules/${todayWorkout.scheduleId}${reason ? `?reason=${reason}` : ''}`, {
           method: 'DELETE',
@@ -212,18 +242,25 @@ function App() {
         if (!res.ok && res.status !== 404) {
           throw new Error(`Cancel failed: ${res.status}`);
         }
+
+        // If the schedule was already deleted (404), we can ignore it since our local cleanup will handle it.
       } catch (e) {
         logError('Failed to cancel workout on server:', e);
       }
     };
 
+    // Handler for when user clicks "Yes, Post!" to post their workout video.
     const handlePostWorkout = () => {
       dismissPrompt();
       navigate('/post');
     };
 
+
+    // For invites, we need to call the decline endpoint instead of canceling the schedule.
     const declineInviteIfNeeded = async () => {
       if (!todayWorkout?.isInvite || !todayWorkout?.participantId) return;
+
+      // Call the decline invite endpoint
       try {
         await fetch(`${API_BASE.replace('/api', '')}/api/workout-schedules/invites/${todayWorkout.participantId}/respond`, {
           method: 'POST',
@@ -233,11 +270,15 @@ function App() {
           },
           body: JSON.stringify({ status: 'declined' })
         });
+
+        // We do not dismiss the prompt here because the parent handler will handle it after this call.
       } catch (e) {
         logError('Failed to decline invite on Not Now:', e);
       }
     };
 
+
+    // Handler for when user clicks "Not Now" to skip their workout or decline an invite.
     const handleSkipWorkout = async () => {
       if (todayWorkout?.isInvite) {
         // For invites, just decline but do not delete the schedule
@@ -278,6 +319,7 @@ function App() {
       dismissPrompt();
     };
 
+    // Handler for when user clicks "Yes, I'm In!" to accept a workout invite.
     const handleAcceptInvite = () => {
       // Call accept endpoint
       if (todayWorkout.participantId && todayWorkout.scheduleId) {
@@ -298,7 +340,11 @@ function App() {
       }
     };
 
+
+
+    // Handler for when user clicks "Maybe Later" to decline a workout invite.
     const handleDeclineInvite = () => {
+
       // Call decline endpoint
       if (todayWorkout.participantId && todayWorkout.scheduleId) {
         fetch(`${API_BASE.replace('/api', '')}/api/workout-schedules/invites/${todayWorkout.participantId}/respond`, {
@@ -318,6 +364,11 @@ function App() {
       }
     };
 
+
+
+    // Render the workout prompt modal with different 
+    // content and actions based on whether it's a regular
+    // workout reminder or an invite.
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
         <div className={`rounded-2xl shadow-2xl max-w-md w-full p-6 ${isDark ? 'bg-gray-900 border border-gray-700' : 'bg-white border border-gray-200'}`}>
@@ -379,11 +430,15 @@ function App() {
     );
   }
 
+
+  //
   // Shows real-time notification toast from socket events.
   function NotificationToast() {
     const navigate = useNavigate();
     const [toast, setToast] = useState(null);
 
+
+    // Sets up socket connection on mount and listens for new notifications.
     useEffect(() => {
       const token = localStorage.getItem('token');
       if (!token) return undefined;
@@ -435,9 +490,12 @@ function App() {
       return () => clearTimeout(timer);
     }, [toast]);
 
+    // If there's no active toast, render nothing.
     if (!toast) return null;
     const { type, payload } = toast;
 
+
+    // When the toast is clicked, navigate to the relevant page based on notification type.
     const onClick = () => {
       setToast(null);
       if (type === 'message' && payload?.fromUserId) {
@@ -447,6 +505,8 @@ function App() {
       }
     };
 
+    // Render the notification toast with different content based on type, 
+    // and include a preview for message notifications.
     return (
       <>
         <div onClick={onClick} className="fixed top-20 right-4 z-50 animate-slideDown cursor-pointer">
@@ -477,11 +537,22 @@ function App() {
     );
   }
 
+
+
+
   // App startup loader shown during boot delay.
   function SplashLoader() {
+
+    // Read theme from localStorage to apply correct styles to the loader.
     const [theme] = useState(localStorage.getItem('theme') || 'light');
     const isDark = theme === 'dark';
     
+
+
+
+
+    // Render a full-screen loader with a dumbbell icon and swirling dots,
+    //  styled differently for dark mode.
     return (
       <div className={`loader-overlay ${isDark ? 'dark-mode' : ''}`}>
         <div className="loader-container">
@@ -499,5 +570,13 @@ function App() {
     );
   }
 }
+//main end 
 
+
+
+
+
+
+
+// Export the main App component as default
 export default App;

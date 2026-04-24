@@ -1,11 +1,19 @@
+//const
 const express = require('express');
 const auth = require('../middleware/auth');
 const db = require('../db');
-
 const router = express.Router();
+//const end
 
+
+
+
+
+//block 1 
 // Cancel a workout schedule (creator only)
 router.delete('/:scheduleId', auth, (req, res) => {
+
+  // Get schedule ID and optional reason for cancellation
   const { scheduleId } = req.params;
   const { reason } = req.query;
   const io = req.app.get('io');
@@ -56,23 +64,38 @@ router.delete('/:scheduleId', auth, (req, res) => {
     });
   });
 });
+//block 1 end
 
+
+
+
+
+
+
+
+//block 2 
 // Create workout schedule and invite buddies
 router.post('/', auth, (req, res) => {
+
+  // Validate input
   const { date, workout, time, buddies } = req.body;
   
+  // Basic validation
   if (!date || !workout || !time) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
+  // Insert new workout schedule
   const sql = 'INSERT INTO workout_schedules (creator_id, date, workout_type, reminder_time) VALUES (?, ?, ?, ?)';
   
+  // Use function() to access 'this.lastID' for the inserted schedule
   db.run(sql, [req.user.id, date, workout, time], function(err) {
     if (err) {
       console.error('Error creating workout schedule:', err);
       return res.status(500).json({ error: 'Failed to create workout schedule' });
     }
 
+    // Get the ID of the newly created schedule
     const scheduleId = this.lastID;
 
     // Add participants
@@ -87,6 +110,7 @@ router.post('/', auth, (req, res) => {
       db.get(getCreatorSql, [req.user.id], (err, creator) => {
         const creatorUsername = creator ? creator.username : 'Unknown';
         
+        // Add each buddy as a participant with 'pending' status
         buddies.forEach(buddyId => {
           db.run(participantsSql, [scheduleId, buddyId, 'pending'], function(err) {
             if (err) console.error('Error adding participant:', err);
@@ -105,6 +129,7 @@ router.post('/', auth, (req, res) => {
               time
             };
             
+            // Insert notification into DB
             db.run(notifSql, [buddyId, 'workout_invite', JSON.stringify(notifData), 0], (err, notifId) => {
               if (err) {
                 console.error('Error creating notification:', err);
@@ -124,6 +149,7 @@ router.post('/', auth, (req, res) => {
       });
     }
 
+    // Respond with success and schedule ID
     res.json({ 
       success: true, 
       scheduleId,
@@ -131,9 +157,23 @@ router.post('/', auth, (req, res) => {
     });
   });
 });
+//block 2 end
 
+
+
+
+
+
+
+
+
+
+
+//block 3 
 // Get my workout schedules
 router.get('/my-schedules', auth, (req, res) => {
+
+  // Fetch schedules created by the user along with participant count
   const sql = `
     SELECT ws.*, 
            COUNT(wsp.id) as participant_count
@@ -144,14 +184,27 @@ router.get('/my-schedules', auth, (req, res) => {
     ORDER BY ws.date DESC
   `;
   
+  // Use db.all to get all schedules and their participant counts
   db.all(sql, [req.user.id], (err, rows) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     res.json({ schedules: rows || [] });
   });
 });
+//block 3 end 
 
+
+
+
+
+
+
+
+
+//block 4
 // Get workout invites (schedules I'm invited to)
 router.get('/invites', auth, (req, res) => {
+
+  // Fetch schedules where the user is a participant along with invite status and creator info
   const sql = `
     SELECT ws.*, 
            wsp.status,
@@ -164,23 +217,39 @@ router.get('/invites', auth, (req, res) => {
     ORDER BY ws.date DESC
   `;
   
+  // Use db.all to get all invites with their status and creator info
   db.all(sql, [req.user.id], (err, rows) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     res.json({ invites: rows || [] });
   });
 });
+//block 4 end
 
+
+
+
+
+
+
+
+
+//block 5
 // Respond to workout invite
 router.post('/invites/:participantId/respond', auth, (req, res) => {
+
+  // Get participant ID and response status from request
   const { participantId } = req.params;
   const { status } = req.body; // 'accepted' or 'declined'
 
+  // Validate status
   if (!['accepted', 'declined'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
 
+  // Update the participant's status in the database
   const sql = 'UPDATE workout_schedule_participants SET status = ?, responded_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?';
   
+  // Use function() to access 'this.changes' to check if the update was successful
   db.run(sql, [status, participantId, req.user.id], function(err) {
     if (err) return res.status(500).json({ error: 'DB error' });
     if (this.changes === 0) return res.status(404).json({ error: 'Invite not found' });
@@ -193,6 +262,8 @@ router.post('/invites/:participantId/respond', auth, (req, res) => {
             const message = status === 'accepted' 
               ? 'accepted your workout invite' 
               : 'declined your workout invite';
+
+              // Insert notification for the creator
             db.run(
               'INSERT INTO notifications (user_id, type, sender_id, message) VALUES (?, ?, ?, ?)',
               [schedule.creator_id, 'workout_response', req.user.id, message]
@@ -202,8 +273,14 @@ router.post('/invites/:participantId/respond', auth, (req, res) => {
       }
     });
 
+
+    // Respond with success and the new status
     res.json({ success: true, status });
   });
 });
+//block 5 end
+
+
+
 
 module.exports = router;

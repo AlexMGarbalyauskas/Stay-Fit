@@ -1,4 +1,16 @@
 // Timezone utility - Maps cities/countries to their timezone identifiers
+
+//PURPOSE: This utility provides functions to determine the timezone based on a given location 
+// string (like a city or country name) and to get a human-readable display name for a timezone. 
+// It includes a mapping of common locations to their respective timezone identifiers.
+
+
+
+
+
+
+//block 1
+// Mapping of location keywords to timezone identifiers
 const timezoneMap = {
   // Ireland
   'dublin': 'Europe/Dublin',
@@ -126,7 +138,15 @@ const timezoneMap = {
   'moscow': 'Europe/Moscow',
   'russia': 'Europe/Moscow',
 };
+//block 1 end 
 
+
+
+
+
+
+//block 2
+// Additional mappings can be added as needed
 /**
  * Get timezone from location string
  * @param {string} location - Location string (city, country, etc.)
@@ -153,13 +173,23 @@ function getTimezoneFromLocation(location) {
   
   return 'UTC';
 }
+//block 2 end
 
+
+
+
+
+
+
+//block 3
 /**
  * Get human-readable timezone display name
  * @param {string} timezone - Timezone identifier (e.g., 'Europe/Dublin')
  * @returns {string} - Display name (e.g., 'GMT+0:00 (Europe/Dublin)')
  */
 function getTimezoneDisplay(timezone) {
+
+  // Use Intl.DateTimeFormat to get the timezone abbreviation (e.g., GMT+0:00)
   try {
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -173,7 +203,13 @@ function getTimezoneDisplay(timezone) {
     return timezone;
   }
 }
+//block 3 end
 
+
+
+
+
+// Export functions and mapping
 module.exports = {
   getTimezoneFromLocation,
   getTimezoneDisplay,
