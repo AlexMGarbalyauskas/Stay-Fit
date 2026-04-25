@@ -22,15 +22,15 @@ export default function AuthRequired() {
   const section = path.split('/')[1] || '';
 
   const messages = {
-    find: 'Log in to discover and add new fitness friends.',
-    post: 'Log in to share your workouts, updates, and moments.',
-    chat: 'Log in to chat with friends and keep conversations going.',
-    friends: 'Log in to view and manage your friends list.',
-    notifications: 'Log in to see your notifications, invites, and requests.',
-    profile: 'Log in to view and edit your profile.',
+    find: t('authRequiredFindDesc'),
+    post: t('authRequiredPostDesc'),
+    chat: t('authRequiredChatDesc'),
+    friends: t('authRequiredFriendsDesc'),
+    notifications: t('authRequiredNotificationsDesc'),
+    profile: t('authRequiredProfileDesc'),
   };
 
-  const description = messages[section] || 'Log in or create an account to access this page.';
+  const description = messages[section] || t('authRequiredDefaultDesc');
 
   return (
     <>
@@ -45,9 +45,7 @@ export default function AuthRequired() {
             <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-green-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
               <Dumbbell className="w-12 h-12 text-white" />
             </div>
-            <h1 className={`text-4xl font-bold mb-4 ${
-              isDark ? 'text-gray-100' : 'text-gray-900'
-            }`}>Login required</h1>
+            <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('authRequiredTitle')}</h1>
             <p className={`text-lg px-4 ${
               isDark ? 'text-gray-300' : 'text-gray-600'
             }`}>{description}</p>
@@ -58,7 +56,7 @@ export default function AuthRequired() {
               to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`}
               className="w-full bg-gradient-to-r from-blue-500 to-green-400 text-white py-4 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-green-500 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              Go to Login
+              {t('goToLogin')}
             </Link>
             <Link
               to={`/register?next=${encodeURIComponent(location.pathname + location.search)}`}
@@ -68,14 +66,14 @@ export default function AuthRequired() {
                   : 'bg-white border-gray-200 text-gray-800 hover:bg-gray-50 hover:border-gray-300'
               }`}
             >
-              Create an Account
+              {t('createAnAccount')}
             </Link>
           </div>
 
           <p className={`text-xs mt-8 ${
             isDark ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            {t('agreeToTermsAndPrivacy')}
           </p>
         </div>
       </div>

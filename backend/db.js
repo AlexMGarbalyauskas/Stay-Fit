@@ -1,21 +1,51 @@
+//db.js used to set up the SQLite database connection
+//  and initialize tables for the Stay-Fit application.
+
+
+// IMPORTS
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
+// Load environment variables from .env file
 require('dotenv').config({ override: true });
 
+// Database file path 
+// (can be set via env variable or defaults to 
+// data.sqlite in the same directory)
 const DB_FILE = process.env.DATABASE_FILE || path.join(__dirname, 'data.sqlite');
 
+
+
+
+
+
+//block 1 if the data directory doesn't exist, create it
 // Ensure directory exists
 if (!fs.existsSync(path.dirname(DB_FILE))) {
   fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
 }
+//block 1 end
 
+
+
+
+
+
+//block 2 Connect to SQLite database (will create file if it doesn't exist)
+// Connect to SQLite database (will create file if it doesn't exist)
 const db = new sqlite3.Database(DB_FILE, (err) => {
   if (err) console.error('DB connection error', err);
   else console.log('SQLite DB connected');
 });
+//block 2 end
 
+
+
+
+
+
+//block 3 Initialize tables if they don't exist
 // Initialize tables
 const initSql = `
 CREATE TABLE IF NOT EXISTS users (
@@ -118,7 +148,14 @@ CREATE TABLE IF NOT EXISTS comment_likes (
   UNIQUE(comment_id, user_id)
 );
 `;
+//block 3 end
 
+
+
+
+
+
+//block 4 Execute the initialization SQL and handle migrations
 db.exec(initSql, (err) => {
   if (err) console.error('DB init error', err);
 
@@ -175,6 +212,9 @@ db.exec(initSql, (err) => {
         else console.log('Added message_type column to messages');
       });
     }
+
+    // Add media_url, encrypted_content, iv, 
+    // and is_encrypted columns if they don't exist
     const hasMedia = cols3 && cols3.some(c => c.name === 'media_url');
     if (!hasMedia) {
       db.run("ALTER TABLE messages ADD COLUMN media_url TEXT", err8 => {
@@ -182,6 +222,11 @@ db.exec(initSql, (err) => {
         else console.log('Added media_url column to messages');
       });
     }
+
+
+
+    // Add encrypted_content, iv,
+    //  and is_encrypted for message encryption support
     const hasEncryptedContent = cols3 && cols3.some(c => c.name === 'encrypted_content');
     if (!hasEncryptedContent) {
       db.run("ALTER TABLE messages ADD COLUMN encrypted_content TEXT", err9 => {
@@ -189,6 +234,9 @@ db.exec(initSql, (err) => {
         else console.log('Added encrypted_content column to messages');
       });
     }
+
+
+    // Add iv column for encryption support
     const hasIv = cols3 && cols3.some(c => c.name === 'iv');
     if (!hasIv) {
       db.run("ALTER TABLE messages ADD COLUMN iv TEXT", err10 => {
@@ -196,6 +244,9 @@ db.exec(initSql, (err) => {
         else console.log('Added iv column to messages');
       });
     }
+
+
+    // Add is_encrypted flag to messages
     const hasEncryptedFlag = cols3 && cols3.some(c => c.name === 'is_encrypted');
     if (!hasEncryptedFlag) {
       db.run("ALTER TABLE messages ADD COLUMN is_encrypted INTEGER DEFAULT 0", err11 => {
@@ -205,5 +256,10 @@ db.exec(initSql, (err) => {
     }
   });
 });
+//block 4 end
+
+
+
+
 
 module.exports = db;
