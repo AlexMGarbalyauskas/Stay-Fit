@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --runInBand",
+    "test:integration": "jest --runInBand --forceExit tests/integration/api.integration.test.js",
     "start": "node server.js"
   },
   "keywords": [],
@@ -28,5 +29,9 @@
     "resend": "^4.0.0",
     "socket.io": "^4.8.1",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.1.1"
   }
 }

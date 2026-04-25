@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Dumbbell, Save, Clock, Users, Bel
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { startReminderService } from '../utils/workoutReminders';
+import { buildPostDateSet, calculateCurrentStreak } from '../utils/streak';
 import { useWorkoutReminder } from '../context/WorkoutReminderContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -49,39 +50,11 @@ export default function CalendarPage() {
         const posts = response.data.posts || [];
         
         // Extract unique dates from posts
-        const dates = new Set();
-        posts.forEach(post => {
-          if (post.created_at) {
-            const date = new Date(post.created_at);
-            const key = dateKey(date.getFullYear(), date.getMonth(), date.getDate());
-            dates.add(key);
-          }
-        });
+        const dates = buildPostDateSet(posts);
         
         setPostDates(dates);
-        
-        // Calculate current streak
-        const calculateStreak = () => {
-          let streak = 0;
-          const currentDate = new Date();
-          
-          for (let i = 0; i < 365; i++) {
-            const checkDate = new Date(currentDate);
-            checkDate.setDate(checkDate.getDate() - i);
-            const key = dateKey(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
-            
-            if (dates.has(key)) {
-              streak++;
-            } else if (i > 0) {
-              // Allow missing today but count streak
-              break;
-            }
-          }
-          
-          return streak;
-        };
-        
-        setCurrentStreak(calculateStreak());
+
+        setCurrentStreak(calculateCurrentStreak(dates));
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       }

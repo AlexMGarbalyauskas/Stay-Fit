@@ -243,7 +243,9 @@ io.on('connection', (socket) => {
 
 // ===== Start server =====
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
 // ===== Start server end =====
 
 
@@ -287,3 +289,5 @@ process.on('SIGTERM', () => {
   });
 });
 //block 7 end
+
+module.exports = { app, server };

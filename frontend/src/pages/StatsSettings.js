@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Flame, Users, MessageSquare, TrendingUp, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { buildPostDateSet, calculateCurrentStreak, countPostingDaysInWindow } from '../utils/streak';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function StatsSettings() {
@@ -55,37 +56,13 @@ export default function StatsSettings() {
         }
         setMonthlyPosts(months);
         
-        // Calculate streak from posts
-        const dates = new Set();
-        allPosts.forEach(post => {
-          if (post.created_at) {
-            const date = new Date(post.created_at);
-            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-            dates.add(key);
-          }
-        });
+        const dates = buildPostDateSet(allPosts);
 
         // Count how many unique posting days happened in the last 7 days (including today)
-        let last7DaysPosted = 0;
-        const weekAnchor = new Date();
-        for (let i = 0; i < 7; i++) {
-          const checkDate = new Date(weekAnchor);
-          checkDate.setDate(checkDate.getDate() - i);
-          const key = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
-          if (dates.has(key)) last7DaysPosted++;
-        }
+        const last7DaysPosted = countPostingDaysInWindow(dates, 7);
         setWeeklyPostingDays(last7DaysPosted);
 
-        let streak = 0;
-        const currentDate = new Date();
-        for (let i = 0; i < 365; i++) {
-          const checkDate = new Date(currentDate);
-          checkDate.setDate(checkDate.getDate() - i);
-          const key = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
-          if (dates.has(key)) {
-            streak++;
-          } else if (i > 0) break;
-        }
+        const streak = calculateCurrentStreak(dates);
 
         // Get friends
         const friendsRes = await axios.get(`${API_URL}/api/friends`, authHeaders);

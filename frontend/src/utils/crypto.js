@@ -6,6 +6,26 @@ const KEY_LENGTH = 256;
 const IV_LENGTH = 12; // 96 bits recommended for AES-GCM
 const SHARED_CONVERSATION_SEED = 'stay-fit-shared-conversation-seed-v2';
 
+const getTextEncoder = () => {
+  const Encoder = typeof window !== 'undefined' && window.TextEncoder
+    ? window.TextEncoder
+    : (typeof TextEncoder !== 'undefined' ? TextEncoder : undefined);
+  if (!Encoder) {
+    throw new Error('TextEncoder is not available in this environment');
+  }
+  return Encoder;
+};
+
+const getTextDecoder = () => {
+  const Decoder = typeof window !== 'undefined' && window.TextDecoder
+    ? window.TextDecoder
+    : (typeof TextDecoder !== 'undefined' ? TextDecoder : undefined);
+  if (!Decoder) {
+    throw new Error('TextDecoder is not available in this environment');
+  }
+  return Decoder;
+};
+
 /**
  * Generate a cryptographic key from a password using PBKDF2
  * @param {string} password - User password or passphrase
@@ -13,7 +33,7 @@ const SHARED_CONVERSATION_SEED = 'stay-fit-shared-conversation-seed-v2';
  * @returns {Promise<CryptoKey>} - Encryption key
  */
 async function deriveKey(password, salt) {
-  const encoder = new TextEncoder();
+  const encoder = new (getTextEncoder())();
   
   // Import password as key material
   const keyMaterial = await window.crypto.subtle.importKey(
@@ -89,7 +109,7 @@ export async function encryptMessage(plaintext, senderId, receiverId) {
   }
 
   try {
-    const encoder = new TextEncoder();
+    const encoder = new (getTextEncoder())();
     const key = await getOrCreateConversationKey(senderId, receiverId);
     
     // Generate random IV (initialization vector)
@@ -151,7 +171,7 @@ export async function decryptMessage(encryptedBase64, ivBase64, senderId, receiv
       encrypted
     );
 
-    const decoder = new TextDecoder();
+    const decoder = new (getTextDecoder())();
     return decoder.decode(decryptedBuffer);
   } catch (error) {
     try {
@@ -170,7 +190,7 @@ export async function decryptMessage(encryptedBase64, ivBase64, senderId, receiv
         encrypted
       );
 
-      const decoder = new TextDecoder();
+      const decoder = new (getTextDecoder())();
       return decoder.decode(decryptedBuffer);
     } catch (legacyError) {
       // Return placeholder for failed decryptions
