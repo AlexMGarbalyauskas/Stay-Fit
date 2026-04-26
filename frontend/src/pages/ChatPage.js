@@ -1,3 +1,19 @@
+//chatpage is the main interface for one-on-one 
+// messaging between users. It displays the list of 
+// friends, the chat history with the selected friend, 
+// and allows sending text and GIF messages. It also 
+// supports message reactions, blocking/unblocking users, 
+// and handles real-time updates via WebSockets. 
+// The component is responsive and adapts to mobile 
+// screens by toggling between the friend list and 
+// chat view.
+
+
+//if viewing check via block by bloc via > 
+
+
+
+//imports 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getUser } from '../api';
@@ -18,8 +34,20 @@ import { User, Image as ImageIcon, ChevronDown, Lock, MessageCircle, Smile, Shie
 import { encryptMessage, decryptMessage, isEncryptionReady, initializeEncryption } from '../utils/crypto';
 import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
 import { useLanguage } from '../context/LanguageContext';
+//imports end 
 
+
+
+
+
+
+
+
+
+// The ChatPage component renders the chat interface,
 export default function ChatPage() {
+
+  //consts 
   const { t } = useLanguage();
   const isDark = document.documentElement.classList.contains('dark');
   const navigate = useNavigate();
@@ -30,6 +58,9 @@ export default function ChatPage() {
       return null;
     }
   });
+
+
+  // Check for authentication token and user data to determine if the user is logged in
   const token = localStorage.getItem('token');
   const isAuthenticated = !!(token && currentUser);
 
@@ -60,20 +91,57 @@ export default function ChatPage() {
   const currentUserRef = useRef(currentUser);
 
   const getLastChatFriendKey = (userId) => `last_chat_friend_id_${userId || 'anonymous'}`;
+//consts end
 
+
+
+
+
+
+
+
+
+
+
+  //use effect 1
+  // Save the last active friend in local storage 
+  // so we can restore it on page reload
+  // Whenever the active friend or current user's 
+  // ID changes, update the local storage with 
+  // the ID of the active friend. This allows the 
+  // app to remember which chat was open if the user 
+  // refreshes the page or comes back later.
   useEffect(() => {
     if (activeFriend?.id) {
       localStorage.setItem(getLastChatFriendKey(currentUser?.id), String(activeFriend.id));
     }
   }, [activeFriend, currentUser?.id]);
+//use effect 1 end
 
+
+
+
+
+
+
+//use effect 2
+  // Listen for window resize events to determine if we are on a mobile screen
   useEffect(() => {
     const updateIsMobile = () => setIsMobile(window.innerWidth < 768);
     updateIsMobile();
     window.addEventListener('resize', updateIsMobile);
     return () => window.removeEventListener('resize', updateIsMobile);
   }, []);
+//use effect 2 end
 
+
+
+
+
+
+
+//use effect 3  
+  // When the active friend or mobile status changes, update the mobile view accordingly
   useEffect(() => {
     if (!isMobile) {
       setMobileView('list');
@@ -81,30 +149,77 @@ export default function ChatPage() {
     }
     setMobileView(activeFriend ? 'chat' : 'list');
   }, [activeFriend, isMobile]);
+//use effect 3 end
 
+
+
+
+
+
+
+//use effect 4
+  // Whenever the active friend changes, scroll to the bottom of the chat history to show the latest messages. This ensures that when a user opens a chat, they see the most recent messages without having to scroll manually.
   useEffect(() => {
     activeFriendRef.current = activeFriend;
   }, [activeFriend]);
+//use effect 4 end
 
+
+
+
+
+
+//use effect 5
+  // Whenever the current user changes, update the currentUserRef to keep a mutable reference to the latest user data. This is useful for accessing the current user's information in event handlers and WebSocket listeners without having to worry about stale closures.
   useEffect(() => {
     currentUserRef.current = currentUser;
   }, [currentUser]);
+//use effect 5 end
 
+
+
+
+
+
+
+
+
+// use effect 6
+// Whenever the messages array changes (e.g., when new messages are received or sent), scroll to the bottom of the chat history to show the latest messages. This provides a better user experience by automatically keeping the most recent messages in view.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+// use effect 6 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+// use effect 7
+// Set up the WebSocket connection and event listeners for real-time chat updates. This effect runs whenever the authentication token or status changes. It initializes the socket connection, listens for incoming messages, reaction updates, message deletions, and block notifications. It also handles cleanup by disconnecting the socket and removing event listeners when the component unmounts or when dependencies change.
   useEffect(() => {
     if (!isAuthenticated) return;
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
 
+
+    // Initialize WebSocket connection with authentication token and set up event listeners for receiving messages, reaction updates, message deletions, and block notifications. Clean up the connection on component unmount.
     socketRef.current = io(SOCKET_BASE, getSocketOptions(token));
     const s = socketRef.current;
 
     s.on('connect_error', (err) => console.error('Socket connect error:', err));
 
+
+    // Listen for incoming messages and update the chat if the message is from/to the active friend. Decrypt messages if they are encrypted, and handle cases where decryption fails.
     s.on('receive_message', async (msg) => {
       const currentFriend = activeFriendRef.current;
       if (currentFriend && (msg.sender_id === currentFriend.id || msg.receiver_id === currentFriend.id)) {
@@ -154,6 +269,8 @@ export default function ChatPage() {
       }
     });
 
+
+    // Clean up the WebSocket connection when the component unmounts
     return () => {
       s.off('connect_error');
       s.off('receive_message');
@@ -163,14 +280,38 @@ export default function ChatPage() {
       s.disconnect();
     };
   }, [token, isAuthenticated, t]);
+// use effect 7 end
 
+
+
+
+
+
+
+
+
+
+// use effect 8
+  // Load the user's friends list when the component mounts and whenever the authentication status changes. Handle errors by logging them to the console.
   useEffect(() => {
     if (!isAuthenticated) return;
     api.get('/api/friends')
       .then(res => setFriends(res.data.friends || []))
       .catch(err => console.error('Friends load error', err));
   }, [isAuthenticated]);
+// use effect 8 end
 
+
+
+
+
+
+
+
+
+
+// use effect 9
+  // Load the current user's profile information when the component mounts and whenever the authentication status changes. Update the currentUser state and local storage with the latest user data. Handle errors by logging them to the console.
   useEffect(() => {
     if (!isAuthenticated || !token) return;
     api.get('/api/me')
@@ -184,14 +325,35 @@ export default function ChatPage() {
       })
       .catch(() => {});
   }, [isAuthenticated, token]);
+// use effect 9 end
 
+
+
+
+
+
+
+
+
+
+// use effect 10
+  // Initialize encryption when the user logs in and we have their ID. This ensures that messages can be encrypted and decrypted properly. The encryption is initialized with a combination of the authentication token and the user's ID to create a unique key for the session.
   useEffect(() => {
     if (!isAuthenticated || !token || !currentUser?.id) return;
     if (!isEncryptionReady()) {
       initializeEncryption(token + currentUser.id);
     }
   }, [isAuthenticated, token, currentUser?.id]);
+// use effect 10 end
 
+
+
+
+
+
+// use effect 11
+
+// When the component mounts and whenever the route parameter for the friend ID changes, attempt to set the active friend based on the URL. If a friend ID is present in the URL, try to find that friend in the friends list or fetch their profile if not found. If no route parameter is present, try to restore the last active friend from local storage. This allows users to share links to specific chats and also ensures that they return to the same chat they were on when they come back to the app.
   const params = useParams();
 
   useEffect(() => {
@@ -217,7 +379,21 @@ export default function ChatPage() {
       }
     }
   }, [isAuthenticated, params?.id, friends, currentUser?.id]);
+// use effect 11 end
 
+
+
+
+
+
+
+
+
+
+
+
+// use effect 12
+// If the user is not authenticated, render the AuthRequired component which prompts them to log in or register. This ensures that only logged-in users can access the chat interface and its features.
   useEffect(() => {
     if (!isAuthenticated || !activeFriend) return;
     api.get(`/api/messages/${activeFriend.id}`)
@@ -259,7 +435,18 @@ export default function ChatPage() {
       })
       .catch(err => console.error('Messages load error', err));
   }, [isAuthenticated, activeFriend]);
+// use effect 12 end
 
+
+
+
+
+
+
+
+
+
+// use effect 13
   useEffect(() => {
     if (!isAuthenticated || !activeFriend?.id) return;
     getMessageBlockStatus(activeFriend.id)
@@ -272,7 +459,17 @@ export default function ChatPage() {
         setBlockStatus({ blockedByMe: false, blockedMe: false, blockedEither: false });
       });
   }, [isAuthenticated, activeFriend?.id]);
+// use effect 13 end
 
+
+
+
+
+
+
+
+// use effect 14
+  // If the user is not authenticated, render the AuthRequired component which prompts them to log in or register. This ensures that only logged-in users can access the chat interface and its features.
   // Auth guard render
   if (!isAuthenticated) {
     return (
@@ -312,7 +509,15 @@ export default function ChatPage() {
       </>
     );
   }
+// use effect 14 end
 
+
+
+
+
+
+//constant render for main chat interface
+  // If the user is authenticated, render the main chat interface with the Navbar, Header, and the chat components. This includes the friend list, chat history, message input, and any notices related to blocking status. The interface is responsive and adapts to mobile screens by toggling between the friend list and chat view.
   const sendMessage = async () => {
     const hasText = text.trim().length > 0;
     if (!activeFriend || !socketRef.current || !hasText) return;
@@ -321,6 +526,9 @@ export default function ChatPage() {
       return;
     }
     
+
+
+    // Always encrypt messages if encryption is ready, and send the message data through the WebSocket. If encryption is not ready (which shouldn't happen), send the message unencrypted as a fallback. Handle any errors that occur during encryption or sending by logging them and showing an alert to the user.
     try {
       // Always encrypt messages if encryption is ready
       if (isEncryptionReady()) {
@@ -356,7 +564,15 @@ export default function ChatPage() {
       alert('Failed to send message');
     }
   };
+// constant render for main chat interface end
 
+
+
+
+
+
+//const 2
+// Send a GIF message to the active friend. If the user is blocked, show a notice instead. After sending the GIF, register the share with Tenor for analytics and close the GIF panel.
   const sendGif = (url, gifId) => {
     if (!activeFriend || !socketRef.current || !url) return;
     if (blockStatus.blockedEither) {
@@ -382,7 +598,16 @@ export default function ChatPage() {
     setGifQuery('');
     setGifResults([]);
   };
+//const 2 end
 
+
+
+
+
+
+
+
+//const 3
   const searchGifs = async (query) => {
     const q = (query || gifQuery).trim();
     if (!q) {
@@ -405,7 +630,12 @@ export default function ChatPage() {
       setGifLoading(false);
     }
   };
+//const 3 end
 
+
+
+
+//const 4
   const handleToggleBlockUser = async () => {
     if (!activeFriend?.id) return;
 
@@ -425,7 +655,12 @@ export default function ChatPage() {
       setBlockBusy(false);
     }
   };
+//const 4 end
 
+
+
+
+//const 5
   const confirmBlockUser = async () => {
     if (!activeFriend?.id) return;
     try {
@@ -441,7 +676,13 @@ export default function ChatPage() {
       setBlockBusy(false);
     }
   };
+//const 5 end
 
+
+
+
+
+//const 6
   const handleGifQueryChange = (e) => {
     const val = e.target.value;
     setGifQuery(val);
@@ -452,7 +693,19 @@ export default function ChatPage() {
       setGifResults([]);
     }
   };
+//const 6 end
 
+
+
+
+
+
+
+
+
+
+//block 1 
+// If the user is blocked by the active friend or has blocked the active friend, show a notice instead of the chat interface. This prevents users from interacting in the chat if there is a block in place, and provides feedback on why they cannot send messages.
   if (!currentUser || !token) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -460,7 +713,17 @@ export default function ChatPage() {
       </div>
     );
   }
+//block 1 end
 
+
+
+
+
+
+
+
+
+// Main render of the chat interface, including friend list, chat history, message input, and notices related to blocking status. The interface is responsive and adapts to mobile screens by toggling between the friend list and chat view.
   return (
     <>
       <div className={`flex flex-col md:flex-row h-[calc(100vh-56px)] pt-2 bg-gradient-to-br relative ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`} onClick={() => { if (pickerOpenFor) setPickerOpenFor(null); if (contextMenu.open) setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false }); }}>
@@ -830,3 +1093,9 @@ export default function ChatPage() {
     </>
   );
 }
+
+
+
+
+
+//component end 
