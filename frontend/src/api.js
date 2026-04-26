@@ -1,8 +1,25 @@
+// api.js - Centralized API client for Stay Fit application
+// This module defines all API 
+// interactions with the backend server, 
+// including authentication,
+
+
 import axios from 'axios';
 
+
+
+
+// Base URL configuration with environment 
+// variable support and fallback
 const isBrowser = typeof window !== 'undefined';
 const DEFAULT_PROD_API_BASE = 'https://stay-fit-1.onrender.com';
 
+
+
+
+
+// Resolves the API base URL based on environment 
+// variables and runtime context
 const resolveApiBase = () => {
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
@@ -20,10 +37,18 @@ const resolveApiBase = () => {
 
 export const API_BASE = resolveApiBase();
 
+
+
+
+// Create an Axios instance with the resolved base URL
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 });
+
+
+
+
 
 // Attach JWT automatically
 api.interceptors.request.use(config => {
@@ -31,6 +56,11 @@ api.interceptors.request.use(config => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+
+
+
+
 
 // AUTH
 export const register = (username, email, password) =>
@@ -52,6 +82,11 @@ export const verifyEmail = () => api.post('/api/auth/verify-email');
 
 export const getVerificationStatus = () => api.get('/api/auth/verification-status');
 
+
+
+
+
+
 // USERS
 export const getUsers = () => api.get('/api/users');
 export const getUser = id => api.get(`/api/users/${id}`);
@@ -64,6 +99,10 @@ export const getTotalUsersCount = async () => {
   return res.data.users?.length || 0;
 };
 
+
+
+
+
 // FRIENDS
 export const sendFriendRequest = receiverId => api.post('/api/friends/request', { receiverId });
 export const getFriendStatus = userId => api.get(`/api/friends/status/${userId}`);
@@ -74,6 +113,9 @@ export const acceptFriendRequest = (requestId, senderId) =>
   api.post('/api/friends/accept', { requestId, senderId });
 export const rejectFriendRequest = requestId => api.post('/api/friends/reject', { requestId });
 
+
+
+
 // MESSAGES
 export const getMessages = userId => api.get(`/api/messages/${userId}`);
 export const getMessageReactions = messageId => api.get(`/api/messages/${messageId}/reactions`);
@@ -83,15 +125,27 @@ export const getMessageBlockStatus = userId => api.get(`/api/messages/blocks/${u
 export const blockMessageUser = userId => api.post(`/api/messages/blocks/${userId}`);
 export const unblockMessageUser = userId => api.delete(`/api/messages/blocks/${userId}`);
 
+
+
+
 // NOTIFICATIONS
 export const getNotifications = (type) => api.get(`/api/notifications${type ? `?type=${type}` : ''}`);
 export const markNotificationRead = (id) => api.post('/api/notifications/mark-read', { id });
 export const markAllNotificationsRead = () => api.post('/api/notifications/mark-all-read');
 export const deleteNotification = (id) => api.delete(`/api/notifications/${id}`);
 
+
+
+
+
+
 // WORKOUT SCHEDULES
 export const respondToWorkoutInvite = (participantId, status) =>
   api.post(`/api/workout-schedules/invites/${participantId}/respond`, { status });
+
+
+
+
 
 // POSTS
 export const getPosts = () => api.get('/api/posts');
@@ -110,6 +164,11 @@ export const unsavePost = (postId) => api.delete(`/api/posts/${postId}/save`);
 export const toggleLike = (postId) => api.post(`/api/posts/${postId}/like`);
 export const toggleSave = (postId) => api.post(`/api/posts/${postId}/save`);
 
+
+
+
+
+
 // COMMENTS
 export const getComments = (postId) => api.get(`/api/posts/${postId}/comments`);
 export const createComment = (postId, content, parentCommentId = null) =>
@@ -122,6 +181,10 @@ export const likeComment = (postId, commentId) => api.post(`/api/posts/${postId}
 export const unlikeComment = (postId, commentId) => api.delete(`/api/posts/${postId}/comments/${commentId}/like`);
 export const toggleCommentLike = (postId, commentId) => api.post(`/api/posts/${postId}/comments/${commentId}/like`);
 
+
+
+
+
 // NESTED COMMENTS
 export const getNestedComments = (postId, commentId) => api.get(`/api/posts/${postId}/comments/${commentId}/replies`);
 export const createNestedComment = (postId, commentId, content) =>
@@ -133,8 +196,16 @@ export const likeNestedComment = (postId, commentId, nestedCommentId) =>
 export const unlikeNestedComment = (postId, commentId, nestedCommentId) =>
   api.delete(`/api/posts/${postId}/comments/${commentId}/replies/${nestedCommentId}/like`);
 
+
+
+
+
 // AI HELPER
 export const askAIHelper = (prompt, language = 'en') => api.post('/api/ai/helper', { prompt, language });
+
+
+
+
 
 // ACCOUNT
 export const deleteAccount = (password) => api.delete('/api/me/delete', { data: { password } });

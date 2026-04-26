@@ -1,4 +1,25 @@
+//one big file for all translations, 
+// to keep them organized in one place 
+// and make it easier to add new languages 
+// in the future. Each key corresponds to a 
+// specific text element in the app, and the 
+// value is the translated string for that element. 
+// The 'en' object contains the default English 
+// translations, and additional language objects 
+// (like 'es' for Spanish) can be added with the 
+// same keys but translated values.
+
+
+
+
+
+
+
+//big block translation object
+// Example usage:
 export const translations = {
+
+  // English translations (en)
   en: {
     // Navigation
     home: 'Home',
@@ -550,6 +571,7 @@ export const translations = {
     beTheFirst: 'No posts yet — be the first!',
   },
   
+  // Spanish translations (es)
   es: {
     // Navigation
     home: 'Inicio',
@@ -1020,6 +1042,8 @@ export const translations = {
     workoutCore: 'Core',
   },
   
+
+  // French translations (fr)
   fr: {
     profile: 'Profil',
     post: 'Publier',
@@ -1484,6 +1508,8 @@ export const translations = {
     workoutCore: 'Gainage',
   },
   
+
+  // Italian translations (it)
   it: {
     // Navigation
     home: 'Home',
@@ -1959,8 +1985,18 @@ export const translations = {
     noFriendsYet: 'Non hai ancora amici.',
   },
 };
+// block end 
 
+
+
+
+
+
+
+//block 2
+// Function to get translation for a given 
+// key and language, with fallback to English
 export const getTranslation = (lang, key) => {
   return translations[lang]?.[key] || translations['en'][key] || key;
 };
-
+//block 2 end 

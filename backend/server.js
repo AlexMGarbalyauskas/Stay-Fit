@@ -1,5 +1,7 @@
-//PURPOSE:  server.js is the main entry point for the Stay-Fit backend. 
-// It sets up the Express server, configures middleware, defines API routes, 
+//PURPOSE:  server.js is the main entry point for the 
+// Stay-Fit backend. 
+// It sets up the Express server, configures 
+// middleware, defines API routes, 
 // and initializes Socket.IO for real-time communication. 
 // The server handles user authentication, messaging, notifications, 
 // and other core functionalities of the Stay-Fit application. 

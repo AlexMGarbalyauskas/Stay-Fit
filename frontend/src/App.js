@@ -2,7 +2,12 @@
 // and global UI elements like the workout prompt and notification toast.
 
 
-//Import necessary libraries and components
+//Import necessary libraries and components for all pages and 
+// utilities like API, translations, streaks, 
+// workout reminders, and crypto.
+
+
+
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import './App.css';

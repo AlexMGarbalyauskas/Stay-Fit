@@ -5,6 +5,7 @@
   "scripts": {
     "test": "jest --runInBand",
     "test:integration": "jest --runInBand --forceExit tests/integration/api.integration.test.js",
+    "test:class": "jest --runInBand --forceExit tests/integration/auth.class.integration.test.js",
     "start": "node server.js"
   },
   "keywords": [],

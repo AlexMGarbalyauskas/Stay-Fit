@@ -1,5 +1,16 @@
+// This module provides utility functions for 
+// calculating posting streaks and activity 
+// patterns based on post creation dates.
+
+
+
+// Pads a number with leading zeros to ensure 
+// it has at least 2 digits
 const pad = (n) => String(n).padStart(2, '0');
 
+
+
+// Converts a Date object to a string key in the format YYYY-MM-DD
 export const toDateKey = (date) => {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
     throw new Error('Invalid date provided');
@@ -7,6 +18,9 @@ export const toDateKey = (date) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
 
+
+
+// Builds a set of date keys from an array of posts
 export const buildPostDateSet = (posts = []) => {
   const dates = new Set();
 
@@ -21,6 +35,9 @@ export const buildPostDateSet = (posts = []) => {
   return dates;
 };
 
+
+
+// Calculates the current posting streak based on a set of date keys
 export const calculateCurrentStreak = (dateKeys, anchorDate = new Date(), maxDays = 365) => {
   let streak = 0;
 
@@ -40,6 +57,8 @@ export const calculateCurrentStreak = (dateKeys, anchorDate = new Date(), maxDay
   return streak;
 };
 
+
+// Counts how many days within the specified window have posts
 export const countPostingDaysInWindow = (dateKeys, days, anchorDate = new Date()) => {
   let count = 0;
 

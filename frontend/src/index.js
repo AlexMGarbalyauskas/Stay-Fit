@@ -1,3 +1,8 @@
+// This file is the entry point of the React application. 
+// It sets up the root component and renders it to the DOM.
+
+
+//importing necessary libraries and components
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -6,11 +11,19 @@ import reportWebVitals from './reportWebVitals';
 
 // === Google OAuth Redirect Handler ===
 function handleGoogleOAuthRedirect() {
-  const params = new URLSearchParams(window.location.search);
 
+  // Parse URL parameters to check for token and user info
+  const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
   const user = params.get('user');
 
+
+
+
+
+  // If we have a token, 
+  // the user has just been redirected back from Google 
+  // OAuth login
   if (token) {
     // Save JWT token
     localStorage.setItem('token', token);
@@ -36,6 +49,9 @@ function handleGoogleOAuthRedirect() {
 // Run immediately
 handleGoogleOAuthRedirect();
 
+
+
+// Render the root component into the DOM
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
@@ -43,6 +59,13 @@ root.render(
   </React.StrictMode>
 );
 
+
+
+
+
+
+// Register service worker for offline 
+// support and PWA features
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
@@ -51,5 +74,9 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.log('SW registration failed:', err));
   });
 }
+
+
+
+
 
 reportWebVitals();

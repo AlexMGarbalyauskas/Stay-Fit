@@ -36,8 +36,8 @@ export default function Home({ onLogout, isAuthenticated }) {
         setUser(res.data.user || res.data);
       })
       .catch(err => {
-        logError('❌ getMe error:', err);
-        logError('❌ Error response:', err.response);
+        logError('getMe error:', err);
+        logError('Error response:', err.response);
         if (err?.response?.status === 404) {
           alert('Session invalid or user not found. Please log in again.');
         }

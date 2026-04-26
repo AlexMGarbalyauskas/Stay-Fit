@@ -16,6 +16,9 @@ const getTextEncoder = () => {
   return Encoder;
 };
 
+
+// Some environments (like older versions of jsdom) 
+// may not have TextDecoder
 const getTextDecoder = () => {
   const Decoder = typeof window !== 'undefined' && window.TextDecoder
     ? window.TextDecoder

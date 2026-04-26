@@ -1,3 +1,12 @@
+//email.js handles sending verification emails 
+// using multiple providers (MailSender, Resend, SMTP) 
+// with a fallback mechanism. It includes detailed 
+// diagnostics and error logging to help identify 
+// issues with email delivery. The module exports 
+// the sendVerificationEmail function for 
+// sending emails and getEmailDiagnostics for 
+// retrieving recent email send attempts and errors.
+
 //const
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');

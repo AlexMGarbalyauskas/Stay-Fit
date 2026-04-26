@@ -1,8 +1,11 @@
 // Timezone utility - Maps cities/countries to their timezone identifiers
 
-//PURPOSE: This utility provides functions to determine the timezone based on a given location 
-// string (like a city or country name) and to get a human-readable display name for a timezone. 
-// It includes a mapping of common locations to their respective timezone identifiers.
+//PURPOSE: This utility provides functions to determine 
+// the timezone based on a given location 
+// string (like a city or country name) 
+// and to get a human-readable display name for a timezone. 
+// It includes a mapping of common 
+// locations to their respective timezone identifiers.
 
 
 
