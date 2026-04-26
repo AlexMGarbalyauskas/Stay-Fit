@@ -1,3 +1,17 @@
+// The AuthRequired component is displayed when a user 
+// tries to access a page that requires authentication 
+// without being logged in. It provides a friendly 
+// message and options to log in or register.
+// The component also detects the current theme 
+// (light or dark) and adjusts its styling accordingly. 
+// It uses React Router's Link component to navigate 
+// to the login and registration pages, passing along 
+// the intended destination so that users can be 
+// redirected back after successful authentication.
+
+
+
+//immports
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
@@ -5,11 +19,21 @@ import Header from '../components/Header';
 import { Dumbbell } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
+
+
+
+
+// The AuthRequired component renders a message 
+// prompting the user to log in or register,
 export default function AuthRequired() {
   const { t } = useLanguage();
   const location = useLocation();
   const [isDark, setIsDark] = useState(localStorage.getItem('theme') === 'dark');
 
+
+  // Listen for changes to the theme in 
+  // localStorage to update the component's 
+  // appearance in real-time
   useEffect(() => {
     const handleThemeChange = () => {
       setIsDark(localStorage.getItem('theme') === 'dark');
@@ -18,9 +42,11 @@ export default function AuthRequired() {
     return () => window.removeEventListener('storage', handleThemeChange);
   }, []);
 
+  // Determine the current section based on the URL path
   const path = location.pathname || '';
   const section = path.split('/')[1] || '';
 
+  // Define messages for different sections of the app,
   const messages = {
     find: t('authRequiredFindDesc'),
     post: t('authRequiredPostDesc'),
@@ -32,6 +58,13 @@ export default function AuthRequired() {
 
   const description = messages[section] || t('authRequiredDefaultDesc');
 
+
+
+
+  
+
+
+  // The component's JSX structure includes a header,
   return (
     <>
       <Header disableNotifications />

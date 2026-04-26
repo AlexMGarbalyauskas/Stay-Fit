@@ -1,3 +1,16 @@
+// This page provides an interface for users to ask 
+// questions or seek advice from an AI assistant.
+// It includes a text area for input, 
+// a button to submit the question, and a 
+// section to display the AI's response.
+// The page also handles loading states 
+// and error messages gracefully.
+
+
+
+
+
+//imports
 import { useState } from 'react';
 import { ArrowLeft, Bot, Send, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,12 +19,17 @@ import Navbar from '../components/Navbar';
 import { askAIHelper } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
+
+
+
+
+
+// The AIHelper component renders the AI assistant interface,
 export default function AIHelper() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
-
   const [prompt, setPrompt] = useState('');
   const [reply, setReply] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,6 +52,14 @@ export default function AIHelper() {
     }
   };
 
+
+
+
+
+
+
+  // Render the AI helper interface with a header, 
+  // input area, and response display
   return (
     <>
       <Header />

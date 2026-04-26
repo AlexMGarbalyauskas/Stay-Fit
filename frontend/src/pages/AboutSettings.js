@@ -1,12 +1,30 @@
+// This page provides information about the 
+// app, links to terms of service, privacy policy, 
+// and project details.
+// It also includes a back button to return to the 
+// main settings page and uses the app's translation 
+// system for multilingual support.
+
+
+
+//imports
 import { ArrowLeft, FileText, Shield, Info, Github } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
+
+
+
+// The AboutSettings component renders the "About" page of the app,
 export default function AboutSettings() {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+
+
+  // The component includes buttons to 
+  // view the Terms of Service, Privacy Policy,
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
       <div className="pt-20 px-4 max-w-md mx-auto">
