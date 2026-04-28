@@ -1,3 +1,12 @@
+// This page allows users to plan their workouts on a calendar, set reminders, and invite friends to join them.
+// It displays a calendar view with indicators for days that have planned workouts and posting activity.
+// Users can click on a day to assign a workout, set a reminder time, add notes, and invite workout buddies.
+// The page also tracks the user's posting streak and shows a countdown to the next workout reminder.
+
+
+
+
+//imports
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ChevronLeft, ChevronRight, Dumbbell, Save, Clock, Users, Bell, X as Close, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,11 +15,21 @@ import { startReminderService } from '../utils/workoutReminders';
 import { buildPostDateSet, calculateCurrentStreak } from '../utils/streak';
 import { useWorkoutReminder } from '../context/WorkoutReminderContext';
 import { useLanguage } from '../context/LanguageContext';
+//imports end
 
+//const 
 const pad = (n) => String(n).padStart(2, '0');
 const dateKey = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+//const 
 
+
+
+
+// Main component for the Calendar page
 export default function CalendarPage() {
+
+
+  //all const and states
   const { t } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
@@ -24,6 +43,8 @@ export default function CalendarPage() {
   const minYear = currentYear - 2;
   const maxYear = currentYear + 2;
   
+  // State for workout plans, 
+  // selected day, form inputs, buddies, and UI controls
   const [plans, setPlans] = useState({}); 
   const [selected, setSelected] = useState({ key: dateKey(today.getFullYear(), today.getMonth(), today.getDate()) });
   const [workout, setWorkout] = useState('Full Body');
@@ -42,6 +63,11 @@ export default function CalendarPage() {
   const token = localStorage.getItem('token');
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
+
+
+
+
+  //use effect 1
   // Fetch user's posts to track posting dates
   useEffect(() => {
     const fetchPostDates = async () => {
@@ -62,7 +88,13 @@ export default function CalendarPage() {
 
     fetchPostDates();
   }, []);
+  //use effect 1 end 
 
+
+
+
+
+//use effect 2
   // Load saved plans from localStorage
   useEffect(() => {
     try {
@@ -81,12 +113,24 @@ export default function CalendarPage() {
       console.error('Failed to load plans', e);
     }
   }, []);
+//use effect 2 end
+
+
+
+
+//use effect 3
   // Start workout reminder service
   useEffect(() => {
     const cleanup = startReminderService(() => plans);
     return cleanup;
   }, [plans]);
+//use effect 3 end
 
+
+
+
+
+//use effect 4
   // When selection changes, populate form
   useEffect(() => {
     const plan = plans[selected.key];
@@ -95,7 +139,13 @@ export default function CalendarPage() {
     setReminderTime(plan?.time || '');
     setSelectedBuddies(plan?.buddies || []);
   }, [selected.key, plans]);
+//use effect 4 end
 
+
+
+
+
+//block 1 
   // Load friends for buddy selection
   const loadFriends = async () => {
     try {
@@ -105,7 +155,13 @@ export default function CalendarPage() {
       console.error('Failed to load friends:', error);
     }
   };
+//block 1 end
 
+
+
+
+
+//block 2
   const savePlan = async () => {
     const planData = { 
       workout, 
@@ -139,7 +195,14 @@ export default function CalendarPage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 1600);
   };
+//block 2 end
 
+
+
+
+
+
+//block 3
   const sendWorkoutInvites = async () => {
     try {
       const res = await axios.post(`${API_URL}/api/workout-schedules`, {
@@ -154,7 +217,12 @@ export default function CalendarPage() {
       return null;
     }
   };
+//block 3 end
 
+
+
+
+//block 4
   const cancelPlan = async () => {
     if (!window.confirm(t('cancelPlanConfirm'))) {
       return;
@@ -189,24 +257,68 @@ export default function CalendarPage() {
     setSelectedBuddies([]);
     setSaved(false);
   };
+//block 4 end
 
+
+
+
+//block 5
+// Additional handlers for posting workout, 
+// skipping, camera, and buddy modal
   const handlePostWorkout = () => {
     navigate('/post');
   };
+//block 5 end
 
+
+
+
+
+
+//block 6
   const handleSkipWorkout = () => {
     // Handled by context dismissPrompt
   };
+//block 6 end
 
+
+
+
+
+
+
+
+
+
+//block 7
   const handleCloseCamera = () => {
     setShowCamera(false);
   };
+//block 7 end
 
+
+
+
+
+
+
+
+
+//block 8
   const openBuddyModal = async () => {
     await loadFriends();
     setShowBuddyModal(true);
   };
+//block 8 end
 
+
+
+
+
+
+
+
+//block 9
   const toggleBuddy = (friend) => {
     setSelectedBuddies(prev => {
       const exists = prev.find(b => b.id === friend.id);
@@ -217,7 +329,17 @@ export default function CalendarPage() {
       }
     });
   };
+//block 9 end
 
+
+
+
+
+
+
+
+//block 10
+// Memoized workout options and month/day labels for localization
   const workoutOptions = useMemo(() => ([
     { value: 'Rest', label: t('workoutRest') },
     { value: 'Full Body', label: t('workoutFullBody') },
@@ -229,17 +351,55 @@ export default function CalendarPage() {
     { value: 'Cardio', label: t('workoutCardio') },
     { value: 'Core', label: t('workoutCore') }
   ]), [t]);
+//block 10 end
 
+
+
+
+
+
+
+
+
+
+//block 11
+// Memoized month and day labels for localization
   const months = useMemo(() => [
     t('monthJanuary'), t('monthFebruary'), t('monthMarch'), t('monthApril'), t('monthMay'), t('monthJune'),
     t('monthJuly'), t('monthAugust'), t('monthSeptember'), t('monthOctober'), t('monthNovember'), t('monthDecember')
   ], [t]);
+//block 11 end
 
+
+
+
+
+
+
+
+
+
+
+//block 12
   const dayLabels = useMemo(() => [
     t('daySunShort'), t('dayMonShort'), t('dayTueShort'), t('dayWedShort'),
     t('dayThuShort'), t('dayFriShort'), t('daySatShort')
   ], [t]);
+//block 12 end
 
+
+
+
+
+
+
+
+
+
+
+
+//block 13
+// Helper function to generate calendar weeks for a given month and year
   const weeksForMonth = (y, m) => {
     const firstDay = new Date(y, m, 1).getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -251,27 +411,69 @@ export default function CalendarPage() {
     for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
     return weeks;
   };
+//block 13 end
 
+
+
+
+
+
+
+
+//block 14
+// Helper functions to check if a date is today, has a plan, or has a post
   const isToday = (y, m, d) => {
     return today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
   };
+// block 14 end
 
+
+
+
+
+
+//block 15
+// Check if a given date has a workout plan
   const hasPlan = (y, m, d) => {
     if (!d) return false;
     return !!plans[dateKey(y, m, d)];
   };
+//block 15 end
 
+
+
+
+//block 16
+// Check if a given date has a post (for streak tracking)
   const hasPost = (y, m, d) => {
     if (!d) return false;
     return postDates.has(dateKey(y, m, d));
   };
+//block 16 end
 
+
+
+
+
+
+//block 17
+// Handler for when a user selects a day on the calendar
   const handleSelectDay = (y, m, d) => {
     if (!d) return;
     const key = dateKey(y, m, d);
     setSelected({ key, y, m, d });
   };
+//block 17 end
 
+
+
+
+
+
+
+
+//blcok 18
+// Function to change the displayed year, with bounds checking
   const changeYear = (delta) => {
     const nextYear = year + delta;
     if (nextYear < minYear || nextYear > maxYear) return;
@@ -282,7 +484,16 @@ export default function CalendarPage() {
       setSelected({ key: dateKey(nextYear, 0, 1), y: nextYear, m: 0, d: 1 });
     }
   };
+//  block 18 end
 
+
+
+
+
+
+
+
+  //main stucture 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-white text-slate-800'}`}>
       <div className="mx-auto max-w-6xl px-4 py-6">
@@ -595,4 +806,5 @@ export default function CalendarPage() {
       )}
     </div>
   );
+  //html end 
 }

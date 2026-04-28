@@ -12,6 +12,10 @@ import { ArrowLeft, FileText, Shield, Info, Github } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+//imports end
+
+
+
 
 
 

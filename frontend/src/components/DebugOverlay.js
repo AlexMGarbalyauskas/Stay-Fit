@@ -1,12 +1,30 @@
+//debug overlay component to capture console 
+// logs and errors in a floating panel
+
+
+
+//imprts 
 import { useState, useEffect } from 'react';
 import { X, ChevronUp, ChevronDown } from 'lucide-react';
+//imports end
 
+
+
+
+// The DebugOverlay component 
+// captures console logs, warnings, 
+// and errors, as well as unhandled errors, 
+// and displays them in a floating panel for easy 
+// debugging. It allows toggling visibility, 
+// minimizing the log view, and clearing logs.
 export default function DebugOverlay() {
   const [logs, setLogs] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(true);
   const maxLogs = 50;
 
+
+  //use effect 1
   useEffect(() => {
     // Capture console.log
     const originalLog = console.log;
@@ -47,6 +65,8 @@ export default function DebugOverlay() {
     };
     window.addEventListener('error', handleError);
 
+
+    // Cleanup on unmount
     return () => {
       console.log = originalLog;
       console.error = originalError;
@@ -55,6 +75,9 @@ export default function DebugOverlay() {
     };
   }, []);
 
+
+
+  // If the overlay is not open, show a button to open it
   if (!isOpen) {
     return (
       <button
@@ -66,6 +89,9 @@ export default function DebugOverlay() {
     );
   }
 
+
+
+  // Main render of the debug overlay panel
   return (
     <div className="fixed bottom-0 right-0 z-50 bg-gray-900 text-white shadow-xl rounded-t-lg w-full sm:w-96 max-h-96 flex flex-col border-l-4 border-red-600">
       {/* Header */}
@@ -118,4 +144,5 @@ export default function DebugOverlay() {
       )}
     </div>
   );
+  //main render end 
 }

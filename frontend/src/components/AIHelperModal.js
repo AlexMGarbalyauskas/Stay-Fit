@@ -1,27 +1,58 @@
+//Ai Helper Modal component for asking questions to 
+//  the AI and getting responses in a chat-like interface. 
+// Handles loading states, errors, and displays conversation history.
+
+
+//Key features:
+
+
+//imports 
 import { useEffect, useRef, useState } from 'react';
 import { X, Bot, Send, Sparkles } from 'lucide-react';
 import { askAIHelper } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+//improts end 
 
+
+// main component function
 export default function AIHelperModal({ open, onClose }) {
   const { t, language } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
-
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
 
+
+
+
+
+
+  //use effecr 1 
+  // Scroll to bottom when messages or loading state changes
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, loading]);
+  //use effect end 
 
+
+
+
+
+
+  // Don't render anything if the modal is not open
   if (!open) return null;
 
+
+
+
+
+
+  // Function to handle asking the AI helper
   const handleAsk = async () => {
     const cleaned = prompt.trim();
     if (!cleaned) return;
@@ -31,13 +62,19 @@ export default function AIHelperModal({ open, onClose }) {
     setLoading(true);
     setError('');
 
+
+    // Call the API to get the AI response
     try {
+
+      // Make the API call to ask the AI helper
       const res = await askAIHelper(cleaned, language);
       const assistantText = (res.data?.reply || '').trim();
       if (assistantText) {
         setMessages(prev => [...prev, { role: 'assistant', text: assistantText }]);
       }
     } catch (err) {
+
+      // Handle different error scenarios based on status codes and response data
       const status = err?.response?.status;
       if (status === 404) {
         setError(t('aiEndpointNotFound'));
@@ -48,6 +85,8 @@ export default function AIHelperModal({ open, onClose }) {
         if (code === 'ai_insufficient_quota') {
           setError(t('aiNoCredits'));
         } else if (retryAt) {
+
+          // Try to parse the retryAt date and display a user-friendly message
           const retryDate = new Date(retryAt);
           if (!Number.isNaN(retryDate.getTime())) {
             const localRetryTime = retryDate.toLocaleString();
@@ -66,6 +105,13 @@ export default function AIHelperModal({ open, onClose }) {
     }
   };
 
+
+
+
+
+
+  //const 1 
+  // Function to close the modal and reset all states
   const closeModal = () => {
     setPrompt('');
     setMessages([]);
@@ -73,14 +119,38 @@ export default function AIHelperModal({ open, onClose }) {
     setLoading(false);
     onClose();
   };
+  //const 1 end 
 
+
+
+
+
+
+
+
+
+
+  
+  //const 2 
+  // Handle pressing Enter to send the message, while allowing Shift+Enter for new lines
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       handleAsk();
     }
   };
+  //const 2 end 
 
+
+
+
+
+
+
+   
+
+
+  // Main render of the modal
   return (
     <div className="fixed inset-0 z-[220]">
       <div className="absolute inset-0 bg-black/60" onClick={closeModal} />
@@ -169,4 +239,5 @@ export default function AIHelperModal({ open, onClose }) {
       </div>
     </div>
   );
+  //main render end 
 }

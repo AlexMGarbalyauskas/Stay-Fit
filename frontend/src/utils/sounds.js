@@ -88,6 +88,7 @@ export const playNotificationSound = async (type = 'notification') => {
       oscillator.connect(gain);
       gain.connect(audioContext.destination);
 
+      // Start and stop the oscillator to play the tone
       oscillator.start(toneStart);
       oscillator.stop(toneEnd);
     });

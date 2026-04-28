@@ -1,3 +1,17 @@
+//Find Friends page - allows users to search for and 
+// manage friendships with other users. 
+// It includes a search bar for finding users by username, 
+// and a filter for location. The page displays a list of users 
+// matching the search criteria, along with their profile pictures, 
+// usernames, and locations. Users can send friend requests or 
+// unfriend existing friends directly from this page. 
+// The component also handles authentication checks, 
+// ensuring that only logged-in users can access the page, 
+// and provides appropriate messaging and navigation options 
+// for unauthenticated users.
+
+
+//imports
 import { useEffect, useState } from 'react';
 import { User, X, UserPlus, Dumbbell } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,8 +20,18 @@ import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
 import { getUsers, getFriendStatus, sendFriendRequest, unfriend, getMe, getTotalUsersCount } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+//imports end
 
+
+
+
+// The FindFriends component renders the interface for 
+// searching and managing friends,
 export default function FindFriends({ onFriendUpdate }) {
+
+
+  // State variables for user data, 
+  // search input, friend statuses, etc.
   const { t } = useLanguage();
   const isDark = document.documentElement.classList.contains('dark');
   const [users, setUsers] = useState([]);
@@ -19,6 +43,7 @@ export default function FindFriends({ onFriendUpdate }) {
   const [me, setMe] = useState(null);
   const [totalUsersCount, setTotalUsersCount] = useState(0);
 
+  // Base API URL for constructing profile picture paths
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -50,6 +75,12 @@ export default function FindFriends({ onFriendUpdate }) {
   //   fetchUsers();
   // }, [isAuthenticated]);
 
+
+
+
+
+
+  //use effect 1 
   // Fetch current user (me)
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -68,7 +99,17 @@ export default function FindFriends({ onFriendUpdate }) {
       })
       .catch(() => setMe(null));
   }, []);
+//end of use effect 1
 
+
+
+
+
+
+
+//use effect 2
+// Fetch friend statuses for all users when 
+// the users list changes
   // Fetch total users count
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -76,7 +117,17 @@ export default function FindFriends({ onFriendUpdate }) {
       .then(count => setTotalUsersCount(count))
       .catch(() => setTotalUsersCount(0));
   }, [isAuthenticated]);
+//end of use effect 2
 
+
+
+
+
+
+
+
+
+//use effect 3
   // When users or me change, fetch friend statuses for other users
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -87,7 +138,13 @@ export default function FindFriends({ onFriendUpdate }) {
       ).catch(() => {});
     });
   }, [users, me]);
+//end of use effect 3
 
+
+
+
+
+//use effect 4
   // Fetch and filter users when search is performed
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -118,28 +175,60 @@ export default function FindFriends({ onFriendUpdate }) {
     
     setFilteredUsers(result);
   }, [searchTerm, locationFilter, users, isAuthenticated]);
+//end of use effect 4
 
+
+
+//block 1 
+// Handler for sending a friend request
   const handleAddFriend = id =>
     sendFriendRequest(id)
       .then(() => {
         setStatuses(prev => ({ ...prev, [id]: 'sent' }));
         if (onFriendUpdate) onFriendUpdate();
       });
+//block 1 end
+
+
 
   // Modal state for unfriend confirmation
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
 
+
+
+
+
+
+  //block 2
+  // Handlers for opening and closing the 
+  // unfriend confirmation modal
   const openUnfriendModal = (id, username) => {
     setConfirmTarget({ id, username });
     setConfirmOpen(true);
   };
+//block 2 end
 
+
+
+
+
+
+
+//block 3
   const closeUnfriendModal = () => {
     setConfirmOpen(false);
     setConfirmTarget(null);
   };
+  //block 3 end
 
+
+
+
+
+
+  //block 4
+  // Handler for confirming the unfriend action
   const confirmUnfriend = () => {
     if (!confirmTarget) return;
     const id = confirmTarget.id;
@@ -154,7 +243,16 @@ export default function FindFriends({ onFriendUpdate }) {
         closeUnfriendModal();
       });
   };
+  //block 4 end
 
+
+
+
+
+
+  
+
+  // If not authenticated, render the AuthRequired component
   // Auth guard render
   if (!isAuthenticated) {
     return (
@@ -198,7 +296,17 @@ export default function FindFriends({ onFriendUpdate }) {
       </>
     );
   }
+  // End of auth guard render
 
+
+
+
+
+
+
+
+  //main render for authenticated users 
+  // shows search and friend management UI
   return (
     <div className={`min-h-screen pt-20 pb-20 ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-slate-800'}`}>
       <Header title={t('findFriends')} showBack />
@@ -341,4 +449,5 @@ export default function FindFriends({ onFriendUpdate }) {
       <Navbar />
     </div>
   );
+  //end of main render
 }

@@ -1,11 +1,33 @@
 // End-to-End Encryption for Messages using AES-GCM
 // Uses Web Crypto API for secure, browser-native encryption
 
+
+// The encryption key is derived 
+// from a combination of the user's 
+// password and a unique salt (e.g., user ID) 
+// using PBKDF2, ensuring that each user has a unique key. 
+// For conversations between two users, 
+// a shared conversation key is 
+// generated based on their user IDs, 
+// allowing both parties to encrypt and decrypt 
+// messages without needing to exchange keys directly. 
+// The encrypted messages are stored in base64 
+// format along with the initialization vector (IV) 
+// used for encryption, enabling secure storage and 
+// retrieval of messages while maintaining confidentiality.
+
+
+// The test suite includes tests to check that
 const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 const IV_LENGTH = 12; // 96 bits recommended for AES-GCM
 const SHARED_CONVERSATION_SEED = 'stay-fit-shared-conversation-seed-v2';
 
+
+
+
+//block 1 
+// Some environments (like older versions of jsdom)
 const getTextEncoder = () => {
   const Encoder = typeof window !== 'undefined' && window.TextEncoder
     ? window.TextEncoder
@@ -15,8 +37,12 @@ const getTextEncoder = () => {
   }
   return Encoder;
 };
+//block 1 end
 
 
+
+
+//block 2
 // Some environments (like older versions of jsdom) 
 // may not have TextDecoder
 const getTextDecoder = () => {
@@ -28,7 +54,12 @@ const getTextDecoder = () => {
   }
   return Decoder;
 };
+//block 2 end
 
+
+
+//block 3
+// The AuthRequired component renders a message
 /**
  * Generate a cryptographic key from a password using PBKDF2
  * @param {string} password - User password or passphrase
@@ -63,19 +94,51 @@ async function deriveKey(password, salt) {
 
   return key;
 }
+//block 3 end
 
+
+
+
+
+
+// The AIHelper component 
+// renders the AI assistant interface, 
+// allowing users to ask questions and 
+// receive responses from the AI. It includes 
+// a header, an input area for the user's prompt, 
+// and a display area for the AI's reply. 
+// The component also handles loading states 
+// and error messages to provide feedback to
+//  the user during interactions with the AI assistant.
 /**
  * Generate a unique conversation key for two users
  * @param {number} userId1 - First user ID
  * @param {number} userId2 - Second user ID
  * @returns {string} - Deterministic key for the conversation
  */
+
+//block 4
+// The getConversationKey function 
+// generates a unique key for a conversation 
+// between two users by sorting their 
+// user IDs and combining them into a string. 
+// This ensures that both users derive 
+// the same conversation key regardless of 
+// who initiates the conversation, 
+// allowing for consistent encryption and decryption 
+// of messages between the two parties 
+// without needing to exchange keys directly.
 function getConversationKey(userId1, userId2) {
   // Sort IDs to ensure same key regardless of who initiates
   const [id1, id2] = [userId1, userId2].sort((a, b) => a - b);
   return `conv_${id1}_${id2}`;
 }
+//block 4 end
 
+
+
+//block 5
+// The initializeEncryption function
 /**
  * Generate or retrieve encryption key for a conversation
  * @param {number} currentUserId - Current user's ID
@@ -91,14 +154,25 @@ async function getOrCreateConversationKey(currentUserId, otherUserId) {
 
   return await deriveKey(sharedSeed, conversationId);
 }
+//block 5 end
 
+
+
+
+//block 6
 async function getLegacyConversationKey(currentUserId, otherUserId) {
   const conversationId = getConversationKey(currentUserId, otherUserId);
   const legacySeed = localStorage.getItem('encryption_seed');
   if (!legacySeed) return null;
   return await deriveKey(legacySeed, conversationId);
 }
+//block 6 end
 
+
+
+
+
+//block 7
 /**
  * Encrypt a message
  * @param {string} plaintext - Message to encrypt
@@ -143,7 +217,13 @@ export async function encryptMessage(plaintext, senderId, receiverId) {
     throw new Error('Failed to encrypt message');
   }
 }
+//block 7 end
 
+
+
+
+
+//block 8
 /**
  * Decrypt a message
  * @param {string} encryptedBase64 - Encrypted message in base64
@@ -201,7 +281,16 @@ export async function decryptMessage(encryptedBase64, ivBase64, senderId, receiv
     }
   }
 }
+//block 8 end
 
+
+
+
+
+
+
+
+//block 9
 /**
  * Initialize encryption seed for current user
  * Should be called once on login with user's password or generated key
@@ -213,7 +302,15 @@ export function initializeEncryption(userPassword) {
   const seed = btoa(userPassword + '_stay_fit_encryption');
   localStorage.setItem('encryption_seed', seed);
 }
+//block 9 end
 
+
+
+
+
+
+
+//block 10
 /**
  * Check if encryption is properly initialized
  * @returns {boolean}
@@ -221,10 +318,17 @@ export function initializeEncryption(userPassword) {
 export function isEncryptionReady() {
   return !!localStorage.getItem('encryption_seed');
 }
+//block 10 end
 
+
+
+
+
+//block 11
 /**
  * Clear encryption data (on logout)
  */
 export function clearEncryption() {
   localStorage.removeItem('encryption_seed');
 }
+//block 11 end

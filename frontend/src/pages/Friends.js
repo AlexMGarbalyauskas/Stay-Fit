@@ -1,3 +1,17 @@
+//Friends.js - page for viewing and managing friends list
+// This page allows users to see their current friends,
+//  navigate to their profiles, and unfriend them if desired. 
+// It also handles the case where the user is 
+// not authenticated, prompting them to log in or 
+// register to access their friends list. 
+// The component fetches the friends data from the 
+// server and displays it in a user-friendly format, 
+// with options to view profiles or remove friends.
+
+
+
+
+//imports 
 import { useEffect, useState } from 'react';
 import { Users, UserX, ArrowLeft, Dumbbell } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -6,9 +20,19 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
 import { useLanguage } from '../context/LanguageContext';
+//imports end
 
 
 
+
+
+
+// The Friends component renders 
+// the user's friends list and provides 
+// functionality to unfriend and navigate to 
+// friend profiles. It also handles authentication 
+// state and displays appropriate messages for 
+// unauthenticated users.
 export default function Friends({ refreshTrigger }) {
   const { t } = useLanguage();
   const isDark = document.documentElement.classList.contains('dark');
@@ -93,6 +117,11 @@ export default function Friends({ refreshTrigger }) {
 
   if (loading) return <p className="mt-20 text-center text-gray-500">{t('loadingFriends')}</p>;
 
+  // If the user is authenticated but
+  //  has no friends, show a message 
+  // and a button to find friends. Otherwise, 
+  // show the list of friends with options to view 
+  // profiles or unfriend.
   return (
     <>
       <div className={`pt-20 pb-24 min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-slate-800'}`}>

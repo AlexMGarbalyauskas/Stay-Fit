@@ -18,6 +18,9 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { Dumbbell } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+//imports end 
+
+
 
 
 
@@ -56,6 +59,8 @@ export default function AuthRequired() {
     profile: t('authRequiredProfileDesc'),
   };
 
+
+  // and select the appropriate message based on the current section.
   const description = messages[section] || t('authRequiredDefaultDesc');
 
 
@@ -110,6 +115,7 @@ export default function AuthRequired() {
           </p>
         </div>
       </div>
+      
       <Navbar />
     </>
   );

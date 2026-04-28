@@ -1,8 +1,20 @@
+//confirm modal component that can be used to confirm actions such as 
+// deleting a post or comment. It takes in props for the title,
+//  message, and callback functions for confirming or canceling the action. 
+// The modal is styled with Tailwind CSS classes for a clean and modern look.
+
+
+//import 
 import React from 'react';
 
+
+// A reusable confirmation modal component that can be used throughout the application.
 export default function ConfirmModal({ open, title = 'Confirm', message, onConfirm, onCancel, confirmText = 'Yes', cancelText = 'No' }) {
   if (!open) return null;
 
+
+  //main html structure of the modal, with a dark 
+  // background and a centered white box containing the title, message, and buttons
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="absolute inset-0 bg-black opacity-40" onClick={onCancel}></div>
@@ -16,4 +28,5 @@ export default function ConfirmModal({ open, title = 'Confirm', message, onConfi
       </div>
     </div>
   );
+  //end of modal structure
 }

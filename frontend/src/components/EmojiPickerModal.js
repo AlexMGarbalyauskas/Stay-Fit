@@ -1,10 +1,28 @@
+//emoji picker modal component, used for both adding
+//  reactions and editing messages (with delete option)
+
+
+
+//imports
 import React, { useEffect } from 'react';
 import Picker from 'emoji-picker-react';
 import { ArrowLeft } from 'lucide-react';
+//imports end 
 
+
+
+
+
+
+
+
+//component
 export default function EmojiPickerModal({ open, onSelect, onClose, showDelete = false, onDelete }) {
   useEffect(() => {
     if (!open) return;
+
+
+    // close on escape key
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -12,20 +30,47 @@ export default function EmojiPickerModal({ open, onSelect, onClose, showDelete =
 
   if (!open) return null;
 
+
+
+
+
+
+
+
+
+  //const 1 
   // emoji-picker-react's onEmojiClick signature is (emojiData, event)
   // support several possible properties (emoji, native) to extract the unicode emoji
   const handleClick = (emojiData, event) => {
     const emoji = emojiData?.emoji || emojiData?.native || emojiData?.unified || null;
     if (emoji) onSelect(emoji);
   };
+  //const 1 end 
 
+  
+
+
+
+
+
+
+
+  //const 2
+  // handle delete with confirmation
   const handleDelete = () => {
     if (!onDelete) return;
     if (window.confirm('Are you sure you want to delete this message?')) {
       onDelete();
     }
   };
+  //const 2 end
 
+
+
+
+
+  //main html return
+  // render modal with backdrop and panel
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop covering entire screen (blocks interactions including navbar) */}
@@ -52,4 +97,5 @@ export default function EmojiPickerModal({ open, onSelect, onClose, showDelete =
       </div>
     </div>
   );
+  //html end 
 }

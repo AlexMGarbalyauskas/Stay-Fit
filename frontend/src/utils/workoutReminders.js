@@ -1,25 +1,40 @@
+//workoutReminders.js  used for workout reminder notifications
+//  in the app, allowing users to receive timely 
+// alerts for their scheduled workouts.
+
+
+
+
 import { playNotificationSound } from './sounds';
 
 // Workout Reminder Notification System
 
+
+// This module checks the user's workout plans and schedules notifications
 export const requestNotificationPermission = async () => {
   if (!('Notification' in window)) {
     console.log('This browser does not support notifications');
     return false;
   }
 
+  // Check if permission is already granted
   if (Notification.permission === 'granted') {
     return true;
   }
+
+  // Request permission from the user
 
   if (Notification.permission !== 'denied') {
     const permission = await Notification.requestPermission();
     return permission === 'granted';
   }
 
+  // If permission is denied, we cannot show notifications
   return false;
 };
 
+
+// Show a workout reminder notification
 export const showWorkoutNotification = (workout, time, note = '') => {
   if (Notification.permission === 'granted') {
     playNotificationSound('workout');
@@ -34,6 +49,8 @@ export const showWorkoutNotification = (workout, time, note = '') => {
   }
 };
 
+
+// Check workout plans and show notifications if needed
 export const checkWorkoutReminders = (plans) => {
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
