@@ -1,3 +1,12 @@
+//Post.js allows authenticated users to create and share fitness posts with media (video or photo).
+//Users can upload media from their device or capture directly from their camera with real-time
+//filters. Videos must be 5-60 seconds, and all posts require a title. After successful upload,
+//a celebration animation plays before redirecting to the home feed. The page includes a full-screen
+//camera overlay with countdown, filter controls, and recording timer.
+
+
+
+//imports
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -5,8 +14,14 @@ import Navbar from '../components/Navbar';
 import api, { createPost } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { Upload, Camera, Video, Image as ImageIcon, Dumbbell } from 'lucide-react';
+//imports end
 
+
+
+
+//Main Post component
 export default function Post() {
+  // Localization and navigation
   const { t } = useLanguage();
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -14,6 +29,7 @@ export default function Post() {
   const isDark = document.documentElement.classList.contains('dark');
   
   // All state declarations must come before early returns
+  // Media selection and recording state
   const [mediaKind, setMediaKind] = useState('video'); // 'video' or 'image'
   const [source, setSource] = useState('upload'); // 'upload' or 'camera'
   const [composerOpen, setComposerOpen] = useState(false);
@@ -23,6 +39,7 @@ export default function Post() {
   const [celebrate, setCelebrate] = useState(false);
   const [cameraStats, setCameraStats] = useState(null);
 
+  // Local media file and form state
   const [local, setLocal] = useState(null); // { file, url, duration }
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
@@ -30,7 +47,9 @@ export default function Post() {
   const [error, setError] = useState(null);
   const [cameraOverlay, setCameraOverlay] = useState(false); // full-screen camera UI
   const [countdown, setCountdown] = useState(null); // null or number for countdown display
+  //state end
   
+  // Filter definitions for camera effects
   const filterStyles = {
     none: 'none',
     vivid: 'saturate(1.25) contrast(1.05)',
@@ -38,9 +57,12 @@ export default function Post() {
     warm: 'sepia(0.3) saturate(1.1)',
     cool: 'contrast(1.05) saturate(1.05) hue-rotate(8deg)'
   };
+
+  // Get CSS filter string based on selected camera filter
   const appliedFilter = filterStyles[cameraFilter] || 'none';
 
   // All ref declarations before hooks
+  // Video and canvas references for playback, stream, and recording
   const videoRef = useRef(); // preview playback
   const cameraVideoRef = useRef(); // dedicated to live camera stream
   const attachAttemptsRef = useRef(0);
@@ -51,8 +73,22 @@ export default function Post() {
   const cameraDebugTimerRef = useRef(null);
   const attachTimerRef = useRef(null);
   const canvasRef = useRef(null);
+  //refs end
 
-  // Canvas fireworks animation
+
+
+
+
+
+
+
+
+
+
+
+//use effect 1
+  // Canvas fireworks animation - triggers when celebrate state is true
+  // Creates animated particles that explode outward from center of screen
   useEffect(() => {
     if (!celebrate || !canvasRef.current) return;
 
@@ -186,12 +222,33 @@ export default function Post() {
       window.removeEventListener('resize', handleResize);
     };
   }, [celebrate]);
+//end use effect 1
 
-  // Retry attaching the stream to the video element a few times to combat blank preview
+
+
+
+
+
+
+
+
+
+
+
+//use effect 2
+  // Camera stream attachment effect - retries attaching video stream to ensure smooth preview
+  // Handles cases where camera preview may initially be blank due to timing issues
   useEffect(() => {
     if (!cameraOverlay || !streamRef.current) return;
     attachAttemptsRef.current = 0;
 
+
+
+
+
+
+    // Try to attach stream to video element, 
+    // #with retries if metadata isn't ready
     const tryAttach = () => {
       attachAttemptsRef.current += 1;
       if (!cameraVideoRef.current || !streamRef.current) return;
@@ -223,7 +280,20 @@ export default function Post() {
       if (attachTimerRef.current) clearTimeout(attachTimerRef.current);
     };
   }, [cameraOverlay]);
+  //end use effect 2
 
+
+
+
+
+
+
+
+
+
+
+//block 1
+  // Handle file selection from device - validates file type against selected media kind
   const handleFileChange = (e) => {
     setError(null);
     const f = e.target.files && e.target.files[0];
@@ -234,7 +304,18 @@ export default function Post() {
     const url = URL.createObjectURL(f);
     setLocal({ file: f, url, duration: null });
   };
+  //end block 1
 
+
+
+
+
+
+
+
+
+//block 2
+  // Get video duration from metadata and validate length (5-60 seconds)
   const onLoadedMetadata = () => {
     if (!videoRef.current) return;
     const d = Math.round(videoRef.current.duration);
@@ -244,8 +325,18 @@ export default function Post() {
       else setError(null);
     }
   };
+//end block 2
 
-  // Camera / recording
+
+
+
+
+
+
+
+//block 3
+  // Start camera stream - requests user permissions and initializes video preview
+  // Audio included when mediaKind is 'video' for recording
   const startCamera = async () => {
     setError(null);
     try {
@@ -306,7 +397,20 @@ export default function Post() {
       setCameraOverlay(false);
     }
   };
+//end block 3
 
+
+
+
+
+
+
+
+
+
+
+//block 4
+  // Stop and cleanup camera stream - releases all tracks and clears references
   const stopStream = () => {
     try {
       if (streamRef.current) {
@@ -319,7 +423,23 @@ export default function Post() {
       setCameraStats(null);
     } catch (e) {}
   };
+//end block 4
 
+
+
+
+
+
+
+
+
+
+
+
+
+//block 5
+  // Start video recording with 3-second countdown before actual recording begins
+  // Records up to 60 seconds with duration timer and auto-stops at limit
   const startRecording = () => {
     if (!streamRef.current) return setError('Camera not started');
     try {
@@ -372,7 +492,22 @@ export default function Post() {
       setIsRecording(false);
     }
   };
+//end block 5
 
+
+
+
+
+
+
+
+
+
+
+
+
+//block 6
+  // Stop video recording - stops MediaRecorder and creates blob for file storage
   const stopRecording = () => {
     try { clearInterval(recordTimerRef.current); } catch (e) {}
     try {
@@ -386,7 +521,24 @@ export default function Post() {
     setIsRecording(false);
     setRecordingDuration(0);
   };
+//end block 6
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//block 7
+  // Capture photo from camera stream - draws to canvas with applied filters and converts to PNG
   const capturePhoto = () => {
     if (!cameraVideoRef.current) return setError('Camera not started');
     const video = cameraVideoRef.current;
@@ -421,21 +573,85 @@ export default function Post() {
       setError('Capture failed. Try again.');
     }
   };
+//end block 7
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//block 8
+  // Stop camera overlay and cleanup - closes full-screen camera UI and stops stream
   const handleStop = async () => {
     if (mediaKind === 'video') stopRecording();
     else stopStream();
     setCameraOverlay(false);
     setIsRecording(false);
   };
+//end block 8
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//block 9
+  // Discard current media selection - clears local file, stream, and errors
   const discardMedia = () => {
     stopStream();
     setLocal(null);
     setError(null);
     setIsRecording(false);
   };
+//end block 9
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//block 10
+  // Main upload handler - validates media and form data, uploads post to API, triggers celebration
+  // Validates video duration, title requirement, and handles upload errors gracefully
   const handleUpload = async () => {
     if (!local || !local.file) return setError('No media selected');
     if (!title.trim()) return setError('Title is required');
@@ -495,7 +711,27 @@ export default function Post() {
       setUploading(false);
     }
   };
+//end block 10
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//block 11
   // Auth guard - after all hooks
   if (!isAuthenticated) {
     return (
@@ -539,7 +775,18 @@ export default function Post() {
       </>
     );
   }
+//end block 11
 
+
+
+
+
+
+
+
+
+
+  //main render
   return (
     <>
       <Header />
@@ -954,4 +1201,6 @@ export default function Post() {
       )}
     </>
   );
+  //main render end
 }
+//main export end 

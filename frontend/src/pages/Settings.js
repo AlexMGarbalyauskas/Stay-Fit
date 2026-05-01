@@ -1,3 +1,11 @@
+//Settings.js provides user account management and personalization options.
+//Allows users to update privacy settings, timezone, theme, language, and notification preferences.
+//Includes PWA install prompts, AI helper integration, and various settings modals for confirming changes.
+//Theme and language preferences are persisted to localStorage and sync across the app.
+
+
+
+//imports
 import { useState, useEffect } from 'react';
 import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, BarChart3, BookOpen, Bot, Volume2, Download } from 'lucide-react';
 import axios from 'axios';
@@ -7,9 +15,23 @@ import { useNavigate } from 'react-router-dom';
 import { updateMe } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { isSoundEnabled, setSoundEnabled } from '../utils/sounds';
+//imports end
 
+
+
+
+//Main Settings component
 export default function Settings() {
+  // Localization
+  //const
   const { language, setLanguage: setGlobalLanguage, t } = useLanguage();
+  const navigate = useNavigate();
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+  const token = localStorage.getItem('token');
+  const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+  const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
+  
+  // Settings and notification states
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState(true);
   const [privacy, setPrivacy] = useState('Public');
@@ -27,17 +49,12 @@ export default function Settings() {
   const [showAIHelper, setShowAIHelper] = useState(false);
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
   const [canInstallPwa, setCanInstallPwa] = useState(false);
+  
   const isDark = theme === 'dark';
   const iconClass = isDark ? 'text-gray-200' : 'text-black';
-  const navigate = useNavigate();
-  const tosAcceptedAt = localStorage.getItem('tosAcceptedAt');
-  const appTutorialLabel = ({
-    en: 'App Tutorial',
-    es: 'Tutorial de la App',
-    fr: 'Tutoriel de l\'app',
-    it: 'Tutorial dell\'app'
-  })[language] || t('appTutorial');
-
+  //const end
+  
+  // Helper function for privacy labels
   const privacyLabel = (value) => {
     if (value === 'Public') return t('public');
     if (value === 'Friends Only') return t('friendsOnly');
@@ -45,10 +62,44 @@ export default function Settings() {
     return value;
   };
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
-  const token = localStorage.getItem('token');
-  const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+  // Localized label for app tutorial 
+  // falls back to translation key if language not supported
+  const appTutorialLabel = ({
+    en: 'App Tutorial',
+    es: 'Tutorial de la App',
+    fr: 'Tutoriel de l\'app',
+    it: 'Tutorial dell\'app'
+  })[language] || t('appTutorial');
 
+  // Common timezones list for timezone selection
+  const commonTimezones = [
+    { label: 'UTC (Coordinated Universal Time)', value: 'UTC' },
+    { label: 'Europe/Dublin (Ireland)', value: 'Europe/Dublin' },
+    { label: 'Europe/London (UK)', value: 'Europe/London' },
+    { label: 'Europe/Paris (France, Spain, Germany)', value: 'Europe/Paris' },
+    { label: 'Europe/Berlin (Central Europe)', value: 'Europe/Berlin' },
+    { label: 'Europe/Athens (Greece, Eastern Europe)', value: 'Europe/Athens' },
+    { label: 'America/New_York (US Eastern)', value: 'America/New_York' },
+    { label: 'America/Chicago (US Central)', value: 'America/Chicago' },
+    { label: 'America/Denver (US Mountain)', value: 'America/Denver' },
+    { label: 'America/Los_Angeles (US Pacific)', value: 'America/Los_Angeles' },
+    { label: 'America/Toronto (Canada Eastern)', value: 'America/Toronto' },
+    { label: 'America/Vancouver (Canada Pacific)', value: 'America/Vancouver' },
+    { label: 'Asia/Dubai (UAE)', value: 'Asia/Dubai' },
+    { label: 'Asia/Kolkata (India)', value: 'Asia/Kolkata' },
+    { label: 'Asia/Shanghai (China)', value: 'Asia/Shanghai' },
+    { label: 'Asia/Tokyo (Japan)', value: 'Asia/Tokyo' },
+    { label: 'Asia/Singapore (Singapore)', value: 'Asia/Singapore' },
+    { label: 'Australia/Sydney (Australia Eastern)', value: 'Australia/Sydney' },
+    { label: 'Australia/Melbourne (Australia)', value: 'Australia/Melbourne' },
+    { label: 'Pacific/Auckland (New Zealand)', value: 'Pacific/Auckland' },
+  ];
+
+
+
+
+  //use effect 1
+  // Fetch user data including privacy, timezone, and notification settings on mount
   useEffect(() => {
     if (!token) return;
 
@@ -62,7 +113,13 @@ export default function Settings() {
       })
       .catch(err => console.error('Error fetching user:', err));
   }, [token, API_URL]);
+  //use effect 1 end
 
+
+
+
+  //use effect 2
+  // Handle PWA install prompts and app installation events
   useEffect(() => {
     const handleBeforeInstallPrompt = (event) => {
       event.preventDefault();
@@ -86,8 +143,13 @@ export default function Settings() {
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, [t]);
+  //use effect 2 end
 
-  // Update current time every second based on timezone
+
+
+
+  //use effect 3
+  // Update current time display every second based on user's selected timezone
   useEffect(() => {
     const updateTime = () => {
       try {
@@ -112,7 +174,13 @@ export default function Settings() {
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, [timezone, t]);
+  //use effect 3 end
 
+
+
+
+  //block 1: theme and language handlers
+  // Toggle between light and dark theme - updates localStorage and DOM
   const handleThemeToggle = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
@@ -133,7 +201,13 @@ export default function Settings() {
     setSoundsEnabled(nextValue);
     setSoundEnabled(nextValue);
   };
+  //block 1 end
 
+
+
+
+  //block 2: logout and share handlers
+  // Clear all localStorage except language, theme, and sounds - redirect to home
   const handleLogout = () => {
     const savedLanguage = localStorage.getItem('language');
     const savedTheme = localStorage.getItem('theme');
@@ -154,7 +228,13 @@ export default function Settings() {
   const handleRateApp = () => {
     window.open('https://alexmgarbalyauskas.github.io/Rating-Webpage-/', '_blank');
   };
+  //block 2 end
 
+
+
+
+  //block 3: PWA install handler
+  // Handle PWA installation prompt - detects platform (iOS vs Android/Web) and shows appropriate message
   const handleInstallApp = async () => {
     if (deferredInstallPrompt) {
       deferredInstallPrompt.prompt();
@@ -181,12 +261,19 @@ export default function Settings() {
     setShowInstallNotification(true);
     setTimeout(() => setShowInstallNotification(false), 3000);
   };
+  //block 3 end
 
+
+
+
+  //block 4: privacy change handlers
+  // Set pending privacy change and show confirmation modal
   const handlePrivacyChange = (newPrivacy) => {
     setPendingPrivacy(newPrivacy);
     setShowConfirmModal(true);
   };
 
+  // Confirm privacy change - updates user data via API
   const confirmPrivacyChange = async () => {
     try {
       const response = await updateMe({ privacy: pendingPrivacy });
@@ -204,15 +291,23 @@ export default function Settings() {
     setShowConfirmModal(false);
     setPendingPrivacy(null);
   };
+  //block 4 end
 
+
+
+
+  //block 5: timezone change handlers
+  // Open timezone selection modal
   const handleTimezoneClick = () => {
     setShowTimezoneModal(true);
   };
 
+  // Set pending timezone selection
   const handleTimezoneChange = (newTimezone) => {
     setPendingTimezone(newTimezone);
   };
 
+  // Confirm timezone change - updates user data via API
   const confirmTimezoneChange = async () => {
     try {
       const response = await updateMe({ timezone: pendingTimezone });
@@ -230,7 +325,22 @@ export default function Settings() {
     setShowTimezoneModal(false);
     setPendingTimezone(null);
   };
+  //block 5 end
 
+
+
+
+
+
+
+
+
+
+
+  
+
+  //block 6: notification toggle handler
+  // Toggle notification preference - updates user data via API
   const handleNotificationToggle = async () => {
     const newValue = !notifications;
     try {
@@ -242,33 +352,21 @@ export default function Settings() {
       alert(t('failedToUpdateNotifications'));
     }
   };
-
-  // Common timezones
-  const commonTimezones = [
-    { label: 'UTC (Coordinated Universal Time)', value: 'UTC' },
-    { label: 'Europe/Dublin (Ireland)', value: 'Europe/Dublin' },
-    { label: 'Europe/London (UK)', value: 'Europe/London' },
-    { label: 'Europe/Paris (France, Spain, Germany)', value: 'Europe/Paris' },
-    { label: 'Europe/Berlin (Central Europe)', value: 'Europe/Berlin' },
-    { label: 'Europe/Athens (Greece, Eastern Europe)', value: 'Europe/Athens' },
-    { label: 'America/New_York (US Eastern)', value: 'America/New_York' },
-    { label: 'America/Chicago (US Central)', value: 'America/Chicago' },
-    { label: 'America/Denver (US Mountain)', value: 'America/Denver' },
-    { label: 'America/Los_Angeles (US Pacific)', value: 'America/Los_Angeles' },
-    { label: 'America/Toronto (Canada Eastern)', value: 'America/Toronto' },
-    { label: 'America/Vancouver (Canada Pacific)', value: 'America/Vancouver' },
-    { label: 'Asia/Dubai (UAE)', value: 'Asia/Dubai' },
-    { label: 'Asia/Kolkata (India)', value: 'Asia/Kolkata' },
-    { label: 'Asia/Shanghai (China)', value: 'Asia/Shanghai' },
-    { label: 'Asia/Tokyo (Japan)', value: 'Asia/Tokyo' },
-    { label: 'Asia/Singapore (Singapore)', value: 'Asia/Singapore' },
-    { label: 'Australia/Sydney (Australia Eastern)', value: 'Australia/Sydney' },
-    { label: 'Australia/Melbourne (Australia)', value: 'Australia/Melbourne' },
-    { label: 'Pacific/Auckland (New Zealand)', value: 'Pacific/Auckland' },
-  ];
+  //block 6 end
 
   if (!user) return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
 
+
+
+
+
+
+
+
+
+
+
+  //JSX return - main settings page UI
   return (
     <div className={`min-h-screen bg-gradient-to-br ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
       <div className="pt-20 pb-20 px-4 max-w-md mx-auto">
@@ -676,4 +774,5 @@ export default function Settings() {
 
     </div>
   );
+  //end of JSX return
 }
