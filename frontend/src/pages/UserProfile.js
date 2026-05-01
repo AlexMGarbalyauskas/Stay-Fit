@@ -1,3 +1,13 @@
+//user profile page with profile picture, username, 
+// nickname, bio, location, stats (posts, friends), 
+// and action buttons (add friend, message, share profile). 
+// Also shows user's posts if profile is public. 
+// Uses API calls to fetch user data and friend status.
+
+
+
+
+//imports
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -5,8 +15,20 @@ import { getUser, getFriendStatus, sendFriendRequest, unfriend } from '../api';
 import { User, UserX, ArrowLeft, Heart, Share2, MessageCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useLanguage } from '../context/LanguageContext';
+//imports end 
 
+
+
+
+
+
+
+
+//user profile page
+// Main component for user profile page
 export default function UserProfile() {
+
+  //state and variables
   const { t } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
@@ -17,14 +39,31 @@ export default function UserProfile() {
   const [friendsCount, setFriendsCount] = useState(0);
   const [posts, setPosts] = useState([]);
 
+  // API URL and auth headers
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
+
+
+
+
+  
+
+
+
+  //block 1 
+  /// Fetch user data, friend status, friends count, and posts (if public)
   const fetchData = async () => {
+
+    //try to fetch data
     try {
+
+      // Fetch user data
       const res = await getUser(id);
       const u = res.data.user;
+
+      // Process profile picture URL
       if (!u) return;
       u.profile_picture = u.profile_picture
         ? u.profile_picture.startsWith('http')
@@ -33,6 +72,7 @@ export default function UserProfile() {
         : null;
       setUser(u);
 
+      // Fetch friend status
       const statusRes = await getFriendStatus(id);
       setStatus(statusRes.data.status);
 
@@ -47,6 +87,8 @@ export default function UserProfile() {
 
       // Fetch user's posts if public
       if (u.privacy === 'Public') {
+
+        // Fetch posts
         try {
           const postsRes = await axios.get(`${API_URL}/api/users/${id}/posts`, authHeaders);
           setPosts(postsRes.data.posts || []);
@@ -55,25 +97,90 @@ export default function UserProfile() {
           setPosts([]);
         }
       }
+
+      // If profile is private or friends-only, we won't fetch posts
     } catch (err) {
       console.error(err);
     }
   };
+  //end of block 1
 
+
+
+
+
+
+
+
+  // Fetch data on component mount and when id changes
   useEffect(() => { fetchData(); }, [id]);
 
+
+
+
+
+
+
+
+
+  //block 2
+  // Handle sending friend request
   const handleSendRequest = async () => {
     try { await sendFriendRequest(id); setStatus('sent'); }
     catch (err) { console.error(err); alert(t('friendRequestFailed')); }
   };
+//end of block 2
 
+
+
+
+
+
+
+
+
+
+
+
+
+//block 3
+  // Handle unfriending
   const handleUnfriend = async () => {
     try { await unfriend(id); setStatus('none'); }
     catch (err) { console.error(err); alert(t('unfriendFailed')); }
   };
+//end of block 3
 
+
+
+
+
+
+
+
+
+
+
+
+  // If user data is still loading, show loading message
   if (!user) return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //main render 
+  // Render user profile page
   return (
     <>
       <Navbar />
@@ -253,4 +360,6 @@ export default function UserProfile() {
       </div>
     </>
   );
+
+  //end of main render
 }

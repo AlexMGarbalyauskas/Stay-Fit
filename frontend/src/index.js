@@ -78,5 +78,5 @@ if ('serviceWorker' in navigator) {
 
 
 
-
+// Measure performance of the app (optional)
 reportWebVitals();

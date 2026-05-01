@@ -1,11 +1,36 @@
+//User details page, shows user details and allows password change
+//page for showing user details and allowing password change
+
+
+
+
+
+
+
+
+
+//imports
 import { useEffect, useState } from 'react';
 import { ArrowLeft, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getMe, changePassword } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import Navbar from '../components/Navbar';
+//imports end
 
+
+
+
+
+
+//main component
 export default function UserDetails() {
+
+
+
+
+
+  //hooks
   const { t } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
@@ -19,37 +44,122 @@ export default function UserDetails() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
+ //end hooks
 
+
+
+
+
+
+
+
+
+  //use effect 1
+  // On component mount, fetch the current user's details and handle loading state
   useEffect(() => {
+
+    // Define an async function to load user details
     const load = async () => {
+
+      // Try to get the current user's details from the API
       try {
+
+        // If successful, store the user details in state
         const res = await getMe();
         setUser(res.data.user);
+
+        // If there's an error (e.g. not authenticated), log it to the console
       } catch (err) {
+
+        // Log any errors that occur while fetching user details for debugging purposes
         console.error('Failed to load user details', err);
+
+        // If the error indicates an authentication issue, you might want to redirect to login
       } finally {
         setLoading(false);
       }
     };
+
+    // Call the load function to fetch user details when the component mounts
     load();
   }, []);
+//use effect 1 end
 
+
+
+
+  //if we're still loading user details, show a loading message. 
+  // If we failed to load user details, show an error message. 
+  // Otherwise, show the user details and password change form.
   if (loading) {
     return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
   }
 
+
+
+
+
+
+
+
+
+
+  //if we don't have user details after loading, show a message 
+  // indicating that we failed to load the profile. This could happen if the 
+  // API request failed 
   if (!user) {
     return <p className="text-center mt-20 text-gray-500">{t('failedToLoadProfile')}</p>;
   }
+//main component end
 
+
+
+
+
+
+
+
+
+
+  //block 1
+  // Helper function to render a row of user details with a label and value, styled according to the theme
   const detailRow = (label, value) => (
+
+
+
+
+
+
+    // Each row consists of a label on the left and the corresponding 
+    // value on the right, with styling that adapts to light or dark mode
     <div className="flex items-center justify-between py-2 border-b border-gray-200/30">
       <span className={isDark ? 'text-gray-300' : 'text-gray-600'}>{label}</span>
       <span className={isDark ? 'text-gray-100' : 'text-gray-900'}>{value || '-'}</span>
     </div>
   );
+//block 1 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+//block 2
+  // Toggles the visibility of the password change fields. 
+  // If we're currently showing the password fields, hide them. 
+  // If we're currently hiding them, show a confirmation prompt before revealing the fields.
   const togglePassword = () => {
+
+    // If the password fields are currently hidden, 
+    // show the confirmation prompt instead of revealing the fields immediately
     if (!showPassword) {
       setShowPasswordConfirm(true);
       return;
@@ -57,17 +167,54 @@ export default function UserDetails() {
     setShowPassword(false);
     setShowChangePassword(false);
   };
+//block 2 end
 
+
+
+
+
+
+
+
+
+
+
+
+//block 3
+  // If the user confirms that they want to show the password fields, 
+  // reveal them and hide the confirmation prompt
   const confirmShowPassword = () => {
     setShowPassword(true);
     setShowChangePassword(true);
     setShowPasswordConfirm(false);
   };
+//block 3 end
 
+
+
+
+
+
+
+
+
+//block 4
+// If the user cancels the confirmation prompt, simply hide the prompt without showing the password fields
   const cancelShowPassword = () => {
     setShowPasswordConfirm(false);
   };
+//block 4 end
 
+
+
+
+
+
+
+
+
+  //block 5
+  // Handles the form submission for changing the user's password.
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -77,6 +224,9 @@ export default function UserDetails() {
       return alert(t('newPasswordsDoNotMatch'));
     }
 
+
+    // Attempt to change the user's password using the API, 
+    // and handle success or error cases with appropriate feedback
     try {
       setSaving(true);
       await changePassword(currentPassword, newPassword);
@@ -93,7 +243,22 @@ export default function UserDetails() {
       setSaving(false);
     }
   };
+//block 5 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //main render
   return (
     <div className={`min-h-screen bg-gradient-to-br ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
       <div className="pt-20 pb-20 px-4 max-w-md mx-auto">
@@ -213,4 +378,5 @@ export default function UserDetails() {
       )}
     </div>
   );
+  //main render end
 }

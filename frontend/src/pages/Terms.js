@@ -1,26 +1,83 @@
+//Terms of Service page with accept button that 
+// saves acceptance in localStorage and shows acceptance date. 
+// Also has a back button to return to previous page. 
+// Content is scrollable if it exceeds the height of the container. 
+// Uses Tailwind CSS for styling and supports dark mode based on a theme value in localStorage. 
+// Text content is internationalized using a language context.
+
+
+
+
+
+
+
+//imports 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+// End of imports
 
+
+
+
+
+//Terms of Service page component
 export default function Terms() {
+
+
+
+
+
+
+  //hooks and state
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
   const [acceptedAt, setAcceptedAt] = useState(() => localStorage.getItem('tosAcceptedAt'));
+ // End of hooks and state
 
+
+
+
+
+
+
+  //used effect 1
+  // Load acceptance date from localStorage on component mount
   useEffect(() => {
     setAcceptedAt(localStorage.getItem('tosAcceptedAt'));
   }, []);
+// End of used effect 1
 
+
+
+
+
+
+
+
+  //block 1 
+  // Handle acceptance of terms
   const accept = () => {
+    // Save acceptance in localStorage with timestamp
     const ts = new Date().toISOString();
     localStorage.setItem('tosAccepted', 'true');
     localStorage.setItem('tosAcceptedAt', ts);
     setAcceptedAt(ts);
     navigate(-1);
   };
+// End of block 1
 
+
+
+
+
+
+
+
+
+  //main render
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800' : 'bg-gray-100'}`}>
       <div className="max-w-2xl mx-auto px-4 py-6">
@@ -47,4 +104,5 @@ export default function Terms() {
       </div>
     </div>
   );
+  // End of main render
 }

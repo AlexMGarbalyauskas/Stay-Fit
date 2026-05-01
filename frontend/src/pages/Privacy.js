@@ -1,16 +1,75 @@
+//Privacy.js 
+// A page that displays the privacy policy of the application. 
+// It includes a back button to navigate to the previous page and 
+// uses the current theme to style the content accordingly. 
+// The text is localized using the language context.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//imports 
 import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+//import end 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Privacy component
 export default function Privacy() {
+
+  //hooks and state
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
+  //hooks and state end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //main return statement
   return (
+
+
+    // The main container has a minimum height to fill the screen and padding at the bottom for the navbar.
     <div className={`min-h-screen pb-24 ${isDark ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800' : 'bg-gray-100'}`}>
       <div className="pt-20 px-4 max-w-2xl mx-auto">
         <button
@@ -38,4 +97,5 @@ export default function Privacy() {
       <Navbar />
     </div>
   );
+  //return end
 }

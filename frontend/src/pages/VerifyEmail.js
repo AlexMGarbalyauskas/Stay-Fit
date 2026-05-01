@@ -1,8 +1,32 @@
+// This component handles the email verification process after a user registers. 
+// It displays a form for entering the 6-digit verification 
+// code sent to the user's email, and provides options to 
+// resend the code or go back to the login page. 
+// It also includes error handling and feedback messages for the user.
+
+
+
+
+
+
+
+//imports 
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Loader } from 'lucide-react';
 import { resendVerificationCode, verifyEmailCode } from '../api';
+//imports end 
 
+
+
+
+
+
+
+
+
+
+//main component
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -14,16 +38,34 @@ export default function VerifyEmail() {
   const [resending, setResending] = useState(false);
   const [resendMessage, setResendMessage] = useState('');
   const [error, setError] = useState('');
+  //end of state variables
 
+
+
+
+
+
+
+
+
+
+
+//use effect 1 
+  // On component mount, check for the 'user' query parameter which 
+  // should contain the user's email and ID.
   useEffect(() => {
     const userParam = searchParams.get('user');
     const emailSentParam = searchParams.get('emailSent');
 
+
+    // If the 'user' parameter is missing, we redirect to the login page.
     if (!userParam) {
       navigate('/login');
       return;
     }
 
+
+    // try to parse the 'user' parameter. If it's valid, we set the email and user ID in state.
     try {
       const user = JSON.parse(decodeURIComponent(userParam));
       setEmail(user.email);
@@ -33,8 +75,20 @@ export default function VerifyEmail() {
       navigate('/login');
     }
   }, [searchParams, navigate]);
+//end of use effect 1
 
+
+
+
+
+
+
+
+//block 1 
+  // This function is called when the user submits the verification form.
   const handleVerify = async (e) => {
+
+    // We prevent the default form submission behavior and reset any existing error messages.
     e.preventDefault();
     setError('');
     
@@ -43,6 +97,8 @@ export default function VerifyEmail() {
       return;
     }
 
+
+    // We set the verifying state to true to disable the form and show a loading state.
     setVerifying(true);
     try {
       const response = await verifyEmailCode(code, userId);
@@ -59,28 +115,66 @@ export default function VerifyEmail() {
       setVerifying(false);
     }
   };
+//end of block 1
 
+
+
+
+
+
+
+//block 2
+  // This function is called when the user clicks the "Resend Code" button.
   const handleResend = async () => {
     if (!userId) return;
     setResendMessage('');
     setError('');
     setResending(true);
 
+    // We call the API to resend the verification code. If successful, we show a success message. If it fails, we show an error message.
     try {
+
+      // Call the API to resend the verification code
       const response = await resendVerificationCode(userId);
       if (response.data.emailSent) {
         setEmailSent(true);
         setResendMessage('A new verification code has been sent.');
+
+        // Clear the code input field
       } else {
         setResendMessage('We could not send the email. Please try again later.');
       }
+
+      // Clear the code input field
     } catch (err) {
+
+      // If there's an error, we display an appropriate message to the user.
       setResendMessage(err.response?.data?.error || 'Failed to resend code. Please try again.');
+
+      // If the error indicates that the email couldn't be sent, we update the emailSent state to false to show the appropriate message in the UI.
     } finally {
       setResending(false);
     }
   };
+//end of block 2
 
+
+
+
+
+
+
+
+
+
+
+
+  //main render
+  // The UI is designed to be clean and user-friendly, 
+  // with clear instructions and feedback for the user. 
+  // It includes a form for entering the verification code, 
+  // buttons for resending the code and going back to the login page, 
+  // and messages to guide the user through the process.
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
@@ -165,4 +259,6 @@ export default function VerifyEmail() {
       </div>
     </div>
   );
+//end of main render 
+
 }

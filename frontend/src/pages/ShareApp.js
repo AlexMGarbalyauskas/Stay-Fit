@@ -1,28 +1,101 @@
+//share app page with qr code and share link functionality
+// This page allows users to share the StayFit app with friends by 
+// providing a QR code and a shareable link. Users can download the QR 
+// code or use the native share functionality of their device. 
+// The page also includes instructions on how to use 
+// the QR code to access the app.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//imports 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Download, Share2, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+//end imports
 
+
+
+
+
+
+
+
+
+
+
+
+
+//share app page component
 export default function ShareApp() {
+
+  //hooks
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [appUrl, setAppUrl] = useState('');
 
+
+
+
+
+
+
+
+
+
+
+
+  //use effect 1 
+// Set the app URL on component mount
   useEffect(() => {
     // Use deployed URL
     const url = 'https://stay-fit-2.onrender.com/';
     setAppUrl(url);
   }, []);
+  //end use effect 1
 
+
+
+
+
+
+
+
+
+
+//handle download qr code
   const handleDownloadQR = () => {
+
+    //hooks
+    // Get the SVG element and convert it to a PNG file for download
     const svg = document.getElementById('qr-code-svg');
     const svgData = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
+    //end hooks
     
+
+
+
+
+
+    //block 1 
+    //image onload event to draw the SVG onto the canvas and trigger download
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
@@ -34,10 +107,28 @@ export default function ShareApp() {
       downloadLink.href = pngFile;
       downloadLink.click();
     };
-    
+  //block 1 end 
+
+
+  // Set the image source to the SVG data encoded as a base64 string
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   };
 
+
+
+
+
+
+
+
+
+
+
+
+  
+
+//block 2
+  //handle share link
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -55,7 +146,22 @@ export default function ShareApp() {
       alert('Link copied to clipboard!');
     }
   };
+//block 2 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //main render
   return (
     <div className="min-h-screen bg-gray-100 pb-24">
       <div className="pt-20 px-4 max-w-md mx-auto">
@@ -125,4 +231,5 @@ export default function ShareApp() {
       <Navbar />
     </div>
   );
+  //end main render
 }

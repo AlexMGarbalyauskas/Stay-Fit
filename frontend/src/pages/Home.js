@@ -1,3 +1,12 @@
+//Home.js is the main feed page that users see after logging in. It displays 
+// a feed of posts from friends, along with a welcome message and a countdown 
+// timer for the next workout if set. Users can like, comment, share, and 
+// save posts directly from the feed. The page also listens for updates to 
+// comments and new posts to keep the feed fresh without needing a full refresh.
+
+
+
+//imports
 import { useEffect, useState } from 'react';
 import { getMe, getPosts, API_BASE } from '../api';
 import { useNavigate } from 'react-router-dom';
@@ -7,8 +16,22 @@ import Header from '../components/Header';
 import { toggleLike, toggleSave } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { log, error as logError } from '../utils/logger';
+//imports end 
 
+
+
+
+
+
+//Main Home component
 export default function Home({ onLogout, isAuthenticated }) {
+
+
+
+
+
+  // Localization
+  //const
   const { t } = useLanguage();
   const isDark = document.documentElement.classList.contains('dark');
   const [user, setUser] = useState(null);
@@ -18,7 +41,16 @@ export default function Home({ onLogout, isAuthenticated }) {
   const [countdown, setCountdown] = useState('');
   const [todayWorkout, setTodayWorkout] = useState(null);
   const navigate = useNavigate();
+  //const end
+  
 
+
+
+
+
+
+  //use effect 1 
+  // Fetch user data and posts on mount, and set up event listeners for updates
   useEffect(() => {
     if (!isAuthenticated) {
       setUser(null);
@@ -26,15 +58,19 @@ export default function Home({ onLogout, isAuthenticated }) {
       return;
     }
 
-    log('🔍 Home: Fetching user data...');
-    log('🔍 isAuthenticated:', isAuthenticated);
-    log('🔍 API_BASE:', API_BASE);
+    // Log authentication status and API base URL for debugging
+    log(' Home: Fetching user data...');
+    log(' isAuthenticated:', isAuthenticated);
+    log(' API_BASE:', API_BASE);
 
+    //get me function to get user data
     getMe()
       .then(res => {
-        log('✅ getMe response:', res);
+        log(' getMe response:', res);
         setUser(res.data.user || res.data);
       })
+
+      //catch error if getMe fails, likely due to invalid session or user not found
       .catch(err => {
         logError('getMe error:', err);
         logError('Error response:', err.response);
@@ -60,12 +96,16 @@ export default function Home({ onLogout, isAuthenticated }) {
       if (!postId) return;
       setPosts(prev => prev.filter(p => p.id !== postId));
     };
+
+    // Listen for custom events to update comments count and handle post deletions
     window.addEventListener('post:commentsUpdated', handler);
     window.addEventListener('post:deleted', deleteHandler);
     // Refresh feed when a friend creates a new post
     const refreshHandler = () => {
       fetchPosts();
     };
+
+    // Listen for feed refresh events (e.g., new post created)
     window.addEventListener('feed:refresh', refreshHandler);
     return () => {
       window.removeEventListener('post:commentsUpdated', handler);
@@ -73,16 +113,27 @@ export default function Home({ onLogout, isAuthenticated }) {
       window.removeEventListener('feed:refresh', refreshHandler);
     };
   }, [navigate, onLogout, isAuthenticated]);
+  //use effect 1 end
 
+
+
+
+
+
+
+
+  //use effect 2
   // Countdown timer for today's workout
   useEffect(() => {
     const pad = (n) => String(n).padStart(2, '0');
     const dateKey = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
     
+    // Check every second for today's workout and update countdown
     const interval = setInterval(() => {
       const today = new Date();
       const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
       
+      // Load workout plans from localStorage and find today's workout
       try {
         const stored = localStorage.getItem('workout-plans');
         if (stored) {
@@ -121,7 +172,17 @@ export default function Home({ onLogout, isAuthenticated }) {
     
     return () => clearInterval(interval);
   }, []);
+  //use effect 2 end
 
+
+
+
+
+
+
+
+  //block 1 
+  // Function to fetch posts for the feed
   const fetchPosts = async () => {
     try {
       const res = await getPosts();
@@ -132,13 +193,32 @@ export default function Home({ onLogout, isAuthenticated }) {
       logError('Failed to load posts', err);
     }
   };
+  //block 1 end
 
+
+
+
+
+
+
+
+  //block 2
+  // Function to handle user logout
   const handleLogout = () => {
     localStorage.clear();
     if (onLogout) onLogout();
     navigate('/');
   };
+  //block 2 end
 
+
+
+
+
+
+
+  //block 3
+  // If user is not authenticated, show welcome screen with login/register options
   // Check authentication first, before checking user
   if (!isAuthenticated) {
     return (
@@ -182,10 +262,23 @@ export default function Home({ onLogout, isAuthenticated }) {
       </>
     );
   }
+  //block 3 end
+
+
+
+
+
+
 
   // Now check if user is loaded
   if (!user) return <p className="text-center mt-20 text-gray-500">{t('loadingUser')}</p>;
 
+
+
+
+
+
+  //main return for authenticated users with user data loaded, showing the feed and countdown timer
   return (
     <>
       <Header onNotificationsClick={() => alert('Notifications clicked')} />
@@ -327,4 +420,5 @@ export default function Home({ onLogout, isAuthenticated }) {
       <Navbar />
     </>
   );
+  //end of main return
 }

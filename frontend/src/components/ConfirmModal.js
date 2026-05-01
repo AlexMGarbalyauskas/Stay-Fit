@@ -1,6 +1,6 @@
-//confirm modal component that can be used to confirm actions such as 
+// confirm modal component that can be used to confirm actions such as 
 // deleting a post or comment. It takes in props for the title,
-//  message, and callback functions for confirming or canceling the action. 
+// message, and callback functions for confirming or canceling the action. 
 // The modal is styled with Tailwind CSS classes for a clean and modern look.
 
 

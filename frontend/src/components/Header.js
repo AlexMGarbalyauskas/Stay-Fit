@@ -1,5 +1,5 @@
 //PURPOSE: Header component with notifications and AI helper
-//NOTES:
+//
 // - Displays app title centered, with notification and tutorial icons on the right
 // - Shows a red dot on the notification icon if there are unread notifications
 // - Clicking the notification icon navigates to the notifications page

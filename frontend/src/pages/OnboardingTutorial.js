@@ -1,8 +1,30 @@
+//onboarding tutorial page that walks users through key
+//  features of the app with step-by-step instructions and visuals. 
+// It checks if the user has completed the tutorial before and 
+// allows them to skip or revisit it from settings.
+
+
+
+
+
+
+
+//imports
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, ExternalLink, Compass } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+//imports end
 
+
+
+
+
+
+
+
+//block 1 
+//translation object for onboarding tutorial content in multiple languages
 const ONBOARDING_TRANSLATIONS = {
   en: {
     appTutorial: 'App Tutorial',
@@ -241,18 +263,31 @@ const ONBOARDING_TRANSLATIONS = {
     stepSettingsPoint3: 'Apri helper AI e opzioni account'
   }
 };
+//block 1 end
 
+
+
+
+
+
+
+
+//main component for onboarding tutorial page
 export default function OnboardingTutorial() {
+
+  //hooks and state for language, navigation, location, theme, user data, and tutorial steps
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
-
   const params = new URLSearchParams(location.search);
   const isAuto = params.get('auto') === '1';
   const returnTo = params.get('return');
 
+
+  //block 2 
+  // Memoized user data from localStorage to determine onboarding status
   const user = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user') || '{}');
@@ -260,13 +295,24 @@ export default function OnboardingTutorial() {
       return {};
     }
   }, []);
+  //block 2 end
 
+  //const for user ID and onboarding completion key based on user ID
   const userId = user?.id;
   const doneKey = userId ? `onboarding_done_${userId}` : null;
-
   const tt = (key) => ONBOARDING_TRANSLATIONS[language]?.[key] || ONBOARDING_TRANSLATIONS.en[key] || t(key);
 
+
+
+
+
+
+//block 3
+// Memoized array of tutorial steps with dynamic content based on language
   const steps = useMemo(() => ([
+
+    // Each step includes a title, body, hint for how to open the page, 
+    // the route to navigate to, and key points about the page's features
     {
       title: tt('stepHomeTitle'),
       body: tt('stepHomeBody'),
@@ -324,56 +370,127 @@ export default function OnboardingTutorial() {
       points: [tt('stepSettingsPoint1'), tt('stepSettingsPoint2'), tt('stepSettingsPoint3')]
     }
   ]), [tt]);
+  //block 3 end
 
+  //state for current tutorial step index and notice message when opening pages
   const [stepIndex, setStepIndex] = useState(0);
   const [openNotice, setOpenNotice] = useState('');
 
+
+
+  // use effect 1
   useEffect(() => {
+
+    // If we don't have a user ID, we can't determine onboarding status, so redirect to login
     if (!userId) {
       navigate('/login');
       return;
     }
+
+    // If this is an auto-redirect and the user has already completed onboarding, skip to home
     if (isAuto && doneKey && localStorage.getItem(doneKey)) {
       navigate('/home');
     }
-  }, [doneKey, isAuto, navigate, userId]);
 
+    // Listen for theme changes in localStorage to update the component's theme state
+  }, [doneKey, isAuto, navigate, userId]);
+  //use effect 1 end
+
+
+
+
+
+  //block 4
+  // Marks the onboarding tutorial as complete for the user and clears pending status
   const markComplete = () => {
+
+    // If we have a user ID and doneKey, mark the tutorial as done in localStorage
     if (doneKey) {
       localStorage.setItem(doneKey, 'true');
     }
+
+    // Clear the pending flag since the user has completed the tutorial
     localStorage.removeItem('onboarding_pending');
   };
+  //block 4 end
 
+
+
+
+
+  //block 5
+  // Listens for theme changes in localStorage to update the component's theme state
   const handleExit = () => {
+
+    // Mark the tutorial as complete when exiting
     markComplete();
+
+    // If the user should return to settings after exiting, navigate there
     if (returnTo === 'settings') {
       navigate('/settings');
       return;
     }
+
+    // Otherwise, navigate to the home page
     navigate('/home');
   };
+  //block 5 end
 
+
+
+
+
+  //block 6
+  // Handles navigation to the next tutorial step or exits if on the last step
   const handleNext = () => {
+
+    // If not on the last step, go to the next step
     if (stepIndex < steps.length - 1) {
       setStepIndex((prev) => prev + 1);
       return;
     }
     handleExit();
   };
+  //block 6 end
 
+
+
+
+
+  //block 7
+  // Handles navigation to the previous tutorial step
   const handleBack = () => {
+
+    // Only allow going back if not on the first step
     if (stepIndex > 0) {
       setStepIndex((prev) => prev - 1);
       setOpenNotice('');
     }
   };
+  //block 7 end
 
+
+
+
+
+
+
+
+  //block 8
+  // Handles opening the current tutorial step's page in a new tab and shows a notice
   const handleOpenPage = () => {
+    
+    // Open the target page in a new tab
     const targetRoute = steps[stepIndex]?.route || '/home';
     navigate(targetRoute);
   };
+  //block 8 end
 
+
+
+  //main render 
+  // with conditional styling based on theme and 
+  // dynamic content based on tutorial step and language
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 text-gray-100' : 'bg-slate-50 text-slate-900'}`}>
       <div className="max-w-3xl mx-auto px-6 py-10">
@@ -478,4 +595,5 @@ export default function OnboardingTutorial() {
       </div>
     </div>
   );
+  //render end
 }

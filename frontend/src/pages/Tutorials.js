@@ -1,11 +1,34 @@
+//tutorials page with exercise tutorials, muscle group filtering, and search functionality
+// This page provides users with detailed exercise tutorials, 
+// allowing them to filter by muscle group and search for specific exercises. 
+// It includes translations for Spanish, French, and Italian to support a wider audience. 
+// The page features an interactive body map for selecting muscle groups 
+// and displays step-by-step instructions, duration, difficulty level, 
+// and media for each exercise tutorial.
+
+
+
+
+
+//import necessary libraries and components
 import { useState, useMemo } from 'react';
 import { ArrowLeft, Play, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { useLanguage } from '../context/LanguageContext';
+//imports end 
 
+
+
+
+
+
+//block 1 
+// Define translations for the tutorial UI
 const TUTORIAL_UI_TRANSLATIONS = {
+
+  // UI text translations for Spanish, French, and Italian
   es: {
     pleaseLoginToViewTutorials: 'Inicia sesión para ver los tutoriales.',
     exerciseTutorials: 'Tutoriales de Ejercicios',
@@ -35,6 +58,8 @@ const TUTORIAL_UI_TRANSLATIONS = {
     muscleGlutes: 'Glúteos',
     muscleLegs: 'Piernas'
   },
+
+  //french translations
   fr: {
     pleaseLoginToViewTutorials: 'Veuillez vous connecter pour voir les tutoriels.',
     exerciseTutorials: 'Tutoriels d\'exercices',
@@ -64,6 +89,8 @@ const TUTORIAL_UI_TRANSLATIONS = {
     muscleGlutes: 'Fessiers',
     muscleLegs: 'Jambes'
   },
+
+  //italian translations
   it: {
     pleaseLoginToViewTutorials: 'Accedi per vedere i tutorial.',
     exerciseTutorials: 'Tutorial degli esercizi',
@@ -94,9 +121,21 @@ const TUTORIAL_UI_TRANSLATIONS = {
     muscleLegs: 'Gambe'
   }
 };
+//end of block 1
 
+
+
+
+
+
+
+
+//block 2
 // Sample exercise tutorials database
 const EXERCISE_TUTORIALS = {
+
+  // Each exercise has a description, duration, d
+  // ifficulty level, step-by-step instructions, and media links
   'Push-ups': {
     description: 'A classic chest, shoulders, and triceps exercise',
     duration: '2:45',
@@ -476,7 +515,18 @@ const EXERCISE_TUTORIALS = {
     imageUrl: '/dumbellshrugs2.jpg'
   }
 };
+//end of block 2
 
+
+
+
+
+
+
+
+
+//block 3
+// Translations for exercise names and descriptions in Spanish, French, and Italian
 const EXERCISE_COPY_TRANSLATIONS = {
   es: {
     'Push-ups': { name: 'Flexiones', description: 'Un ejercicio clásico de pecho, hombros y tríceps' },
@@ -566,11 +616,29 @@ const EXERCISE_COPY_TRANSLATIONS = {
     'Dumbbell Shrugs': { name: 'Scrollate con manubri', description: 'Rinforza trapezi e muscoli di supporto del collo' }
   }
 };
+//end of block 3
+
+
+
+
+
 
 // Extract unique exercises from plans - if empty, show all exercises
 const getExercisesFromWorkouts = (plans) => {
+
+
+
+
+
+  // Use a Set to avoid duplicates when collecting exercises from different workout types
   const exercises = new Set();
   
+
+
+
+
+
+//block 4
   // Common exercises in Full Body, Upper Body, Lower Body, etc.
   const workoutExercises = {
     'Full Body': ['Push-ups', 'Squats', 'Deadlifts', 'Bench Press', 'Chest Press', 'Dumbbell Shrugs', 'Romanian Deadlift', 'Calf Raises', 'Dragon Flag'],
@@ -580,17 +648,53 @@ const getExercisesFromWorkouts = (plans) => {
     'Cardio': ['Lunges', 'Squats', 'Calf Raises'],
     'Strength': ['Deadlifts', 'Bench Press', 'Chest Press', 'Pull-ups', 'Dumbbell Shrugs', 'Romanian Deadlift', 'Leg Press', 'Handstand Push-up', 'Muscle-Up', 'Dragon Flag']
   };
+//end of block 4
 
+
+
+
+
+
+
+
+
+
+
+
+
+//block 5
+// Loop through each plan and add exercises based on the workout type, defaulting to Full Body if not specified
   Object.values(plans).forEach(plan => {
     const workout = plan.workout || 'Full Body';
     const exs = workoutExercises[workout] || ['Push-ups', 'Squats'];
     exs.forEach(ex => exercises.add(ex));
   });
+//block 5 end
+
+
+
+
+
+
 
   return Array.from(exercises);
 };
 
+
+
+
+
+
+
+
+
+
+//block 6
+// Map of muscle groups to exercises that target them
 const MUSCLE_EXERCISE_MAP = {
+
+  // This mapping is based on common exercise-muscle relationships, 
+  // but can be adjusted based on specific exercise variations and individual anatomy
   chest: ['Push-ups', 'Bench Press', 'Chest Press', 'Muscle-Up'],
   shoulders: ['Push-ups', 'Shoulder Press', 'Bench Press', 'Handstand Push-up'],
   neck: ['Shoulder Press', 'Back Rows', 'Deadlifts', 'Neck Flexion', 'Neck Extension', 'Dumbbell Shrugs'],
@@ -601,7 +705,18 @@ const MUSCLE_EXERCISE_MAP = {
   glutes: ['Squats', 'Lunges', 'Deadlifts'],
   legs: ['Squats', 'Lunges', 'Deadlifts', 'Leg Press', 'Romanian Deadlift', 'Calf Raises', 'Bulgarian Split Squat']
 };
+//end of block 6
 
+
+
+
+
+
+
+
+
+//block 7
+// Body map areas and hotspots for interactive muscle selection
 const BODY_MAP_AREAS = [
   { key: 'chest' },
   { key: 'shoulders' },
@@ -613,7 +728,18 @@ const BODY_MAP_AREAS = [
   { key: 'glutes' },
   { key: 'legs' }
 ];
+//end of block 7
 
+
+
+
+
+
+
+
+
+//block 8
+// Hotspots for front and back body maps with positions and sizes for clickable areas
 const BODY_HOTSPOTS = [
   // Front body
   { key: 'neck', label: 'Neck', side: 'front', left: '23%', top: '22.7%', width: '6.4%', height: '7.4%' },
@@ -636,7 +762,19 @@ const BODY_HOTSPOTS = [
   { key: 'legs', label: 'Legs', side: 'back', left: '60%', top: '55.5%', width: '9.4%', height: '27%' },
   { key: 'legs', label: 'Legs', side: 'back', left: '75%', top: '55.5%', width: '9.4%', height: '27%' }
 ];
+//end of block 8
 
+
+
+
+
+
+
+
+
+
+// Main Tutorials component that displays exercise tutorials with search, filter, 
+// and interactive body map features
 export default function Tutorials({ isAuthenticated }) {
   const { t, language } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
@@ -1007,3 +1145,4 @@ export default function Tutorials({ isAuthenticated }) {
     </div>
   );
 }
+//end of render 

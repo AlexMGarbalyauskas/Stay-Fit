@@ -1,3 +1,17 @@
+//Profile page component. Displays user's profile info, their posts, 
+// and saved posts. Allows editing of profile and posts. 
+// Includes auth guard to redirect to login if not authenticated.
+
+
+
+
+
+
+
+
+
+
+//imports
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Heart, Bookmark, Edit2, Check, Share2, UsersIcon, Trash2 } from 'lucide-react';
@@ -7,8 +21,30 @@ import ProfileHeader from '../components/ProfileHeader';
 import axios from 'axios';
 import { getMyPosts, getSavedPosts, toggleLike, toggleSave, updatePost, deletePost } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+//end of imports
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Profile page component //used to display and edit user's profile,
+//  as well as show their posts and saved posts. Also includes auth 
+// guard to redirect to login if not authenticated.
 export default function Profile() {
+
+
+  //hooks and state
   const { t } = useLanguage();
   const isDark = document.documentElement.classList.contains('dark');
   const [user, setUser] = useState(null);
@@ -35,6 +71,14 @@ export default function Profile() {
   const isAuthenticated = !!token;
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
+
+
+
+
+
+
+  //block 1 
+  // Sync updated user info to localStorage
   const syncLocalUser = (updatedUser) => {
     try {
       const stored = JSON.parse(localStorage.getItem('user') || '{}');
@@ -43,7 +87,15 @@ export default function Profile() {
       localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
+  // End of block 1
 
+
+
+
+
+
+
+  //block 2
   // Fetch profile info
   const fetchProfile = async () => {
     try {
@@ -59,7 +111,18 @@ export default function Profile() {
       console.error(err);
     }
   };
+  // End of block 2
 
+
+
+
+
+
+
+
+
+
+// Block 3
   // Fetch user's posts
   const fetchMyPosts = async () => {
     try {
@@ -69,7 +132,25 @@ export default function Profile() {
       console.error(e);
     }
   };
+  // End of block 3
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Block 4
   // Fetch saved posts
   const fetchSaved = async () => {
     try {
@@ -79,7 +160,26 @@ export default function Profile() {
       console.error(e);
     }
   };
+  // End of block 4
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Block 5
   // Save bio
   const handleSaveBio = async () => {
     try {
@@ -93,7 +193,27 @@ export default function Profile() {
       alert('Failed to save bio');
     }
   };
+  // End of block 5
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Block 6
   // Save location
   const handleSaveLocation = async () => {
     try {
@@ -107,7 +227,25 @@ export default function Profile() {
       alert('Failed to save location');
     }
   };
+  // End of block 6
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Block 7
   // Save nickname
   const handleSaveNickname = async () => {
     try {
@@ -121,14 +259,52 @@ export default function Profile() {
       alert('Failed to save nickname');
     }
   };
+  // End of block 7
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Block 8
   // Handle profile picture upload
   const handleProfilePictureChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
   };
+  // End of block 8
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Block 9
   // Upload profile picture
   const handleUploadProfilePicture = async () => {
     if (!selectedFile) return;
@@ -153,15 +329,42 @@ export default function Profile() {
       alert('Failed to upload profile picture');
     }
   };
+  // End of block 9
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//use effect 1
+  // Initial data fetch
   useEffect(() => {
     fetchProfile();
     fetchMyPosts();
     fetchSaved();
   }, []);
+  // End of use effect 1
 
+
+
+
+//used for navigation to login/register from auth guard
   const navigate = useNavigate();
 
+
+
+  //block 10
   // Auth guard render
   if (!isAuthenticated) {
     return (
@@ -205,13 +408,45 @@ export default function Profile() {
       </>
     );
   }
+  // End of block 10
 
+
+
+
+
+
+
+
+
+
+  //block 11
+  // Loading state render
   if (!user) {
     return <p className={`text-center mt-20 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Loading...</p>;
   }
+  // End of block 11
 
+
+
+
+
+
+
+// Determine which posts to display based on toggle
   const displayPosts = showSaved ? savedPosts : posts;
 
+
+
+
+
+
+
+
+
+
+
+
+  //main render
   return (
     <>
       <ProfileHeader />
@@ -662,5 +897,11 @@ export default function Profile() {
       <Navbar />
     </>
   );
+
+  // End of main render
+
+
+
 }
+// End of Profile component
 

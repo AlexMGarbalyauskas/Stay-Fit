@@ -1,11 +1,42 @@
+//stats page with charts and streaks and achievements and stuff, also a back button to settings
+// This page is meant to be a fun and engaging way for users to see 
+// their activity and encourage them to post more and connect with friends.
+
+
+
+
+
+
+
+
+
+//imports 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Flame, Users, MessageSquare, TrendingUp, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { buildPostDateSet, calculateCurrentStreak, countPostingDaysInWindow } from '../utils/streak';
 import { useLanguage } from '../context/LanguageContext';
+//end imports
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default function StatsSettings() {
+
+
+  //hooks and state
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
@@ -20,8 +51,24 @@ export default function StatsSettings() {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const token = localStorage.getItem('token');
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+  //end hooks and state
 
+
+
+
+
+
+
+  // Fetch stats on mount
   useEffect(() => {
+
+
+
+
+
+
+    //block 1 
+    // Function to fetch stats
     const fetchStats = async () => {
       try {
         setLoading(true);
@@ -54,8 +101,11 @@ export default function StatsSettings() {
             count: monthMap[monthKey] || 0
           });
         }
+
+        // Sort months by key just in case
         setMonthlyPosts(months);
         
+        // Build a set of unique posting dates
         const dates = buildPostDateSet(allPosts);
 
         // Count how many unique posting days happened in the last 7 days (including today)
@@ -68,22 +118,56 @@ export default function StatsSettings() {
         const friendsRes = await axios.get(`${API_URL}/api/friends`, authHeaders);
         const friendsCount = friendsRes.data.friends?.length || 0;
 
+
+        // set stats state
         setStats({
           posts: postsCount,
           friends: friendsCount,
           streak: streak,
           comments: 0
         });
+
+
+        // Simulate loading delay for better UX
       } catch (error) {
+
+        // Handle errors gracefully
         console.error('Error fetching stats:', error);
+
+        // Show user-friendly error message
       } finally {
         setLoading(false);
       }
     };
+    //end block 1
 
+
+
+
+
+
+    // Call the function to fetch stats
     fetchStats();
   }, [API_URL, token]);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //block 2
+  // Show loading state
+  //used a simple loading state that just shows a message, 
+  // could be improved with a spinner or skeletons but keeping it simple for now
   if (loading) {
     return (
       <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-white text-slate-800'}`}>
@@ -93,7 +177,18 @@ export default function StatsSettings() {
       </div>
     );
   }
+//  end block 2
 
+
+
+
+
+
+
+
+
+
+  //main return
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-white text-slate-800'}`}>
       <div className="pt-20 pb-20 px-4 max-w-md mx-auto">
@@ -437,4 +532,5 @@ export default function StatsSettings() {
       </div>
     </div>
   );
+  //end main return
 }
