@@ -1,22 +1,53 @@
+//Register.js used for user registration, including form 
+// handling, validation, and integration 
+// with Google OAuth for streamlined sign-up. 
+// It also manages local storage for form drafts 
+// and handles navigation post-registration.
+
+
+
+//imports 
 import { useState, useEffect } from 'react';
 import { register, API_BASE } from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+//imports end 
 
+
+
+//main component 
 export default function Register() {
+
+  // Language context for internationalization
   const { t } = useLanguage();
   const [isDark, setIsDark] = useState(localStorage.getItem('theme') === 'dark');
 
+
+
+  //use effect 1 
+  // Listen for theme changes to update the component's appearance
   useEffect(() => {
+
+    // Update the isDark state whenever the 'theme' value in local storage changes
     const handleThemeChange = () => {
       setIsDark(localStorage.getItem('theme') === 'dark');
     };
+
+    // Listen for changes to the 'theme' key in local storage to update the component's theme dynamically
     window.addEventListener('storage', handleThemeChange);
     return () => window.removeEventListener('storage', handleThemeChange);
   }, []);
+  //use effect 1 end
 
+
+
+
+// Local storage key for saving form drafts
   const DRAFT_KEY = 'register_form_draft';
 
+
+
+  //block 1 
   const loadDraft = () => {
     try {
       const draftRaw = localStorage.getItem(DRAFT_KEY);
@@ -26,7 +57,10 @@ export default function Register() {
       return {};
     }
   };
+  //block 1 end
 
+
+// State variables for form inputs and error handling
   const initialDraft = loadDraft();
 
   const [username, setUsername] = useState(initialDraft.username || '');
@@ -38,17 +72,41 @@ export default function Register() {
   const [tosRead, setTosRead] = useState(() => !!localStorage.getItem('tosAccepted'));
   const navigate = useNavigate();
 
+
+
+
+  //use effect 2
+  // Listen for changes to Terms of Service acceptance in local storage
   useEffect(() => {
+
+    // Update the tosRead state whenever the 'tosAccepted' value in local storage changes
     const handler = () => setTosRead(!!localStorage.getItem('tosAccepted'));
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
   }, []);
+  //use effect 2 end
 
+
+
+
+
+
+
+
+  //use effect 3
   // Load draft from local storage so inputs survive visiting Terms page and back
   useEffect(() => {
+
+    // Load any saved draft from local storage when the component mounts
     try {
+
+      // Attempt to load the draft from local storage and populate form fields
       const draftRaw = localStorage.getItem(DRAFT_KEY);
+
+      // If a draft exists, parse it and set the form state accordingly
       if (draftRaw) {
+
+        // If a draft exists, parse it and set the form state accordingly
         const draft = JSON.parse(draftRaw);
         setUsername(draft.username || '');
         setEmail(draft.email || '');
@@ -56,53 +114,118 @@ export default function Register() {
         setPasswordConfirm(draft.passwordConfirm || '');
         setAgree(!!draft.agree);
       }
+
+      // Check if the user has already accepted the Terms of Service and update state
     } catch (e) {
       console.error('Failed to load draft', e);
     }
   }, []);
+  //use effect 3 end
 
+
+
+
+
+
+
+
+
+
+
+//use effect 4
   // Persist draft while user types
   useEffect(() => {
+
+    // Save form state to local storage so it persists if the user navigates away (e.g., to read Terms) and comes back
     const draft = { username, email, password, passwordConfirm, agree };
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   }, [username, email, password, passwordConfirm, agree]);
+  //use effect 4 end
 
+
+
+
+
+
+
+
+
+
+//block 2
+// Handle form submission with validation and API call
   const handleSubmit = async (e) => {
+
+    // Validate password strength and confirmation before submitting
     e.preventDefault();
     const passwordRules = /^(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};:'",.<>/?\\|`~]).{8,}$/;
     if (!passwordRules.test(password)) {
       setError(t('passwordRulesError'));
       return;
     }
+
+    // Ensure password and confirmation match
     if (password !== passwordConfirm) {
       setError(t('passwordsDoNotMatch'));
       return;
     }
+
+    // Ensure Terms of Service is accepted before allowing registration
     if (!tosRead || !agree) {
       setError(t('acceptTermsBeforeRegistering'));
       return;
     }
+
+    // Attempt to register the user via the API
     try {
       const response = await register(username, email, password);
       localStorage.removeItem(DRAFT_KEY);
       localStorage.setItem('onboarding_pending', 'true');
+
+      // If the server indicates that email verification is required, navigate to the verification page
       if (response.data?.requiresVerification) {
+
+        // If email verification is required, navigate to the verification page with user info
         const userParam = encodeURIComponent(JSON.stringify(response.data.user));
         navigate(`/verify-email?user=${userParam}&emailSent=${response.data.emailSent}`);
         return;
       }
+
+      // For users who don't require email verification, we can log them in immediately
       navigate('/login');
+
+      // Optionally, you could also log the user in immediately by storing the token and user data here
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
     }
   };
+  //block 2 end
 
+
+
+
+
+
+
+
+
+
+//block 3
+// Handle Google OAuth registration flow
   const handleGoogleRegister = () => {
+
+    // Ensure Terms of Service is accepted before allowing Google registration
     localStorage.setItem('onboarding_pending', 'true');
     const frontendOrigin = encodeURIComponent(window.location.origin);
     window.location.href = `${API_BASE}/api/auth/google/register?frontend=${frontendOrigin}`;
   };
+//block 3 end
 
+
+
+
+
+
+  //main render
   return (
     <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800' : 'bg-gray-100'}`}>
       <div className={`w-full max-w-md p-8 rounded-2xl shadow-md ${isDark ? 'bg-gray-900 border border-gray-800' : 'bg-white'}`}>
@@ -191,4 +314,5 @@ export default function Register() {
       </div>
     </div>
   );
+  //main render end 
 }

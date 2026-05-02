@@ -1,18 +1,44 @@
+//PublicShare.js is a public landing page that displays a QR code for app installation.
+//Users can scan the QR code with their phone camera to download and install the StayFit app.
+//Includes a download feature to save the QR code as a PNG image and direct app link.
+
+
+
+//imports
 import { useState, useEffect } from 'react';
 import { Download, QrCode, ArrowRight } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import Navbar from '../components/Navbar';
 import { useLanguage } from '../context/LanguageContext';
+//imports end
 
+
+
+
+//Main PublicShare component
 export default function PublicShare() {
+  // Localization and state
+  //const
   const { t } = useLanguage();
   const [appUrl, setAppUrl] = useState('');
+  //const end
 
+
+
+
+  //use effect 1
+  // Set app URL from window.location.origin on component mount
   useEffect(() => {
     const url = window.location.origin;
     setAppUrl(url);
   }, []);
+  //use effect 1 end
 
+
+
+
+  //block 1: QR code download handler
+  // Download QR code as PNG by converting SVG to canvas and triggering download
   const handleDownloadQR = () => {
     const svg = document.getElementById('qr-code-svg');
     const svgData = new XMLSerializer().serializeToString(svg);
@@ -34,7 +60,12 @@ export default function PublicShare() {
     
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   };
+  //block 1 end
 
+
+
+
+  //JSX return - public share page with QR code and installation instructions
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <div className="pt-12 px-4 max-w-lg mx-auto text-center">
@@ -124,4 +155,5 @@ export default function PublicShare() {
       </div>
     </div>
   );
+  //JSX return end
 }

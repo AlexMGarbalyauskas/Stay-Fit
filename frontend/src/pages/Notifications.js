@@ -1,3 +1,16 @@
+//Notifications.js displays friend requests, workout invites, unfriended users, and message notifications.
+//Supports real-time notifications via Socket.io and allows users to accept/reject friend requests and workout invites.
+//Includes tabbed interface for filtering different notification types with empty states and loading states.
+
+
+
+
+
+
+
+
+
+//imports
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { getFriendRequests, acceptFriendRequest, rejectFriendRequest, getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, respondToWorkoutInvite } from '../api';
 import { useNavigate } from 'react-router-dom';
@@ -7,8 +20,25 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import { useLanguage } from '../context/LanguageContext';
 import { SOCKET_BASE, getSocketOptions } from '../utils/socket';
+//imports end
 
+
+
+
+
+
+
+
+
+
+
+
+//Main Notifications component
 export default function Notifications({ onFriendUpdate }) {
+
+
+  // Localization and theme
+  //const
   const { t } = useLanguage();
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -56,7 +86,25 @@ export default function Notifications({ onFriendUpdate }) {
       button: 'bg-slate-900 hover:bg-slate-800 text-slate-100',
     },
   };
+  //const end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //block 1: notification fetch handlers
+  // Fetch friend requests from API
   const fetchRequests = async () => {
     if (!isAuthenticated) return [];
     setLoading(true);
@@ -69,6 +117,7 @@ export default function Notifications({ onFriendUpdate }) {
     } finally { setLoading(false); }
   };
 
+  // Fetch notifications by type with optional transform function
   const fetchNotifications = async (type, transform) => {
     if (!isAuthenticated) return [];
     setLoading(true);
@@ -87,7 +136,23 @@ export default function Notifications({ onFriendUpdate }) {
       setLoading(false);
     }
   };
+  //block 1 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //use effect 1
+  // Load notifications for current tab and set up real-time socket listener for new notifications
   useEffect(() => {
     if (!isAuthenticated) return;
     const loadCurrentTab = () => {
@@ -123,8 +188,27 @@ export default function Notifications({ onFriendUpdate }) {
 
     return () => { clearInterval(interval); if (socketRef.current) socketRef.current.disconnect(); };
   }, [tab, isAuthenticated]);
+  //use effect 1 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //block 2: friend request handlers
+  // Accept friend request and add user to friend list
   const handleAccept = async (requestId, senderId, username) => {
+
+    // Accept the friend request in the backend
     await acceptFriendRequest(requestId, senderId);
     setItems(prev => prev.filter(r => r.id !== requestId));
     if (onFriendUpdate) onFriendUpdate();
@@ -134,13 +218,56 @@ export default function Notifications({ onFriendUpdate }) {
     setTimeout(() => setSuccessPopup(null), 3000);
   };
 
+  // Reject friend request
   const handleReject = async (requestId) => {
+
+    // Reject the friend request in the backend
     await rejectFriendRequest(requestId);
     setItems(prev => prev.filter(r => r.id !== requestId));
   };
+  //block 2 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //block 3: notification management handlers
+  // Mark notification as read
   const handleMarkRead = async (notifId) => {
+
+    // Mark the notification as read in the backend
     try {
+
+      // Optimistically update UI before API call
       await markNotificationRead(notifId);
       setItems(prev => prev.map(i => i.id === notifId ? { ...i, read: 1 } : i));
     } catch (e) { console.error(e); }
@@ -152,13 +279,43 @@ export default function Notifications({ onFriendUpdate }) {
   };
 
   const handleDelete = async (notifId) => {
+
+    // Delete the notification in the backend and remove from UI
     try {
       await deleteNotification(notifId);
       setItems(prev => prev.filter(i => i.id !== notifId));
     } catch (e) { console.error(e); }
   };
+  //block 3 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //block 4: workout invite handlers
+  // Accept workout invite and add to user's workout plan
   const handleAcceptWorkout = async (notifId, participantId, workoutData) => {
+    
+    // Respond to the workout invite in the backend
     try {
       await respondToWorkoutInvite(participantId, 'accepted');
       
@@ -257,8 +414,33 @@ export default function Notifications({ onFriendUpdate }) {
       }
     }
   };
+  //block 4 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //block 5: real-time updates and notification refresh
+  //sub-component: render helper functions
+  // Render empty state message when no items exist
   const renderEmptyState = (title, desc) => (
+
+    // Empty state UI with icon, title, and description
     <div className={`mt-8 rounded-2xl border shadow-lg p-8 text-center ${isDark ? 'border-gray-700 bg-gray-900 text-gray-300' : 'border-slate-200 bg-white text-slate-700'}`}>
       <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ${isDark ? 'bg-gray-800' : 'bg-slate-100'}`}>
         <BellRing className={`h-6 w-6 ${isDark ? 'text-gray-500' : 'text-slate-500'}`} />
@@ -268,6 +450,8 @@ export default function Notifications({ onFriendUpdate }) {
     </div>
   );
 
+
+  // Render loading skeletons while data is being fetched
   const renderLoading = () => (
     <div className="mt-6 space-y-3">
       {[1, 2, 3].map(i => (
@@ -279,6 +463,8 @@ export default function Notifications({ onFriendUpdate }) {
     </div>
   );
 
+
+  // Render list of notifications with appropriate styling and action buttons based on type
   const renderRequests = () => (
     <div className="mt-6 space-y-3">
       {items.map(r => (
@@ -306,6 +492,8 @@ export default function Notifications({ onFriendUpdate }) {
     </div>
   );
 
+
+  // Render list of unfriended notifications with option to mark as read
   const renderUnfriended = () => (
     <div className="mt-6 space-y-3">
       {items.map(n => (
@@ -326,6 +514,8 @@ export default function Notifications({ onFriendUpdate }) {
     </div>
   );
 
+
+  // Render list of message notifications with option to mark as read and navigate to chat
   const renderMessages = () => (
     <div className="mt-6 space-y-3">
       {items.map(n => (
@@ -355,6 +545,8 @@ export default function Notifications({ onFriendUpdate }) {
     </div>
   );
 
+
+  // Render workout invites with accept/decline options and show if invite is outdated or canceled
   const renderWorkoutInvites = () => {
     // Check if workout time has passed
     const isWorkoutOutdated = (date, time) => {
@@ -435,7 +627,21 @@ export default function Notifications({ onFriendUpdate }) {
       </div>
     );
   };
+//block 5 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+  //JSX return - notifications interface with tabbed navigation and render functions
   return (
     <div className={`min-h-screen bg-gradient-to-br text-slate-800 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100'}`}>
       {/* Success Popup */}
@@ -515,4 +721,5 @@ export default function Notifications({ onFriendUpdate }) {
       `}</style>
     </div>
   );
+  //JSX return end
 }

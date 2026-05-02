@@ -1,3 +1,15 @@
+//PostComments.js displays a single post with its comments and replies.
+//Users can create comments, reply to comments, like/delete comments, and add GIFs/emojis.
+//Comments are loaded asynchronously and organized hierarchically with parent/child relationships.
+//Includes context menu for comment management and real-time comment count updates.
+
+
+
+
+
+
+
+//imports
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getPost, getComments, createComment, toggleLike, toggleSave, deleteComment, toggleCommentLike } from '../api';
@@ -5,32 +17,53 @@ import { Heart, Bookmark, ArrowLeft, User as UserIcon, ChevronDown, ChevronUp, S
 import { API_BASE } from '../api';
 import EmojiPickerModal from '../components/EmojiPickerModal';
 import { useLanguage } from '../context/LanguageContext';
+//imports end
 
+
+
+
+//Main PostComments component
 export default function PostComments() {
+  // Localization and theme
+  //const
   const { t } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
   const { id } = useParams();
   const postId = Number(id);
   const navigate = useNavigate();
+  
+  // Post, comments, and UI states
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // GIF search and selection states
   const [selectedGif, setSelectedGif] = useState(null); // { url, id }
   const [gifQuery, setGifQuery] = useState('');
   const [gifResults, setGifResults] = useState([]);
   const [gifLoading, setGifLoading] = useState(false);
   const [lastGifQuery, setLastGifQuery] = useState('');
   const [gifPanelOpen, setGifPanelOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
+  
+  // Comment interaction states
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, commentId: null, isReply: false });
   const [replyingTo, setReplyingTo] = useState(null);
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const [pickerOpen, setPickerOpen] = useState(false);
+  
+  // Refs
   const gifSearchTimeoutRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
+  //const end
 
+
+
+
+  //use effect 1
+  // Load current user from localStorage on component mount
   useEffect(() => {
     // Get current user
     try {
@@ -38,14 +71,26 @@ export default function PostComments() {
       setCurrentUser(user);
     } catch {}
   }, []);
+  //use effect 1 end
 
+
+
+
+  //use effect 2
+  // Detect mobile screen size and update on window resize
   useEffect(() => {
     const updateIsMobile = () => setIsMobile(window.innerWidth < 640);
     updateIsMobile();
     window.addEventListener('resize', updateIsMobile);
     return () => window.removeEventListener('resize', updateIsMobile);
   }, []);
+  //use effect 2 end
 
+
+
+
+  //block 1: GIF search handlers
+  // Search Tenor GIFs based on query with debounced timeout
   const searchGifs = async (query) => {
     const q = (query || gifQuery).trim();
     if (!q) {
@@ -80,6 +125,7 @@ export default function PostComments() {
     }
   };
 
+  // Select GIF and register with Tenor analytics
   const selectGif = (url, id) => {
     setSelectedGif({ url, id });
     setGifPanelOpen(false);
@@ -93,7 +139,13 @@ export default function PostComments() {
         .catch(e => console.error('Failed to register Tenor share', e));
     }
   };
+  //block 1 end
 
+
+
+
+  //use effect 3
+  // Fetch post and comments on component mount
   useEffect(() => {
     const load = async () => {
       try {
@@ -117,7 +169,13 @@ export default function PostComments() {
     };
     load();
   }, [postId, navigate]);
+  //use effect 3 end
 
+
+
+
+  //block 2: comment submission handler
+  // Submit new comment or reply with optional GIF attachment
   const handleSubmit = async (e) => {
     e.preventDefault();
     const hasText = newComment.trim().length > 0;
@@ -161,7 +219,13 @@ export default function PostComments() {
       alert(err?.response?.data?.error || t('failedToCreateComment'));
     }
   };
+  //block 2 end
 
+
+
+
+  //block 3: comment deletion handlers
+  // Delete top-level comment with confirmation
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm(t('confirmDeleteComment'))) return;
     try {
@@ -175,6 +239,7 @@ export default function PostComments() {
     }
   };
 
+  // Delete reply under a parent comment with confirmation
   const handleDeleteReply = async (parentId, replyId) => {
     if (!window.confirm(t('confirmDeleteReply'))) return;
     try {
@@ -195,7 +260,13 @@ export default function PostComments() {
       alert(err?.response?.data?.error || t('failedToDeleteReply'));
     }
   };
+  //block 3 end
 
+
+
+
+  //block 4: comment like handler
+  // Toggle like state for comment or reply
   const handleLikeComment = async (commentId) => {
     try {
       const res = await toggleCommentLike(postId, commentId);
@@ -220,7 +291,13 @@ export default function PostComments() {
       alert(err?.response?.data?.error || t('failedToLikeComment'));
     }
   };
+  //block 4 end
 
+
+
+
+  //block 5: replies expand/collapse handler
+  // Toggle expanded state for comment replies
   const toggleRepliesExpanded = (commentId) => {
     const newSet = new Set(expandedReplies);
     if (newSet.has(commentId)) {
@@ -230,7 +307,13 @@ export default function PostComments() {
     }
     setExpandedReplies(newSet);
   };
+  //block 5 end
 
+
+
+
+  //sub-component: CommentItem
+  // Renders individual comment or reply with edit/delete options and like button
   const CommentItem = ({ comment, isReply = false, parentId = null }) => {
     // Extract GIF URL from comment content if present
     const gifMatch = comment.content.match(/\[GIF: (https?[^\]]+)\]/);
@@ -287,10 +370,12 @@ export default function PostComments() {
     </div>
     );
   };
+  //sub-component end
 
   if (loading) return <p className="text-center mt-20 text-gray-500">{t('loading')}</p>;
   if (!post) return <p className="text-center mt-20 text-gray-500">{t('postNotFound')}</p>;
 
+  //JSX return - post with comments and reply interface
   return (
     <div className={`min-h-screen bg-gray-100 pt-16 pb-16 ${isMobile ? 'px-2' : 'px-0'}`}>
       <div className="max-w-2xl mx-auto p-2 sm:p-4">

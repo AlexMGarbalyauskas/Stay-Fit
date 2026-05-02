@@ -1,3 +1,10 @@
+//SavedPosts.js displays all posts saved by the current user in a grid layout.
+//Users can view, like, share, and unsave posts from their saved collection.
+//Posts display media (image/video) with action buttons and optional title overlays.
+
+
+
+//imports
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Bookmark, Share2, ArrowLeft } from 'lucide-react';
@@ -5,8 +12,15 @@ import Navbar from '../components/Navbar';
 import ProfileHeader from '../components/ProfileHeader';
 import { getSavedPosts, toggleLike, toggleSave } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+//imports end
 
+
+
+
+//Main SavedPosts component
 export default function SavedPosts() {
+  // Localization and theme
+  //const
   const { t } = useLanguage();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
   const isDark = theme === 'dark';
@@ -15,7 +29,13 @@ export default function SavedPosts() {
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
   const navigate = useNavigate();
+  //const end
 
+
+
+
+  //block 1: fetch saved posts handler
+  // Fetch user's saved posts from API and update state
   const fetchSavedPosts = async () => {
     try {
       const res = await getSavedPosts();
@@ -26,15 +46,23 @@ export default function SavedPosts() {
       setLoading(false);
     }
   };
+  //block 1 end
 
+
+
+
+  //use effect 1
+  // Fetch saved posts on component mount
   useEffect(() => {
     fetchSavedPosts();
   }, []);
+  //use effect 1 end
 
   if (loading) {
     return <p className="text-center mt-20 text-gray-500">Loading...</p>;
   }
 
+  //JSX return - saved posts grid with profile header, back button, and action buttons
   return (
     <>
       <ProfileHeader />
@@ -166,4 +194,5 @@ export default function SavedPosts() {
       <Navbar />
     </>
   );
+  //JSX return end
 }
