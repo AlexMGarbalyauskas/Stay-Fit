@@ -186,21 +186,31 @@ async function sendVerificationEmail(email, username, verificationCode) {
         </div>
       `;
 
-      // Determine provider queue based on configuration
-  const providerQueue = [];
+      // Determine provider queue based on configuration.
+      // On Render, we want to fall back to any configured provider if the preferred
+      // one is not available in the environment.
+      const availableProviders = [];
+      if (useMailSender) availableProviders.push('mailsender');
+      if (useResend) availableProviders.push('resend');
+      if (transporter) availableProviders.push('smtp');
 
-  // If a specific provider mode is set, use only that provider
-  if (emailProviderMode === 'mailsender') {
-    providerQueue.push('mailsender');
-  } else if (emailProviderMode === 'resend') {
-    providerQueue.push('resend');
-  } else if (emailProviderMode === 'smtp') {
-    providerQueue.push('smtp');
-  } else {
-    if (useMailSender) providerQueue.push('mailsender');
-    if (useResend) providerQueue.push('resend');
-    if (transporter) providerQueue.push('smtp');
-  }
+      const providerQueue = [];
+      if (emailProviderMode === 'mailsender' || emailProviderMode === 'resend' || emailProviderMode === 'smtp') {
+        if (
+          (emailProviderMode === 'mailsender' && useMailSender) ||
+          (emailProviderMode === 'resend' && useResend) ||
+          (emailProviderMode === 'smtp' && transporter)
+        ) {
+          providerQueue.push(emailProviderMode);
+        } else {
+          console.warn(
+            `Preferred email provider "${emailProviderMode}" is not configured. Falling back to available providers.`
+          );
+          providerQueue.push(...availableProviders);
+        }
+      } else {
+        providerQueue.push(...availableProviders);
+      }
 
   // If no providers are configured, log an error and return
   if (providerQueue.length === 0) {
