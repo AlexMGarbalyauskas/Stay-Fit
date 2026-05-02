@@ -1,4 +1,5 @@
-//PURPOSE: This file configures JWT token generation and verification for user authentication 
+//PURPOSE: This file configures JWT token 
+// generation and verification for user authentication 
 // in the backend server.
 
 // config/jwt.js - JWT token generation and verification

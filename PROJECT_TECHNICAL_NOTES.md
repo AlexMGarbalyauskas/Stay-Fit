@@ -743,6 +743,7 @@ npm run build
 ### 6. Email Verification System
 **Technologies:**
 - SendGrid for email delivery
+- MailerSend as an additional email delivery provider
 - Nodemailer as backup
 - Resend service integration
 - JWT for verification tokens
@@ -957,7 +958,8 @@ const { t } = useLanguage();
    - Code compared with stored value
    - Expiration check
 5. Resend option → POST /api/auth/resend-code
-6. Success → JWT issued and login
+6. Email sent → SendGrid / MailerSend / Nodemailer / Resend
+7. Success → JWT issued and login
 ```
 
 ### Real-Time Message Flow
