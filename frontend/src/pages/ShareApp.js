@@ -182,6 +182,10 @@ export default function ShareApp() {
             Share this QR code with friends so they can access the app instantly!
           </p>
 
+          <p className="text-xs text-gray-600 mb-4 px-4">
+            For mobile users, open the link in your browser and choose Add to Home Screen to install StayFit.
+          </p>
+
           {/* QR Code */}
           <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block mb-6">
             <QRCodeSVG
@@ -223,7 +227,7 @@ export default function ShareApp() {
               <li>Download or screenshot the QR code</li>
               <li>Share it with friends via messaging apps</li>
               <li>They scan it with their camera to open the app</li>
-              <li>They can add it to their home screen</li>
+              <li>They can add it to their home screen to install the app by going on broswer settings and install to homescreen</li>
             </ol>
           </div>
         </div>
