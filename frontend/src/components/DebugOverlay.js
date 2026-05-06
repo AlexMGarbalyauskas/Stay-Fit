@@ -3,7 +3,7 @@
 
 
 
-//imprts 
+//imports 
 import { useState, useEffect } from 'react';
 import { X, ChevronUp, ChevronDown } from 'lucide-react';
 //imports end
@@ -18,10 +18,20 @@ import { X, ChevronUp, ChevronDown } from 'lucide-react';
 // debugging. It allows toggling visibility, 
 // minimizing the log view, and clearing logs.
 export default function DebugOverlay() {
+
+
+  // State to hold captured logs, panel visibility, and minimized state
   const [logs, setLogs] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(true);
   const maxLogs = 50;
+
+
+
+
+
+
+
 
 
   //use effect 1
@@ -74,9 +84,19 @@ export default function DebugOverlay() {
       window.removeEventListener('error', handleError);
     };
   }, []);
+//use effect 1 end
 
 
 
+
+
+
+
+
+
+
+
+  //block 1
   // If the overlay is not open, show a button to open it
   if (!isOpen) {
     return (
@@ -88,6 +108,11 @@ export default function DebugOverlay() {
       </button>
     );
   }
+//block 1 end
+
+
+
+
 
 
 

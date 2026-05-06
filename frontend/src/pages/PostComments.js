@@ -98,17 +98,27 @@ export default function PostComments() {
       return;
     }
     setGifLoading(true);
+
+    //try to fetch GIFs from Tenor API
     try {
+
+      // Use environment variable for Tenor API key or fallback to default
       const tenorKey = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
       const clientKey = 'stayfit-web';
+
+      // Fetch GIFs from Tenor API
       const resp = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${tenorKey}&client_key=${clientKey}&limit=12&contentfilter=medium`);
       const data = await resp.json();
       const urls = (data.results || []).map(item => ({ url: item.media_formats?.tinygif?.url, id: item.id })).filter(item => item.url);
       setGifResults(urls);
       setLastGifQuery(q);
+
+      // Register search with Tenor (optional but recommended)
     } catch (e) {
       console.error('GIF search failed', e);
       setGifResults([]);
+
+      // In case of error, we could implement a fallback search using another API or show a user-friendly message
     } finally {
       setGifLoading(false);
     }
@@ -118,8 +128,12 @@ export default function PostComments() {
     const val = e.target.value;
     setGifQuery(val);
     clearTimeout(gifSearchTimeoutRef.current);
+
+    // Only search if query is not empty after trimming
     if (val.trim()) {
       gifSearchTimeoutRef.current = setTimeout(() => searchGifs(val), 300);
+
+      // If user clears the input, we should also clear the results immediately
     } else {
       setGifResults([]);
     }
@@ -131,6 +145,7 @@ export default function PostComments() {
     setGifPanelOpen(false);
     setGifQuery('');
     setGifResults([]);
+
     // Register share with Tenor (optional but recommended)
     if (id) {
       const tenorKey = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
@@ -155,14 +170,22 @@ export default function PostComments() {
         setComments(c.data.comments || []);
       } catch (err) {
         console.error(err);
+
+        // If post not found, it might have been deleted - notify parent and show alert
         if (err?.response?.status === 404) {
+
+          // Notify parent components that the post has been deleted (in case they are still showing it)
           try { window.dispatchEvent(new CustomEvent('post:deleted', { detail: { postId } })); } catch (e) {}
           alert(t('postNotFoundMaybeDeleted'));
           navigate('/home');
+
+          // For other errors, just show an alert and navigate back to home
         } else {
           alert(err?.response?.data?.error || t('failedToLoadPost'));
           navigate('/home');
         }
+
+        // handle different error cases more gracefully, such as showing a retry option for network errors or displaying a custom "Post Not Found" page for 404 errors.
       } finally {
         setLoading(false);
       }
@@ -177,12 +200,15 @@ export default function PostComments() {
   //block 2: comment submission handler
   // Submit new comment or reply with optional GIF attachment
   const handleSubmit = async (e) => {
+
+    // Prevent default form submission behavior
     e.preventDefault();
     const hasText = newComment.trim().length > 0;
     const hasGif = selectedGif !== null;
     if (!hasText && !hasGif) return;
     
     try {
+
       // Combine text and GIF URL if both present
       let content = newComment.trim();
       if (selectedGif) {
@@ -193,6 +219,9 @@ export default function PostComments() {
       const created = res.data.comment;
       const commentsCount = res.data.comments_count;
       
+      // If this is a reply, we need to add it 
+      // under the correct parent comment. 
+      // Otherwise, we add it as a new top-level comment.
       if (replyingTo) {
         // Add reply to parent comment
         setComments(prev => prev.map(c => {
@@ -205,7 +234,11 @@ export default function PostComments() {
           return c;
         }));
         setReplyingTo(null);
+
+        // If the parent comment's replies are currently collapsed, 
+        // we should expand them to show the new reply
       } else {
+
         // Add top-level comment
         setComments(prev => [...prev, { ...created, replies: [], likes_count: 0, liked_by_me: false, replies_count: 0 }]);
       }
@@ -214,6 +247,8 @@ export default function PostComments() {
       setSelectedGif(null);
       setPost(prev => ({ ...prev, comments_count: commentsCount }));
       window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: { postId, commentsCount } }));
+    
+    // Handle errors gracefully by showing an alert with the error message
     } catch (err) {
       console.error(err);
       alert(err?.response?.data?.error || t('failedToCreateComment'));
@@ -227,21 +262,34 @@ export default function PostComments() {
   //block 3: comment deletion handlers
   // Delete top-level comment with confirmation
   const handleDeleteComment = async (commentId) => {
+
+    // Confirm deletion with the user before proceeding
     if (!window.confirm(t('confirmDeleteComment'))) return;
+
+    // Attempt to delete the comment and update state accordingly
     try {
       const res = await deleteComment(postId, commentId);
       setComments(prev => prev.filter(c => c.id !== commentId));
       setPost(prev => ({ ...prev, comments_count: res.data.comments_count }));
       window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: { postId, commentsCount: res.data.comments_count } }));
+    
+    // Handle errors gracefully by showing an alert with the error message
     } catch (err) {
       console.error(err);
+
+      // If the comment was already deleted (404), 
+      // we should remove it from the UI and show an alert
       alert(err?.response?.data?.error || t('failedToDeleteComment'));
     }
   };
 
   // Delete reply under a parent comment with confirmation
   const handleDeleteReply = async (parentId, replyId) => {
+
+    // Confirm deletion with the user before proceeding
     if (!window.confirm(t('confirmDeleteReply'))) return;
+
+    // Attempt to delete the reply and update state accordingly
     try {
       const res = await deleteComment(postId, replyId);
       setComments(prev => prev.map(c => {
@@ -253,6 +301,9 @@ export default function PostComments() {
         }
         return c;
       }));
+
+      // After deleting a reply, also need to update the parent comment's 
+      // replies_count and the post's comments_count
       setPost(prev => ({ ...prev, comments_count: res.data.comments_count }));
       window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: { postId, commentsCount: res.data.comments_count } }));
     } catch (err) {
