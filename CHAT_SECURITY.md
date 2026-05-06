@@ -1,4 +1,4 @@
-# 🔒 Chat Security Implementation - End-to-End Encryption
+# Chat Security Implementation - End-to-End Encryption
 
 ## Overview
 Your chat system now implements **end-to-end encryption (E2EE)** using industry-standard cryptographic algorithms to ensure message privacy and security.
@@ -84,7 +84,7 @@ CREATE INDEX idx_messages_encrypted ON messages(is_encrypted);
 
 ## User Interface Features
 
-### 🔐 Encryption Toggle
+### Encryption Toggle
 - Located in chat header
 - **Green Lock Icon**: Encryption enabled
 - **Gray Unlocked Icon**: Encryption disabled
@@ -97,20 +97,20 @@ CREATE INDEX idx_messages_encrypted ON messages(is_encrypted);
 
 ## Security Best Practices
 
-### ✅ What's Secure
+### What's Secure
 1. **Messages at rest**: Encrypted in database
 2. **Keys never sent**: Generated independently on each device
 3. **No server access**: Backend cannot read encrypted messages
 4. **Forward secrecy**: Each message has unique IV
 5. **User control**: Can toggle encryption per conversation
 
-### ⚠️ Important Notes
+### Important Notes
 1. **GIF messages**: Not encrypted (external URLs)
 2. **Key recovery**: Lost password = lost encrypted messages
 3. **Multi-device**: Each device needs encryption seed
 4. **Backwards compatibility**: Old messages remain unencrypted
 
-### 🔄 Key Management
+### Key Management
 - **Login**: Encryption seed initialized from password
 - **Logout**: All encryption keys cleared
 - **OAuth**: Token-based seed generation
@@ -140,7 +140,7 @@ localStorage.getItem('encryption_seed'); // Should be null
 
 ## Production Recommendations
 
-### 🚀 Enhancements for Production
+### Enhancements for Production
 
 1. **Key Storage**
    - Use IndexedDB instead of localStorage
@@ -175,7 +175,7 @@ localStorage.getItem('encryption_seed'); // Should be null
 ## Security Considerations
 
 ### Threat Model
-✅ **Protected Against:**
+ **Protected Against:**
 - Database breaches (messages encrypted)
 - Man-in-the-middle attacks (TLS + E2EE)
 - Server-side snooping
@@ -188,11 +188,11 @@ localStorage.getItem('encryption_seed'); // Should be null
 - Client-side XSS vulnerabilities
 
 ### Browser Compatibility
-- ✅ Chrome/Edge 37+
-- ✅ Firefox 34+
-- ✅ Safari 11+
-- ✅ Opera 24+
-- ❌ Internet Explorer (not supported)
+- Chrome/Edge 37+
+- Firefox 34+
+- Safari 11+
+- Opera 24+
+- Internet Explorer (not supported)
 
 ## API Changes
 
@@ -253,15 +253,15 @@ socket.on('receive_message', async (msg) => {
 ## Files Modified
 
 ### Frontend
-- ✅ `frontend/src/utils/crypto.js` - Encryption utilities
-- ✅ `frontend/src/pages/ChatPage.js` - UI integration
-- ✅ `frontend/src/pages/Login.js` - Key initialization
-- ✅ `frontend/src/App.js` - Key cleanup on logout
+- `frontend/src/utils/crypto.js` - Encryption utilities
+- `frontend/src/pages/ChatPage.js` - UI integration
+- `frontend/src/pages/Login.js` - Key initialization
+- `frontend/src/App.js` - Key cleanup on logout
 
 ### Backend
-- ✅ `backend/server.js` - Socket handler updates
-- ✅ `backend/routes/messagesRoutes.js` - API updates
-- ✅ `backend/migrations/add_message_encryption.sql` - Schema changes
+- `backend/server.js` - Socket handler updates
+- `backend/routes/messagesRoutes.js` - API updates
+- `backend/migrations/add_message_encryption.sql` - Schema changes
 
 ## Next Steps
 
@@ -277,11 +277,11 @@ socket.on('receive_message', async (msg) => {
 ## Summary
 
 Your chat is now **secure by default** with:
-- ✅ AES-256-GCM encryption
-- ✅ PBKDF2 key derivation
-- ✅ Per-conversation keys
-- ✅ User-controlled encryption
-- ✅ Forward secrecy (unique IVs)
-- ✅ Clean logout (key clearing)
+- AES-256-GCM encryption
+- PBKDF2 key derivation
+- Per-conversation keys
+- User-controlled encryption
+- Forward secrecy (unique IVs)
+- Clean logout (key clearing)
 
-**Messages are encrypted end-to-end - not even your server can read them! 🔐**
+**Messages are encrypted end-to-end - not even your server can read them! **
