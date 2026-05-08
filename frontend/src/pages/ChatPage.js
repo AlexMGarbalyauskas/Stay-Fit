@@ -259,6 +259,8 @@ export default function ChatPage() {
     s.on('message:deleted', ({ messageId }) => {
       setMessages(prev => prev.filter(m => m.id !== messageId));
       setReactionsMap(prev => { const copy = { ...prev }; delete copy[messageId]; return copy; });
+      setChatNotice(t('chatMessageDeleted'));
+      setTimeout(() => setChatNotice(''), 3000);
     });
 
     s.on('message:blocked', ({ reason }) => {

@@ -457,6 +457,7 @@ export const translations = {
     chatUpdateBlockFailed: 'Failed to update block setting',
     chatPlaceholderBlockedByYou: 'Unblock user to message',
     chatPlaceholderBlockedByUser: 'You cannot message this user',
+    chatMessageDeleted: 'A message was deleted',
     
     // Home/Feed
     likedBy: 'Liked by',
