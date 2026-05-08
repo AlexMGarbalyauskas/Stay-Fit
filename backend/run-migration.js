@@ -15,7 +15,7 @@ const DB_FILE = process.env.DATABASE_FILE || path.join(__dirname, 'data.sqlite')
 const db = new sqlite3.Database(DB_FILE);
 
 // Read and execute migrations
-const migrations = ['add_privacy_setting.sql', 'add_timezone.sql', 'add_notifications_enabled.sql', 'add_workout_schedules.sql'];
+const migrations = ['add_privacy_setting.sql', 'add_timezone.sql', 'add_notifications_enabled.sql', 'add_workout_schedules.sql', 'message_deletion.sql'];
 
 
 

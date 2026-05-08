@@ -1124,6 +1124,8 @@ export default function ChatPage() {
                   onDelete={async () => {
                     try {
                       await apiDeleteMessage(pickerOpenFor);
+                      // Optimistically mark deleted locally
+                      setMessages(prev => prev.map(m => m.id === pickerOpenFor ? { ...m, is_deleted: 1 } : m));
                     } catch (err) {
                       alert('Failed to delete message');
                     } finally {
@@ -1167,6 +1169,8 @@ export default function ChatPage() {
                       onClick={async () => {
                         try {
                           await apiDeleteMessage(contextMenu.messageId);
+                          // Optimistically mark message as deleted in local state
+                          setMessages(prev => prev.map(m => m.id === contextMenu.messageId ? { ...m, is_deleted: 1 } : m));
                           setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false });
                         } catch (err) {
                           alert('Failed to delete message');

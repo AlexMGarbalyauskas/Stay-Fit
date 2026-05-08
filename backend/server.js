@@ -18,6 +18,12 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const db = require('./db');
 require('dotenv').config({ override: true });
+// Run DB migrations at startup to ensure schema is up-to-date
+try {
+  require('./run-migration');
+} catch (e) {
+  console.error('Failed to run migrations at startup:', e);
+}
 const app = express();
 //const end 
 
