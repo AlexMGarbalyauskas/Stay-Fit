@@ -206,6 +206,8 @@ export default function ChatPage() {
 // use effect 7
 // Set up the WebSocket connection and event listeners for real-time chat updates. This effect runs whenever the authentication token or status changes. It initializes the socket connection, listens for incoming messages, reaction updates, message deletions, and block notifications. It also handles cleanup by disconnecting the socket and removing event listeners when the component unmounts or when dependencies change.
   useEffect(() => {
+
+    // If the user is not authenticated, we don't need to set up the WebSocket connection. If there was an existing connection, disconnect it to clean up resources and avoid receiving updates when not logged in.
     if (!isAuthenticated) return;
     if (socketRef.current) {
       socketRef.current.disconnect();
@@ -222,9 +224,22 @@ export default function ChatPage() {
     // Listen for incoming messages and update the chat if the message is from/to the active friend. Decrypt messages if they are encrypted, and handle cases where decryption fails.
     s.on('receive_message', async (msg) => {
       const currentFriend = activeFriendRef.current;
+      
       if (currentFriend && (msg.sender_id === currentFriend.id || msg.receiver_id === currentFriend.id)) {
         // Decrypt message if encrypted
         if (msg.is_encrypted && msg.encrypted_content && msg.iv) {
+          
+
+          // try to decrypt the message, 
+          // and if it fails, log the error 
+          // and show a placeholder 
+          // indicating that the message 
+          // could not be decrypted. 
+          // If the original content is 
+          // available and not just a 
+          // generic "[Encrypted]" placeholder, 
+          // use it as a fallback to provide
+          //  some context to the user.
           try {
             const originalContent = msg.content;
             const decrypted = await decryptMessage(
@@ -257,13 +272,14 @@ export default function ChatPage() {
     });
 
     s.on('message:deleted', ({ messageId }) => {
-      setMessages(prev => prev.filter(m => m.id !== messageId));
-      setReactionsMap(prev => { const copy = { ...prev }; delete copy[messageId]; return copy; });
-      setChatNotice(t('chatMessageDeleted'));
-      setTimeout(() => setChatNotice(''), 3000);
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_deleted: 1 } : m));
     });
 
     s.on('message:blocked', ({ reason }) => {
+
+      // Update block status and 
+      // show appropriate notice based 
+      // on who initiated the block
       if (reason === 'blocked_by_you') {
         setChatNotice(t('chatBlockedByYou'));
       } else {
@@ -866,7 +882,9 @@ export default function ChatPage() {
                               : 'bg-gray-100 text-gray-900 rounded-bl-none'
                           }`}
                         >
-                          {isGif ? (
+                          {msg.is_deleted ? (
+                            <p className="text-sm leading-5 italic opacity-60">{t('thisMessageWasDeleted')}</p>
+                          ) : isGif ? (
                             <div className="space-y-2">
                               {msg.content && msg.content !== '[gif]' && <p>{msg.content}</p>}
                               {msg.media_url && (
@@ -992,7 +1010,7 @@ export default function ChatPage() {
               )}
 
               {/* Emoji picker modal for reactions */}
-              {pickerOpenFor && (
+              {pickerOpenFor && !messages.find(m => m.id === pickerOpenFor)?.is_deleted && (
                 <EmojiPickerModal
                   open={!!pickerOpenFor}
                   showDelete={pickerContextIsMine}
@@ -1005,7 +1023,6 @@ export default function ChatPage() {
                   onDelete={async () => {
                     try {
                       await apiDeleteMessage(pickerOpenFor);
-                      setMessages(prev => prev.filter(m => m.id !== pickerOpenFor));
                     } catch (err) {
                       alert('Failed to delete message');
                     } finally {
@@ -1035,19 +1052,20 @@ export default function ChatPage() {
                   style={{ left: contextMenu.x, top: contextMenu.y }}
                   onMouseLeave={() => setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false })}
                 >
-                  <button
-                    className="block px-3 py-1 hover:bg-gray-100 w-full text-left"
-                    onClick={() => { setPickerOpenFor(contextMenu.messageId); setPickerContextIsMine(contextMenu.isMine); setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false }); }}
-                  >
-                    React
-                  </button>
-                  {contextMenu.isMine && (
+                  {!messages.find(m => m.id === contextMenu.messageId)?.is_deleted && (
+                    <button
+                      className="block px-3 py-1 hover:bg-gray-100 w-full text-left"
+                      onClick={() => { setPickerOpenFor(contextMenu.messageId); setPickerContextIsMine(contextMenu.isMine); setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false }); }}
+                    >
+                      React
+                    </button>
+                  )}
+                  {contextMenu.isMine && !messages.find(m => m.id === contextMenu.messageId)?.is_deleted && (
                     <button
                       className="block px-3 py-1 hover:bg-gray-100 w-full text-left text-red-600"
                       onClick={async () => {
                         try {
                           await apiDeleteMessage(contextMenu.messageId);
-                          setMessages(prev => prev.filter(m => m.id !== contextMenu.messageId));
                           setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false });
                         } catch (err) {
                           alert('Failed to delete message');

@@ -275,7 +275,7 @@ router.post('/:messageId/reactions', auth, (req, res) => {
 
 
 //block 7 
-// Delete a message (sender only)
+// Delete a message (sender only) - marks as deleted instead of removing
 router.delete('/:messageId', auth, (req, res) => {
 
   // Validate messageId
@@ -287,20 +287,17 @@ router.delete('/:messageId', auth, (req, res) => {
     if (err || !row) return res.status(404).json({ error: 'Message not found' });
     if (row.sender_id !== userId) return res.status(403).json({ error: 'Not allowed' });
 
-    // If the user is the sender, we delete the message and its reactions, then notify both participants
+    // If the user is the sender, we mark the message as deleted and notify both participants
     const io = req.app.get('io');
 
-    // delete message
-    db.run('DELETE FROM messages WHERE id = ?', [messageId], (err2) => {
+    // mark message as deleted
+    db.run('UPDATE messages SET is_deleted = 1 WHERE id = ?', [messageId], (err2) => {
       if (err2) return res.status(500).json({ error: 'DB error' });
 
-      // clean up reactions
-      db.run('DELETE FROM message_reactions WHERE message_id = ?', [messageId], () => {
-        // notify participants
-        io.to(`user:${row.sender_id}`).emit('message:deleted', { messageId });
-        io.to(`user:${row.receiver_id}`).emit('message:deleted', { messageId });
-        res.json({ message: 'Deleted' });
-      });
+      // notify participants with the deleted message data
+      io.to(`user:${row.sender_id}`).emit('message:deleted', { messageId, is_deleted: 1 });
+      io.to(`user:${row.receiver_id}`).emit('message:deleted', { messageId, is_deleted: 1 });
+      res.json({ message: 'Deleted' });
     });
   });
 });
