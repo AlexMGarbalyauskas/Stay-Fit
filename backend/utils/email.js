@@ -7,6 +7,11 @@
 // sending emails and getEmailDiagnostics for 
 // retrieving recent email send attempts and errors.
 
+
+
+
+
+
 //const
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
@@ -19,15 +24,28 @@ const mailSenderToken = process.env.MAILSENDER_API_TOKEN || process.env.MAILERSE
 const sendGridApiKey = process.env.SENDGRID_API_KEY;
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
 let sgMail = null;
+
+
+// Initialize SendGrid SDK if configured and available
 if (useSendGrid) {
+
+  // Attempt to require @sendgrid/mail and set API key, 
+  // with fallback to HTTP API if the package 
+  // is not available
   try {
     sgMail = require('@sendgrid/mail');
+
+    // Set SendGrid API key if the SDK is available
     if (sendGridApiKey) sgMail.setApiKey(sendGridApiKey);
+
+    // API call to validate the key and connectivity
   } catch (e) {
     console.warn('SendGrid package not available; falling back to HTTP API for sendgrid if configured.');
     sgMail = null;
   }
 }
+
+
 const EMAIL_SEND_TIMEOUT_MS = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 12000);
 const EMAIL_DIAGNOSTICS_MAX = 50;
 const emailDiagnostics = [];
@@ -293,7 +311,7 @@ async function sendVerificationEmail(email, username, verificationCode) {
         // Note: MailSender's API may not return a message ID or may 
         // not throw on all errors, so we check the response status and log accordingly
       } else if (provider === 'resend') {
-        console.log(`📧 Sending email via Resend to ${email} from ${fromAddress}`);
+        console.log(`Sending email via Resend to ${email} from ${fromAddress}`);
         const response = await withTimeout(
           resend.emails.send({
             from: fromAddress,
