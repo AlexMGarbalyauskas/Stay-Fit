@@ -208,11 +208,12 @@ async function sendVerificationEmail(email, username, verificationCode) {
       if (transporter) availableProviders.push('smtp');
 
       const providerQueue = [];
-      if (emailProviderMode === 'mailsender' || emailProviderMode === 'resend' || emailProviderMode === 'smtp') {
+      if (emailProviderMode === 'mailsender' || emailProviderMode === 'resend' || emailProviderMode === 'smtp' || emailProviderMode === 'sendgrid') {
         if (
           (emailProviderMode === 'mailsender' && useMailSender) ||
           (emailProviderMode === 'resend' && useResend) ||
-          (emailProviderMode === 'smtp' && transporter)
+          (emailProviderMode === 'smtp' && transporter) ||
+          (emailProviderMode === 'sendgrid' && useSendGrid)
         ) {
           providerQueue.push(emailProviderMode);
         } else {
