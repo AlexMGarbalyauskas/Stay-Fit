@@ -12,10 +12,22 @@ const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 const useMailSender = !!(process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY);
 const useResend = !!process.env.RESEND_API_KEY;
+const useSendGrid = !!process.env.SENDGRID_API_KEY;
 const hasSmtpCredentials = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
 const emailProviderMode = (process.env.EMAIL_PROVIDER || '').trim().toLowerCase();
 const mailSenderToken = process.env.MAILSENDER_API_TOKEN || process.env.MAILERSEND_API_KEY;
+const sendGridApiKey = process.env.SENDGRID_API_KEY;
 const resend = useResend ? new Resend(process.env.RESEND_API_KEY) : null;
+let sgMail = null;
+if (useSendGrid) {
+  try {
+    sgMail = require('@sendgrid/mail');
+    if (sendGridApiKey) sgMail.setApiKey(sendGridApiKey);
+  } catch (e) {
+    console.warn('SendGrid package not available; falling back to HTTP API for sendgrid if configured.');
+    sgMail = null;
+  }
+}
 const EMAIL_SEND_TIMEOUT_MS = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 12000);
 const EMAIL_DIAGNOSTICS_MAX = 50;
 const emailDiagnostics = [];
@@ -192,6 +204,7 @@ async function sendVerificationEmail(email, username, verificationCode) {
       const availableProviders = [];
       if (useMailSender) availableProviders.push('mailsender');
       if (useResend) availableProviders.push('resend');
+      if (useSendGrid) availableProviders.push('sendgrid');
       if (transporter) availableProviders.push('smtp');
 
       const providerQueue = [];
@@ -301,6 +314,68 @@ async function sendVerificationEmail(email, username, verificationCode) {
 
         // Note: Resend's send method may not throw on all errors, 
         // so we check the response for success indicators
+      } else if (provider === 'sendgrid') {
+        if (!sendGridApiKey) throw new Error('SendGrid provider selected but SENDGRID_API_KEY is not configured.');
+        console.log(`Sending email via SendGrid to ${email} from ${fromAddress}`);
+
+        if (sgMail) {
+          // Use @sendgrid/mail SDK when installed
+          const msg = {
+            to: email,
+            from: fromAddress,
+            subject,
+            html,
+          };
+
+          const sgResp = await withTimeout(sgMail.send(msg), EMAIL_SEND_TIMEOUT_MS, 'SendGrid SDK email send');
+          // sgMail.send may return an array or response object
+          const statusCode = Array.isArray(sgResp) ? sgResp[0]?.statusCode || null : sgResp?.statusCode || null;
+          pushEmailDiagnostic({
+            type: 'provider-success',
+            provider,
+            email,
+            fromAddress,
+            statusCode,
+          });
+        } else {
+          // Fallback to HTTP API if SDK not available
+          const sgPayload = {
+            personalizations: [{ to: [{ email }] }],
+            from: { email: fromAddress },
+            subject,
+            content: [{ type: 'text/html', value: html }],
+          };
+
+          const sgResp = await withTimeout(
+            fetch('https://api.sendgrid.com/v3/mail/send', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${sendGridApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(sgPayload),
+            }),
+            EMAIL_SEND_TIMEOUT_MS,
+            'SendGrid email send'
+          );
+
+          if (!sgResp.ok) {
+            const errBody = await sgResp.text().catch(() => null);
+            const sgError = new Error(`SendGrid request failed with status ${sgResp.status}`);
+            sgError.statusCode = sgResp.status;
+            sgError.response = { body: errBody };
+            throw sgError;
+          }
+
+          pushEmailDiagnostic({
+            type: 'provider-success',
+            provider,
+            email,
+            fromAddress,
+            statusCode: sgResp.status,
+          });
+        }
+
       } else if (provider === 'smtp') {
         if (!transporter) {
           throw new Error('SMTP provider selected but EMAIL_USER/EMAIL_PASSWORD are not configured.');
