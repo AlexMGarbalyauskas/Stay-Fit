@@ -187,7 +187,7 @@ export default function ChatPage() {
 // use effect 6
 // Whenever the messages array changes (e.g., when new messages are received or sent), scroll to the bottom of the chat history to show the latest messages. This provides a better user experience by automatically keeping the most recent messages in view.
   useEffect(() => {
-    
+
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 // use effect 6 end
@@ -750,6 +750,12 @@ export default function ChatPage() {
 
 
     } catch (err) {
+
+      // console log and alert any errors that occur 
+      // during the block/unblock process to 
+      // inform the user of what went wrong. 
+    
+      // feedback to the user if the action fails.
       console.error('Failed to update block status:', err);
       alert(err?.response?.data?.error || t('chatUpdateBlockFailed'));
     
