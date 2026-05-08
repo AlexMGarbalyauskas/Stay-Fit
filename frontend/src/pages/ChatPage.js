@@ -260,7 +260,18 @@ export default function ChatPage() {
           }
         }
         
-        setMessages(prev => [...prev, msg]);
+        setMessages(prev => {
+          const exists = prev.find(m => m.id === msg.id);
+          if (exists) {
+            return prev.map(m => {
+              if (m.id !== msg.id) return m;
+              const merged = { ...m, ...msg };
+              if (m.is_deleted) merged.is_deleted = m.is_deleted;
+              return merged;
+            });
+          }
+          return [...prev, msg];
+        });
         // fetch reactions for new message
         api.get(`/api/messages/${msg.id}/reactions`).then(r => {
           setReactionsMap(prev => ({ ...prev, [msg.id]: r.data.reactions }));
@@ -448,13 +459,13 @@ export default function ChatPage() {
                 const content = (decrypted === '[Unable to decrypt message]' && originalContent && originalContent !== '[Encrypted]')
                   ? originalContent
                   : decrypted;
-                return { ...msg, content };
+                return { ...msg, content, is_deleted: msg.is_deleted ? 1 : 0 };
               } catch (error) {
                 console.error('Failed to decrypt message:', error);
                 return { ...msg, content: '[Encrypted message - unable to decrypt]' };
               }
             }
-            return msg;
+            return { ...msg, is_deleted: msg.is_deleted ? 1 : 0 };
           })
         );
         

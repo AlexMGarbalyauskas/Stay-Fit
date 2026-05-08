@@ -198,7 +198,8 @@ io.on('connection', (socket) => {
                     encrypted_content: encryptedContent,
                     iv: encryptedIv,
                     is_encrypted: isEncryptedFlag,
-                    created_at: createdAt,
+                      is_deleted: 0,
+                      created_at: createdAt,
                     sender_profile_picture: senderRow?.profile_picture || null
                   };
 

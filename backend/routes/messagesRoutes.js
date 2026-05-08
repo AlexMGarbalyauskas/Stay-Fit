@@ -139,6 +139,7 @@ router.get('/:userId', auth, (req, res) => {
           messages.encrypted_content,
           messages.iv,
           messages.is_encrypted,
+          messages.is_deleted,
           messages.created_at AS created_at,
          u.profile_picture AS sender_profile_picture
      FROM messages
