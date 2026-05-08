@@ -187,6 +187,7 @@ export default function ChatPage() {
 // use effect 6
 // Whenever the messages array changes (e.g., when new messages are received or sent), scroll to the bottom of the chat history to show the latest messages. This provides a better user experience by automatically keeping the most recent messages in view.
   useEffect(() => {
+    
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 // use effect 6 end
@@ -209,6 +210,7 @@ export default function ChatPage() {
 
     // If the user is not authenticated, we don't need to set up the WebSocket connection. If there was an existing connection, disconnect it to clean up resources and avoid receiving updates when not logged in.
     if (!isAuthenticated) return;
+
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
@@ -331,16 +333,22 @@ export default function ChatPage() {
 // use effect 9
   // Load the current user's profile information when the component mounts and whenever the authentication status changes. Update the currentUser state and local storage with the latest user data. Handle errors by logging them to the console.
   useEffect(() => {
+
     if (!isAuthenticated || !token) return;
+
     api.get('/api/me')
       .then((res) => {
         const latestUser = res.data?.user;
+
         if (!latestUser) return;
         setCurrentUser(latestUser);
+
         try {
+
           localStorage.setItem('user', JSON.stringify(latestUser));
         } catch {}
       })
+
       .catch(() => {});
   }, [isAuthenticated, token]);
 // use effect 9 end
@@ -357,6 +365,7 @@ export default function ChatPage() {
 // use effect 10
   // Initialize encryption when the user logs in and we have their ID. This ensures that messages can be encrypted and decrypted properly. The encryption is initialized with a combination of the authentication token and the user's ID to create a unique key for the session.
   useEffect(() => {
+
     if (!isAuthenticated || !token || !currentUser?.id) return;
     if (!isEncryptionReady()) {
       initializeEncryption(token + currentUser.id);
@@ -375,6 +384,8 @@ export default function ChatPage() {
   const params = useParams();
 
   useEffect(() => {
+
+
     if (!isAuthenticated) return;
     // If route param present, fetch and set active friend
     const userIdFromParams = params?.id;
@@ -389,12 +400,16 @@ export default function ChatPage() {
     }
 
     const storedFriendId = localStorage.getItem(getLastChatFriendKey(currentUser?.id));
+    
     if (storedFriendId) {
       const found = friends.find(f => Number(f.id) === Number(storedFriendId));
+      
       if (found) setActiveFriend(found);
+      
       else {
         getUser(storedFriendId).then(r => setActiveFriend(r.data.user)).catch(() => {});
       }
+
     }
   }, [isAuthenticated, params?.id, friends, currentUser?.id]);
 // use effect 11 end
@@ -446,11 +461,13 @@ export default function ChatPage() {
         setMessages(decryptedMsgs);
         // fetch reactions for each message
         const map = {};
+
         await Promise.all(msgs.map(m =>
           api.get(`/api/messages/${m.id}/reactions`).then(r => { map[m.id] = r.data.reactions; }).catch(() => { map[m.id] = []; })
         ));
         setReactionsMap(map);
       })
+
       .catch(err => console.error('Messages load error', err));
   }, [isAuthenticated, activeFriend]);
 // use effect 12 end
@@ -466,12 +483,15 @@ export default function ChatPage() {
 
 // use effect 13
   useEffect(() => {
+
+
     if (!isAuthenticated || !activeFriend?.id) return;
     getMessageBlockStatus(activeFriend.id)
       .then((res) => {
         setBlockStatus(res.data || { blockedByMe: false, blockedMe: false, blockedEither: false });
         setChatNotice('');
       })
+
       .catch((err) => {
         console.error('Failed to load block status:', err);
         setBlockStatus({ blockedByMe: false, blockedMe: false, blockedEither: false });
@@ -490,6 +510,7 @@ export default function ChatPage() {
   // If the user is not authenticated, render the AuthRequired component which prompts them to log in or register. This ensures that only logged-in users can access the chat interface and its features.
   // Auth guard render
   if (!isAuthenticated) {
+
     return (
       <>
         <Header disableNotifications />
@@ -537,8 +558,13 @@ export default function ChatPage() {
 //constant render for main chat interface
   // If the user is authenticated, render the main chat interface with the Navbar, Header, and the chat components. This includes the friend list, chat history, message input, and any notices related to blocking status. The interface is responsive and adapts to mobile screens by toggling between the friend list and chat view.
   const sendMessage = async () => {
+
     const hasText = text.trim().length > 0;
+    
+    
     if (!activeFriend || !socketRef.current || !hasText) return;
+    
+    
     if (blockStatus.blockedEither) {
       setChatNotice(blockStatus.blockedByMe ? t('chatBlockedByYou') : t('chatBlockedByUser'));
       return;
@@ -548,6 +574,7 @@ export default function ChatPage() {
 
     // Always encrypt messages if encryption is ready, and send the message data through the WebSocket. If encryption is not ready (which shouldn't happen), send the message unencrypted as a fallback. Handle any errors that occur during encryption or sending by logging them and showing an alert to the user.
     try {
+
       // Always encrypt messages if encryption is ready
       if (isEncryptionReady()) {
         const encrypted = await encryptMessage(
@@ -564,7 +591,10 @@ export default function ChatPage() {
           iv: encrypted.iv,
           isEncrypted: true
         };
+
         socketRef.current.emit('send_message', messageData);
+      
+      
       } else {
         // Fallback if encryption not ready (shouldn't happen)
         console.warn('Encryption not ready, sending unencrypted');
@@ -577,6 +607,8 @@ export default function ChatPage() {
         });
       }
       setText('');
+
+
     } catch (error) {
       console.error('Failed to send message:', error);
       alert('Failed to send message');
@@ -592,25 +624,32 @@ export default function ChatPage() {
 //const 2
 // Send a GIF message to the active friend. If the user is blocked, show a notice instead. After sending the GIF, register the share with Tenor for analytics and close the GIF panel.
   const sendGif = (url, gifId) => {
+    
+    
     if (!activeFriend || !socketRef.current || !url) return;
     if (blockStatus.blockedEither) {
       setChatNotice(blockStatus.blockedByMe ? t('chatBlockedByYou') : t('chatBlockedByUser'));
       return;
     }
+
     socketRef.current.emit('send_message', {
       receiverId: activeFriend.id,
       content: '',
       messageType: 'gif',
       mediaUrl: url,
     });
+
+
     // Register share with Tenor (optional but recommended)
     if (gifId) {
       const tenorKey = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
       const clientKey = 'stayfit-web';
       console.log('Using Tenor key:', tenorKey); // verify env key is used
       fetch(`https://tenor.googleapis.com/v2/registershare?id=${gifId}&key=${tenorKey}&client_key=${clientKey}&q=${encodeURIComponent(lastGifQuery)}`)
-        .catch(e => console.error('Failed to register Tenor share', e));
+       
+      .catch(e => console.error('Failed to register Tenor share', e));
     }
+
     // Close GIF panel after send
     setGifPanelOpen(false);
     setGifQuery('');
@@ -627,13 +666,19 @@ export default function ChatPage() {
 
 //const 3
   const searchGifs = async (query) => {
+
     const q = (query || gifQuery).trim();
+
+
     if (!q) {
       setGifResults([]);
       return;
     }
     setGifLoading(true);
+
+
     try {
+
       const tenorKey = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
       const clientKey = 'stayfit-web';
       const resp = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${tenorKey}&client_key=${clientKey}&limit=12&contentfilter=medium`);
@@ -641,9 +686,12 @@ export default function ChatPage() {
       const urls = (data.results || []).map(item => ({ url: item.media_formats?.tinygif?.url, id: item.id })).filter(item => item.url);
       setGifResults(urls);
       setLastGifQuery(q);
+    
     } catch (e) {
+
       console.error('GIF search failed', e);
       setGifResults([]);
+    
     } finally {
       setGifLoading(false);
     }
@@ -655,20 +703,28 @@ export default function ChatPage() {
 
 //const 4
   const handleToggleBlockUser = async () => {
+
     if (!activeFriend?.id) return;
 
     try {
+
       if (blockStatus.blockedByMe) {
+
         setBlockBusy(true);
         const res = await unblockMessageUser(activeFriend.id);
         setBlockStatus(res.data || { blockedByMe: false, blockedMe: false, blockedEither: false });
         setChatNotice(t('chatUnblockedSuccess'));
+      
       } else {
+
         setConfirmBlockOpen(true);
       }
+
     } catch (err) {
+
       console.error('Failed to update block status:', err);
       alert(err?.response?.data?.error || t('chatUpdateBlockFailed'));
+    
     } finally {
       setBlockBusy(false);
     }
@@ -680,19 +736,28 @@ export default function ChatPage() {
 
 //const 5
   const confirmBlockUser = async () => {
+
+    //
     if (!activeFriend?.id) return;
+
+    //
     try {
       setBlockBusy(true);
       const res = await blockMessageUser(activeFriend.id);
       setBlockStatus(res.data || { blockedByMe: true, blockedMe: false, blockedEither: true });
       setChatNotice(t('chatBlockedSuccess'));
       setConfirmBlockOpen(false);
+
+
     } catch (err) {
       console.error('Failed to update block status:', err);
       alert(err?.response?.data?.error || t('chatUpdateBlockFailed'));
+    
+    
     } finally {
       setBlockBusy(false);
     }
+
   };
 //const 5 end
 
@@ -702,9 +767,23 @@ export default function ChatPage() {
 
 //const 6
   const handleGifQueryChange = (e) => {
+
+    // const for the GIF search query input. 
+    // It updates the query state and sets a 
+    // debounce timer to delay the search until 
+    // the user stops typing for 300ms. 
+    // If the input is cleared, it immediately 
+    // clears the GIF results to avoid showing 
+    // irrelevant results.
     const val = e.target.value;
     setGifQuery(val);
     clearTimeout(gifSearchTimeoutRef.current);
+
+    // Only search for GIFs if there is a non-empty query. 
+    // This prevents unnecessary API calls when the 
+    // user clears the search input. 
+    // If the input is empty, clear the GIF results 
+    // immediately.
     if (val.trim()) {
       gifSearchTimeoutRef.current = setTimeout(() => searchGifs(val), 300);
     } else {
@@ -746,33 +825,49 @@ export default function ChatPage() {
     <>
       <div className={`flex flex-col md:flex-row h-[calc(100vh-56px)] pt-2 bg-gradient-to-br relative ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`} onClick={() => { if (pickerOpenFor) setPickerOpenFor(null); if (contextMenu.open) setContextMenu({ open: false, x: 0, y: 0, messageId: null, isMine: false }); }}>
         <div className={`md:w-1/3 border-r overflow-y-auto ${mobileView === 'chat' ? 'hidden md:block' : 'block'} ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
-          {friends.map(friend => (
-            <button
-              key={friend.id}
-              onClick={() => {
-                setActiveFriend(friend);
-                setMobileView('chat');
-                navigate(`/chat/${friend.id}`);
-              }}
-              className={`w-full text-left px-4 py-3 border-b hover:bg-gray-100 flex items-center gap-3 ${activeFriend?.id === friend.id ? 'bg-gray-100' : ''}`}
-            >
-              {friend.profile_picture ? (
-                <img
-                  src={friend.profile_picture.startsWith('http') ? friend.profile_picture : `${API_BASE}${friend.profile_picture}`}
-                  alt={friend.username}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-5 h-5 text-gray-500" />
+          {friends.length === 0 ? (
+            <div className="flex h-full min-h-[40vh] items-center justify-center px-6 text-center">
+              <div className="max-w-xs space-y-3">
+                <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${isDark ? 'bg-gray-800 text-gray-200' : 'bg-slate-100 text-slate-600'}`}>
+                  <MessageCircle className="h-7 w-7" />
                 </div>
-              )}
-              <div>
-                <span className="font-medium">{friend.nickname || friend.username}</span>
-                {friend.nickname && <span className="text-xs text-gray-500 block">@{friend.username}</span>}
+                <p className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-slate-900'}`}>
+                  {t('chatMakeSomeFriends')}
+                </p>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                  {t('chatNoFriendsHint')}
+                </p>
               </div>
-            </button>
-          ))}
+            </div>
+          ) : (
+            friends.map(friend => (
+              <button
+                key={friend.id}
+                onClick={() => {
+                  setActiveFriend(friend);
+                  setMobileView('chat');
+                  navigate(`/chat/${friend.id}`);
+                }}
+                className={`w-full text-left px-4 py-3 border-b hover:bg-gray-100 flex items-center gap-3 ${activeFriend?.id === friend.id ? 'bg-gray-100' : ''}`}
+              >
+                {friend.profile_picture ? (
+                  <img
+                    src={friend.profile_picture.startsWith('http') ? friend.profile_picture : `${API_BASE}${friend.profile_picture}`}
+                    alt={friend.username}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User className="w-5 h-5 text-gray-500" />
+                  </div>
+                )}
+                <div>
+                  <span className="font-medium">{friend.nickname || friend.username}</span>
+                  {friend.nickname && <span className="text-xs text-gray-500 block">@{friend.username}</span>}
+                </div>
+              </button>
+            ))
+          )}
         </div>
 
         <div className={`${mobileView === 'list' && isMobile ? 'hidden' : 'flex'} flex-1 flex-col min-w-0`}>

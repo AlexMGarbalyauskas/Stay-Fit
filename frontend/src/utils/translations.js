@@ -458,6 +458,8 @@ export const translations = {
     chatPlaceholderBlockedByYou: 'Unblock user to message',
     chatPlaceholderBlockedByUser: 'You cannot message this user',
     thisMessageWasDeleted: 'This message was deleted',
+    chatMakeSomeFriends: 'Make some friends to chat',
+    chatNoFriendsHint: 'Once you add a friend, your chats will appear here.',
     
     // Home/Feed
     likedBy: 'Liked by',
