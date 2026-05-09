@@ -4,6 +4,11 @@
 // real-time features in the app, such as live updates or notifications.
 
 
+
+//connects to the backend server using WebSockets,
+// handles authentication and reconnection logic, 
+// and allows for flexible transport options based on environment variables.
+
 //import
 import { API_BASE } from '../api';
 

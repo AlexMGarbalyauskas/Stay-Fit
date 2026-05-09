@@ -8,7 +8,13 @@
 // locations to their respective timezone identifiers.
 
 
-
+//made via json the backend, but used on the frontend 
+// to determine the user's timezone based on their 
+// location input during onboarding, 
+// and to display the timezone in a user-friendly 
+// format in the profile settings. 
+// It helps ensure that workout schedules and 
+// notifications are aligned with the user's local time.
 
 
 

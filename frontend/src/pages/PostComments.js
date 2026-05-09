@@ -66,9 +66,11 @@ export default function PostComments() {
   // Load current user from localStorage on component mount
   useEffect(() => {
     // Get current user
+
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       setCurrentUser(user);
+      
     } catch {}
   }, []);
   //use effect 1 end
@@ -79,9 +81,11 @@ export default function PostComments() {
   //use effect 2
   // Detect mobile screen size and update on window resize
   useEffect(() => {
+
     const updateIsMobile = () => setIsMobile(window.innerWidth < 640);
     updateIsMobile();
     window.addEventListener('resize', updateIsMobile);
+
     return () => window.removeEventListener('resize', updateIsMobile);
   }, []);
   //use effect 2 end
@@ -92,7 +96,9 @@ export default function PostComments() {
   //block 1: GIF search handlers
   // Search Tenor GIFs based on query with debounced timeout
   const searchGifs = async (query) => {
+
     const q = (query || gifQuery).trim();
+
     if (!q) {
       setGifResults([]);
       return;
@@ -125,6 +131,7 @@ export default function PostComments() {
   };
 
   const handleGifQueryChange = (e) => {
+
     const val = e.target.value;
     setGifQuery(val);
     clearTimeout(gifSearchTimeoutRef.current);
@@ -141,6 +148,7 @@ export default function PostComments() {
 
   // Select GIF and register with Tenor analytics
   const selectGif = (url, id) => {
+
     setSelectedGif({ url, id });
     setGifPanelOpen(false);
     setGifQuery('');
@@ -163,11 +171,13 @@ export default function PostComments() {
   // Fetch post and comments on component mount
   useEffect(() => {
     const load = async () => {
+
       try {
         const p = await getPost(postId);
         setPost(p.data.post);
         const c = await getComments(postId);
         setComments(c.data.comments || []);
+
       } catch (err) {
         console.error(err);
 
@@ -205,12 +215,14 @@ export default function PostComments() {
     e.preventDefault();
     const hasText = newComment.trim().length > 0;
     const hasGif = selectedGif !== null;
+
     if (!hasText && !hasGif) return;
     
     try {
 
       // Combine text and GIF URL if both present
       let content = newComment.trim();
+
       if (selectedGif) {
         content = content ? `${content}\n[GIF: ${selectedGif.url}]` : `[GIF: ${selectedGif.url}]`;
       }
@@ -225,6 +237,7 @@ export default function PostComments() {
       if (replyingTo) {
         // Add reply to parent comment
         setComments(prev => prev.map(c => {
+
           if (c.id === replyingTo) {
             return {
               ...c,
@@ -293,6 +306,7 @@ export default function PostComments() {
     try {
       const res = await deleteComment(postId, replyId);
       setComments(prev => prev.map(c => {
+
         if (c.id === parentId) {
           return {
             ...c,
@@ -306,6 +320,7 @@ export default function PostComments() {
       // replies_count and the post's comments_count
       setPost(prev => ({ ...prev, comments_count: res.data.comments_count }));
       window.dispatchEvent(new CustomEvent('post:commentsUpdated', { detail: { postId, commentsCount: res.data.comments_count } }));
+    
     } catch (err) {
       console.error(err);
       alert(err?.response?.data?.error || t('failedToDeleteReply'));
@@ -319,12 +334,15 @@ export default function PostComments() {
   //block 4: comment like handler
   // Toggle like state for comment or reply
   const handleLikeComment = async (commentId) => {
+
     try {
       const res = await toggleCommentLike(postId, commentId);
       setComments(prev => prev.map(c => {
+
         if (c.id === commentId) {
           return { ...c, liked_by_me: res.data.liked, likes_count: res.data.likes_count };
         }
+
         if (c.replies && c.replies.length > 0) {
           return {
             ...c,
@@ -337,6 +355,7 @@ export default function PostComments() {
         }
         return c;
       }));
+
     } catch (err) {
       console.error(err);
       alert(err?.response?.data?.error || t('failedToLikeComment'));

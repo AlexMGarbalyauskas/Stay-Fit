@@ -1,3 +1,17 @@
+//purpose: This file defines the AI helper 
+// routes for the Stay Fit app. 
+// It provides an endpoint for users 
+// to interact with an AI assistant 
+// that can offer fitness advice and app support. 
+// The code includes error handling for API rate 
+// limits and quota issues, ensuring a 
+// smooth user experience even when the AI 
+// service is temporarily unavailable.
+
+
+
+
+
 // block 1 notes and consts
 //aiRoiutes.js - Handles AI helper requests for the Stay Fit app. 
 // Provides a /helper endpoint that accepts user prompts and returns 

@@ -9,6 +9,28 @@
 
 
 
+//connects to nodemailer for SMTP sending, 
+// Resend SDK for Resend API,
+// and uses fetch for MailSender 
+// and SendGrid HTTP APIs. 
+// It checks environment variables to 
+// determine which providers 
+// are configured and available, and 
+// attempts to send emails 
+// using the preferred provider first, 
+// falling back to others if needed.
+
+
+
+//frontend connection to file is in authRoutes.js, where sendVerificationEmail is 
+// called during user registration to send the 
+// verification code to the user's email address. 
+// The diagnostics functions allow for
+// monitoring and troubleshooting email 
+// sending issues without exposing 
+// sensitive information.
+
+
 
 
 

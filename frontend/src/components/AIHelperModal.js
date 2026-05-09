@@ -3,7 +3,15 @@
 // Handles loading states, errors, and displays conversation history.
 
 
+//found from 
+// https://headlessui.com/react/dialog and 
+// adapted it to my needs,
+
+//and from openAI's example of a React chat interface
+//link to openAI example:  https://openai.com/api/
+
 //Key features:
+
 
 
 //imports 

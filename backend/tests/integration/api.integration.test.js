@@ -3,6 +3,14 @@
 // endpoints work as expected with various edge cases.
 
 
+//main test for the API routes, covering health 
+// check and basic auth scenarios, ensuring that 
+// the API is responsive and handles errors correctly.
+
+
+//form of testing is integration testing, where we 
+// test the API endpoints
+
 //const
 const fs = require('fs');
 const path = require('path');

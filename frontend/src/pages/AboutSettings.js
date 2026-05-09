@@ -27,6 +27,10 @@ export default function AboutSettings() {
 
 
 
+
+  
+
+
   // The component includes buttons to 
   // view the Terms of Service, Privacy Policy,
   return (

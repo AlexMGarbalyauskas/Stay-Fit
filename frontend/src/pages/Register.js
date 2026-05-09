@@ -82,6 +82,7 @@ export default function Register() {
     // Update the tosRead state whenever the 'tosAccepted' value in local storage changes
     const handler = () => setTosRead(!!localStorage.getItem('tosAccepted'));
     window.addEventListener('storage', handler);
+    
     return () => window.removeEventListener('storage', handler);
   }, []);
   //use effect 2 end
@@ -158,6 +159,7 @@ export default function Register() {
     // Validate password strength and confirmation before submitting
     e.preventDefault();
     const passwordRules = /^(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};:'",.<>/?\\|`~]).{8,}$/;
+    
     if (!passwordRules.test(password)) {
       setError(t('passwordRulesError'));
       return;

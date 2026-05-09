@@ -100,6 +100,8 @@ passport.use(
           return done(null, newUserData);
         });
       } catch (err) {
+        
+        // error handling the Google profile data
         console.error('Google strategy unexpected error:', err);
         done(err);
       }

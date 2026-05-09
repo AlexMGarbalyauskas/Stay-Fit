@@ -11,6 +11,10 @@
 // cryptographic operations, allowing for 
 // consistent and predictable testing outcomes.
 
+//form of testing is unit testing,
+//  which focuses on testing individual 
+// functions and components in isolation to 
+// ensure they work as expected.
 
 
 // crypto.test.js

@@ -18,7 +18,7 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import { askAIHelper } from '../api';
 import { useLanguage } from '../context/LanguageContext';
-
+//imports end 
 
 
 
@@ -26,6 +26,10 @@ import { useLanguage } from '../context/LanguageContext';
 
 // The AIHelper component renders the AI assistant interface,
 export default function AIHelper() {
+
+
+  // It manages user input, sends questions 
+  // to the backend,
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [theme] = useState(localStorage.getItem('theme') || 'light');
@@ -37,16 +41,28 @@ export default function AIHelper() {
 
   const handleAsk = async () => {
     const cleaned = prompt.trim();
+
     if (!cleaned) return;
 
     setLoading(true);
     setError('');
 
+
+
+
+    //try block to send the user's question to 
+    // the backend API and handle the response. 
+    // It updates the UI based on the loading state, 
+    // displays the AI's reply, and catches 
+    // any errors that occur during the API call.
     try {
       const res = await askAIHelper(cleaned);
       setReply(res.data?.reply || '');
+
     } catch (err) {
+
       setError(err?.response?.data?.error || t('aiHelperError'));
+    
     } finally {
       setLoading(false);
     }
@@ -108,6 +124,7 @@ export default function AIHelper() {
             {error && (
               <p className="mt-3 text-sm text-red-500">{error}</p>
             )}
+
 
             {reply && (
               <div className={`mt-4 rounded-lg p-3 border ${isDark ? 'border-gray-600 bg-gray-900' : 'border-gray-200 bg-slate-50'}`}>

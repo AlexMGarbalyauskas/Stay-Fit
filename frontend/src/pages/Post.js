@@ -85,6 +85,18 @@ export default function Post() {
 
 
 
+//this use effect 1 used for the fireworks 
+// celebration animation after a 
+// successful post upload. 
+// It creates a canvas overlay 
+// and animates particles to simulate fireworks. 
+// The effect runs when the 'celebrate' 
+// state is set to true, and it cleans up 
+// the canvas and animation on unmount or when 
+// 'celebrate' changes. This adds a 
+// fun visual celebration for users after 
+// they share a post, enhancing the user 
+// experience with engaging feedback
 
 //use effect 1
   // Canvas fireworks animation - triggers when celebrate state is true
@@ -234,7 +246,7 @@ export default function Post() {
 
 
 
-
+//used for testing to export the Post component
 //use effect 2
   // Camera stream attachment effect - retries attaching video stream to ensure smooth preview
   // Handles cases where camera preview may initially be blank due to timing issues
@@ -291,7 +303,8 @@ export default function Post() {
 
 
 
-
+//this block 1 used for handling file 
+// selection from the user's device.
 //block 1
   // Handle file selection from device - validates file type against selected media kind
   const handleFileChange = (e) => {
@@ -786,7 +799,7 @@ export default function Post() {
 
 
 
-  //main render
+  //main render jsx and tailwind css
   return (
     <>
       <Header />

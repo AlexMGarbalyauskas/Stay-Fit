@@ -10,6 +10,13 @@
 // provide consistent results across test runs.
 
 
+//form of testing is unit testing, 
+// which focuses on testing individual
+//  functions and components in 
+// isolation to ensure they work as expected.
+
+
+
 
 //imports 
 import { toDateKey, buildPostDateSet, calculateCurrentStreak, countPostingDaysInWindow } from '../../utils/streak';

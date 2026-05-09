@@ -2,6 +2,12 @@
 //  and initialize tables for the Stay-Fit application.
 
 
+//used in authRoutes.js, userRoutes.js, friendRoutes.js, 
+// messageRoutes.js, notificationRoutes.js, 
+// postRoutes.js, commentRoutes.js, likeRoutes.js, 
+// saveRoutes.js, and commentLikeRoutes.js
+
+
 // IMPORTS
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
@@ -44,7 +50,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
 
 
 
-
+//used for testing to export the db instance
 //block 3 Initialize tables if they don't exist
 // Initialize tables
 const initSql = `
@@ -154,7 +160,7 @@ CREATE TABLE IF NOT EXISTS comment_likes (
 
 
 
-
+//used for testing to export the db instance
 //block 4 Execute the initialization SQL and handle migrations
 db.exec(initSql, (err) => {
   if (err) console.error('DB init error', err);

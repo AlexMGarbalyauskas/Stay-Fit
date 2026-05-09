@@ -1,3 +1,30 @@
+//file purpose: This file defines the authentication 
+// routes for the Stay Fit app. 
+// It includes endpoints for user 
+// registration, login, email verification, 
+// and related functionalities. 
+// The code handles password hashing, 
+// JWT token generation, email sending 
+// with timeouts, and includes 
+// security measures such as email 
+// verification before allowing login.
+
+
+
+
+//connects to the database and defines routes 
+// for user authentication, including registration, 
+// login, email verification, and related 
+// functionalities. 
+// It uses bcrypt for password hashing, 
+// JWT for token generation, and includes 
+// error handling and logging for email 
+// sending operations. 
+// The routes ensure that users verify 
+// their email before they can log in, 
+// enhancing the security of the application.
+
+
 //const imports and setup
 const express = require('express');
 const bcrypt = require('bcrypt');

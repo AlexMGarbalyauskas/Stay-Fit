@@ -33,8 +33,10 @@ export const buildPostDateSet = (posts = []) => {
   const dates = new Set();
 
   posts.forEach((post) => {
+
     if (!post?.created_at) return;
     const date = new Date(post.created_at);
+
     if (!Number.isNaN(date.getTime())) {
       dates.add(toDateKey(date));
     }
@@ -47,16 +49,22 @@ export const buildPostDateSet = (posts = []) => {
 
 // Calculates the current posting streak based on a set of date keys
 export const calculateCurrentStreak = (dateKeys, anchorDate = new Date(), maxDays = 365) => {
+  
   let streak = 0;
 
   for (let i = 0; i < maxDays; i++) {
+
+    //construct the date to check by subtracting
+    //  i days from the anchor date
     const checkDate = new Date(anchorDate);
     checkDate.setDate(checkDate.getDate() - i);
     const key = toDateKey(checkDate);
 
     if (dateKeys.has(key)) {
       streak++;
+
     } else if (i > 0) {
+
       // Missing today is allowed, but stop once a gap appears after streak starts.
       break;
     }
@@ -68,13 +76,20 @@ export const calculateCurrentStreak = (dateKeys, anchorDate = new Date(), maxDay
 
 // Counts how many days within the specified window have posts
 export const countPostingDaysInWindow = (dateKeys, days, anchorDate = new Date()) => {
+  
   let count = 0;
 
   // Loop through the specified number of days, checking for posts on each day
   for (let i = 0; i < days; i++) {
+
+    // Calculate the date to check by 
+    // subtracting i days from the anchor date
     const checkDate = new Date(anchorDate);
     checkDate.setDate(checkDate.getDate() - i);
     const key = toDateKey(checkDate);
+
+    // If there is a post on this date, 
+    // increment the count
     if (dateKeys.has(key)) count++;
   }
 

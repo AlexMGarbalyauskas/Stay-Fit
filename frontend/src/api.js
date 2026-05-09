@@ -4,6 +4,11 @@
 // including authentication,
 
 
+
+//connects to the backend server using Axios,
+// handles JWT token management, and provides 
+// functions for all API endpoints related to users,
+
 import axios from 'axios';
 
 

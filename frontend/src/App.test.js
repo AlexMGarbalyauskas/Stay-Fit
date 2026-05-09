@@ -1,3 +1,12 @@
+//form of testing is smoke testing, 
+// which is a basic test to check if the main 
+// app routes render without crashing.
+
+// This file contains basic 
+// smoke tests to ensure the main 
+// app routes render without crashing.
+
+
 
 // This file contains basic smoke tests to 
 // ensure the main app routes render without crashing.

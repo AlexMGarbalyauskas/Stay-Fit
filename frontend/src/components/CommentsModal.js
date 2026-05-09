@@ -9,6 +9,10 @@
 // and adapts to mobile screens.
 
 
+//found modal comments from 
+// https://headlessui.com/react/dialog and 
+// adapted it to my needs,
+
 //imports and component definition
 import { useEffect, useState } from 'react';
 import { getComments, createComment } from '../api';

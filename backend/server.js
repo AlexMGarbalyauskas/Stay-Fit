@@ -3,11 +3,21 @@
 // It sets up the Express server, configures 
 // middleware, defines API routes, 
 // and initializes Socket.IO for real-time communication. 
-// The server handles user authentication, messaging, notifications, 
-// and other core functionalities of the Stay-Fit application. 
-// It also includes error handling and graceful shutdown logic to 
+// The server handles user authentication,
+//  messaging, notifications, 
+// and other core functionalities of the 
+// Stay-Fit application. 
+// It also includes error handling and
+// graceful shutdown logic to 
 // ensure stability and reliability.
 
+
+
+//connects to the database, sets up API routes, 
+// and starts the server.
+
+
+//build via: node server.js
 
 //const
 const express = require('express');
@@ -85,7 +95,8 @@ const io = new Server(server, {
 
 
 
-
+//this is for authenticating socket connections 
+// using JWT tokens.
 //block 3
 io.use((socket, next) => {
 
@@ -121,7 +132,8 @@ app.set('io', io);
 
 
 
-
+//this is for handling real-time messaging and 
+// notifications via Socket.IO.
 //block 4
 io.on('connection', (socket) => {
   try {
@@ -145,6 +157,9 @@ io.on('connection', (socket) => {
             EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blockedBySender`,
           [receiverId, userId, userId, receiverId],
           (blockErr, blockRow) => {
+
+            //if error checking block status, log it 
+            // and prevent message sending
             if (blockErr) {
               console.error('Error checking message block status:', blockErr);
               return;
@@ -153,6 +168,7 @@ io.on('connection', (socket) => {
             // If either side has blocked the other, prevent sending the message and notify the sender
             const blockedByReceiver = !!blockRow?.blockedByReceiver;
             const blockedBySender = !!blockRow?.blockedBySender;
+            
             if (blockedByReceiver || blockedBySender) {
               socket.emit('message:blocked', {
                 receiverId,
@@ -175,6 +191,7 @@ io.on('connection', (socket) => {
               'INSERT INTO messages (sender_id, receiver_id, content, message_type, media_url, encrypted_content, iv, is_encrypted, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
               [userId, receiverId, finalContent, type, mediaUrl || null, encryptedContent, encryptedIv, isEncryptedFlag, createdAt],
               function (err) {
+                
                 if (err) {
                   console.error('Error saving message:', err);
                   return;
@@ -183,6 +200,7 @@ io.on('connection', (socket) => {
 
                 // Load sender's profile picture to include in the message event
                 db.get('SELECT profile_picture FROM users WHERE id = ?', [userId], (profileErr, senderRow) => {
+                  
                   if (profileErr) {
                     console.error('Error loading sender profile picture:', profileErr);
                   }
@@ -210,6 +228,7 @@ io.on('connection', (socket) => {
                   // Create a notification for the receiver
                   const preview = mediaUrl ? '[GIF]' : finalContent.slice(0, 200);
                   db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'message', JSON.stringify({ fromUserId: userId, messageId: message.id, content: preview })], (err) => {
+                    
                     if (err) console.error('Failed to create message notification', err);
                     // include preview content in the socket event for toast
                     io.to(`user:${receiverId}`).emit('notification:new', { type: 'message', fromUserId: userId, messageId: message.id, content: preview });
@@ -261,7 +280,8 @@ if (process.env.NODE_ENV !== 'test') {
 
 
 
-
+//used for testing to export the app and 
+// server instances
 //block 5
 // Global error handlers
 process.on('unhandledRejection', (reason, promise) => {
@@ -273,7 +293,8 @@ process.on('unhandledRejection', (reason, promise) => {
 
 
 
-
+//used for testing to export the app and 
+// server instances
 //block 6
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
@@ -285,7 +306,8 @@ process.on('uncaughtException', (err) => {
 
 
 
-
+//used for testing to export the app and 
+// server instances
 //block 7
 // Graceful shutdown
 process.on('SIGTERM', () => {

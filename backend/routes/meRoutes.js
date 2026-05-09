@@ -1,3 +1,17 @@
+//Purpose: This file defines the routes for user 
+// profile management, including fetching user data, 
+// updating profile information, changing password, 
+// uploading profile pictures, and deleting the account. 
+// It uses authentication middleware to ensure that 
+// only logged-in users can access these routes. 
+// The routes interact with the database to perform 
+// the necessary operations and return appropriate 
+// responses to the client.
+
+
+
+
+
 //const
 const express = require('express');
 const auth = require('../middleware/auth');

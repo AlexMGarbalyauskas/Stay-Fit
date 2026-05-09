@@ -11,6 +11,11 @@
 // for unauthenticated users.
 
 
+
+
+
+
+
 //imports
 import { useEffect, useState } from 'react';
 import { User, X, UserPlus, Dumbbell } from 'lucide-react';
@@ -49,6 +54,10 @@ export default function FindFriends({ onFriendUpdate }) {
   const token = localStorage.getItem('token');
   const isAuthenticated = !!token;
 
+
+
+
+
   // Fetch users
   const fetchUsers = () => {
     if (!isAuthenticated) return;
@@ -80,6 +89,18 @@ export default function FindFriends({ onFriendUpdate }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+  //used for testing to export the component
+
   //use effect 1 
   // Fetch current user (me)
   useEffect(() => {
@@ -107,6 +128,11 @@ export default function FindFriends({ onFriendUpdate }) {
 
 
 
+
+
+
+//used for testing to export the component
+
 //use effect 2
 // Fetch friend statuses for all users when 
 // the users list changes
@@ -118,6 +144,8 @@ export default function FindFriends({ onFriendUpdate }) {
       .catch(() => setTotalUsersCount(0));
   }, [isAuthenticated]);
 //end of use effect 2
+
+
 
 
 
@@ -139,6 +167,10 @@ export default function FindFriends({ onFriendUpdate }) {
     });
   }, [users, me]);
 //end of use effect 3
+
+
+
+
 
 
 
@@ -176,6 +208,12 @@ export default function FindFriends({ onFriendUpdate }) {
     setFilteredUsers(result);
   }, [searchTerm, locationFilter, users, isAuthenticated]);
 //end of use effect 4
+
+
+
+
+
+
 
 
 

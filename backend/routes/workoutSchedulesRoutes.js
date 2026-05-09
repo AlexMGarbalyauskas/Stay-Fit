@@ -1,9 +1,29 @@
+//purpose: This file defines the routes 
+// for managing workout schedules, 
+// including creating schedules, 
+// inviting buddies, responding to invites, 
+// and canceling schedules. It uses Express 
+// for routing, a custom auth middleware for 
+// authentication, and interacts with the 
+// database to store and retrieve workout 
+// schedule data. It also integrates with Socket.IO 
+// to send real-time notifications to 
+// users about workout schedule events.
+
+
+
+
+
 //const
 const express = require('express');
 const auth = require('../middleware/auth');
 const db = require('../db');
 const router = express.Router();
 //const end
+
+
+
+
 
 
 
@@ -65,6 +85,9 @@ router.delete('/:scheduleId', auth, (req, res) => {
   });
 });
 //block 1 end
+
+
+
 
 
 
@@ -169,6 +192,7 @@ router.post('/', auth, (req, res) => {
 
 
 
+
 //block 3 
 // Get my workout schedules
 router.get('/my-schedules', auth, (req, res) => {
@@ -191,6 +215,8 @@ router.get('/my-schedules', auth, (req, res) => {
   });
 });
 //block 3 end 
+
+
 
 
 
@@ -224,6 +250,8 @@ router.get('/invites', auth, (req, res) => {
   });
 });
 //block 4 end
+
+
 
 
 
@@ -279,6 +307,7 @@ router.post('/invites/:participantId/respond', auth, (req, res) => {
   });
 });
 //block 5 end
+
 
 
 

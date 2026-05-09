@@ -47,11 +47,14 @@ export default function Friends({ refreshTrigger }) {
   const fetchFriends = async () => {
     if (!isAuthenticated) return;
     setLoading(true);
+
     try {
       const res = await getFriends();
       setFriends(res.data.friends);
+    
     } catch (err) {
       console.error('Failed to load friends', err);
+    
     } finally {
       setLoading(false);
     }
@@ -63,8 +66,10 @@ export default function Friends({ refreshTrigger }) {
     setConfirmTarget(friend);
     setConfirmOpen(true);
   };
+
   const closeUnfriendModal = () => { setConfirmOpen(false); setConfirmTarget(null); };
   const handleUnfriend = async () => {
+    
     if (!confirmTarget) return;
     await unfriend(confirmTarget.id);
     setFriends(prev => prev.filter(f => f.id !== confirmTarget.id));
@@ -115,6 +120,9 @@ export default function Friends({ refreshTrigger }) {
     );
   }
 
+
+  //if the user is authenticated but the friends 
+  // data is still loading, show a loading state.
   if (loading) return <p className="mt-20 text-center text-gray-500">{t('loadingFriends')}</p>;
 
   // If the user is authenticated but

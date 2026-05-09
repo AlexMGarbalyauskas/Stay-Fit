@@ -1,6 +1,9 @@
 //emoji picker modal component, used for both adding
 //  reactions and editing messages (with delete option)
 
+//found modal from 
+// https://headlessui.com/react/dialog and 
+// adapted it to my needs,
 
 
 //imports

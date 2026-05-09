@@ -4,6 +4,17 @@
 // expected with various edge cases.
 
 
+//main test for the auth routes, covering registration 
+// and login scenarios, ensuring that the API 
+// correctly handles valid and invalid inputs, 
+// and that the authentication flow 
+// works as intended with proper error handling.
+
+//form of testing is integration testing, where we test 
+
+// the API endpoints with the actual server and database, 
+// ensuring that the authentication logic 
+// works end-to-end.
 
 //const
 const fs = require('fs');

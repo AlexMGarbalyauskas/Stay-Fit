@@ -1,3 +1,15 @@
+//messagesRoutes.js - Handles messaging-related API 
+// endpoints for the Stay Fit app.
+
+// Provides routes for fetching chat history, 
+// sending messages, managing message reactions, 
+// and blocking users.
+
+// All routes require authentication and 
+// include error handling for database operations and 
+// input validation.
+
+
 // const
 const express = require('express');
 const auth = require('../middleware/auth');

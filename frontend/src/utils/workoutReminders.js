@@ -12,6 +12,7 @@ import { playNotificationSound } from './sounds';
 
 // This module checks the user's workout plans and schedules notifications
 export const requestNotificationPermission = async () => {
+  
   if (!('Notification' in window)) {
     console.log('This browser does not support notifications');
     return false;
@@ -58,6 +59,7 @@ export const checkWorkoutReminders = (plans) => {
   if (!plans[today]) return;
   
   const plan = plans[today];
+
   if (!plan.time) return;
 
   // Parse the time from the plan
@@ -71,6 +73,7 @@ export const checkWorkoutReminders = (plans) => {
 
   if (timeDiff > 0 && timeDiff <= fiveMinutes) {
     const shownKey = `shown_${today}_${plan.time}`;
+
     if (sessionStorage.getItem(shownKey)) return;
 
     showWorkoutNotification(plan.workout, plan.time, plan.note);
@@ -85,6 +88,7 @@ export const startReminderService = (getPlans) => {
 
   // Then check every minute
   const interval = setInterval(() => {
+
     checkWorkoutReminders(getPlans());
   }, 60000); // Check every minute
 

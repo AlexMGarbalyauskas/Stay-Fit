@@ -3,9 +3,15 @@
 // It uses the Web Audio API to generate tones 
 // for different types of notifications.
 
+
 //used for playing notification sounds in the app,
 //like workout reminders, messages, etc.
 
+
+
+//built a simple sound system using the Web Audio 
+// API to play different tones for
+//  various notification types,
 
 // We define different tone patterns for various notification types
 let audioContext;
@@ -24,6 +30,7 @@ const TONE_PATTERNS = {
 
 // Check if sound is enabled in user preferences
 export const isSoundEnabled = () => {
+  
   if (typeof window === 'undefined') return true;
   return localStorage.getItem(SOUND_PREF_KEY) !== 'false';
 };
@@ -32,6 +39,7 @@ export const isSoundEnabled = () => {
 
 // Enable or disable sound based on user preference
 export const setSoundEnabled = (enabled) => {
+
   if (typeof window === 'undefined') return;
   localStorage.setItem(SOUND_PREF_KEY, enabled ? 'true' : 'false');
 };
@@ -44,6 +52,7 @@ export const playNotificationSound = async (type = 'notification') => {
 
     // Ensure we are in a browser environment and sound is enabled
     if (typeof window === 'undefined') return;
+    
     if (!isSoundEnabled()) return;
 
     const AudioCtx = window.AudioContext || window.webkitAudioContext;

@@ -32,8 +32,13 @@ export default function Login({ onLogin }) {
 
 
 
+
+
+
+
    //use effect 1 
-  // Listen for theme changes to update the component's appearance
+  // Listen for theme changes to update the component's
+  //  appearance
   useEffect(() => {
     const handleThemeChange = () => {
       setIsDark(localStorage.getItem('theme') === 'dark');
@@ -93,6 +98,8 @@ export default function Login({ onLogin }) {
 
 
 
+
+
 //use effect 2
   // Check for Google OAuth tokens and handle login state on component mount
   useEffect(() => {
@@ -145,6 +152,14 @@ export default function Login({ onLogin }) {
 
 
 
+
+
+//block 1 used for handling traditional 
+// username/password login by calling the login API,
+// storing the token and user data, initializing 
+// encryption,
+// and redirecting based on onboarding status.
+
 //block 1 
   // Handles traditional username/password login
   const handleSubmit = async (e) => {
@@ -175,7 +190,8 @@ export default function Login({ onLogin }) {
 
 
 
-
+//block 2 used for handling Google OAuth login by 
+// redirecting to the backend endpoint.
 
   //block 2
   // Handles Google OAuth login by redirecting to the backend endpoint

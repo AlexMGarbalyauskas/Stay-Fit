@@ -1,3 +1,20 @@
+//purpose: This file defines the routes for managing 
+// user notifications, including fetching, 
+// creating, marking as read, and deleting 
+// notifications. All routes require authentication.
+
+
+// The code interacts with a SQLite database to 
+// store and retrieve notifications,
+// and includes error handling for database operations. 
+// It also enriches notification data with usernames 
+// when possible, 
+// providing a better user experience on the frontend.
+
+
+
+
+
 //const
 const express = require('express');
 const auth = require('../middleware/auth');

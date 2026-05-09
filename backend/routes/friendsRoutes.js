@@ -18,9 +18,9 @@ const router = express.Router();
 
 
 
-// ------------------------------
+
 // FRIEND REQUESTS AND FRIEND MANAGEMENT
-// ------------------------------
+
 
 
 
@@ -42,7 +42,19 @@ router.post('/request', auth, (req, res) => {
 
     // Handle potential errors during the insertion of the friend request into the database
     function (err) {
+
+      //if error occurs during the database operation, 
+      // checks if it's a UNIQUE constraint 
+      // violation, which would indicate that a 
+      // friend request has already 
+      // been sent to this user. In that case, 
+      // returns a 400 status with a specific 
+      // error message. For any other database errors, 
+      // returns a 500 status with a generic error message. 
+      // If there are no errors, proceeds to create a notification for the receiver and emit a 
+      // real-time notification via sockets if possible.
       if (err) {
+
         if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'Request already sent' });
         return res.status(500).json({ error: 'DB error' });
       }
@@ -52,12 +64,14 @@ router.post('/request', auth, (req, res) => {
 
       // Create a notification for receiver
       db.run('INSERT INTO notifications (user_id, type, data) VALUES (?, ?, ?)', [receiverId, 'friend_request', JSON.stringify({ fromUserId: req.user.id, requestId })], (err2) => {
+        
         if (err2) console.error('Failed to create notification', err2);
 
         // Emit socket notification if io available
         try {
           const io = req.app.get('io');
           io && io.to(`user:${receiverId}`).emit('notification:new', { type: 'friend_request', fromUserId: req.user.id, requestId });
+        
         } catch (e) { }
 
         res.json({ message: 'Request sent', id: requestId });
@@ -90,6 +104,10 @@ router.get('/requests', auth, (req, res) => {
      WHERE fr.receiver_id = ?`,
     [req.user.id],
     (err, rows) => {
+
+      //if there is an error during the database query, 
+      // return a 500 status with an error message. Otherwise, 
+      // return the list of incoming friend requests in the response.
       if (err) return res.status(500).json({ error: 'DB error' });
       res.json({ requests: rows });
     }
@@ -116,6 +134,7 @@ router.post('/accept', auth, (req, res) => {
 
   // Extract the requestId and senderId from the request body, which are necessary to identify the friend request being accepted
   const { requestId, senderId } = req.body;
+  
   if (!requestId || !senderId) return res.status(400).json({ error: 'Missing data' });
 
   // Insert a new friendship into the friends table for both users,
@@ -123,6 +142,7 @@ router.post('/accept', auth, (req, res) => {
     'INSERT INTO friends (user_id, friend_id) VALUES (?, ?), (?, ?)',
     [req.user.id, senderId, senderId, req.user.id],
     err => {
+      
       if (err) return res.status(500).json({ error: 'DB error' });
 
       // After successfully creating the friendship, we delete the original friend request from the database
@@ -155,6 +175,7 @@ router.post('/reject', auth, (req, res) => {
 
   // Extract the requestId from the request body, which is necessary to identify the friend request being rejected
   const { requestId } = req.body;
+  
   if (!requestId) return res.status(400).json({ error: 'Missing requestId' });
 
   // Delete the friend request from the database using the provided requestId,
@@ -192,6 +213,7 @@ router.get('/', auth, (req, res) => {
 
     // Handle potential errors during the database query and return the list of friends in the response
     (err, rows) => {
+      
       if (err) return res.status(500).json({ error: 'DB error' });
       res.json({ friends: rows });
     }
@@ -220,10 +242,12 @@ router.get('/status/:id', auth, (req, res) => {
 
   // Query the database to check if there is an existing friendship between the authenticated user and the other user, and if not, check if there is a pending friend request sent by the authenticated user to the other user
   db.get('SELECT * FROM friends WHERE user_id = ? AND friend_id = ?', [req.user.id, otherId], (err, row) => {
+    
     if (row) return res.json({ status: 'friends' });
 
     // If they are not friends, check if there is a pending friend request sent by the authenticated user to the other user
     db.get('SELECT * FROM friend_requests WHERE sender_id = ? AND receiver_id = ?', [req.user.id, otherId], (err2, sent) => {
+      
       if (sent) return res.json({ status: 'sent' });
       res.json({ status: 'none' });
     });
@@ -254,6 +278,13 @@ router.post('/unfriend', auth, (req, res) => {
     'DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)',
     [req.user.id, friendId, friendId, req.user.id],
     (err) => {
+
+      //if there is an error during the database
+      // operation, return a 500 status with an 
+      // error message. Otherwise, proceed to clean 
+      // up any related friend requests and 
+      // notifications, and notify the unfriended 
+      // user in real-time via sockets if possible.
       if (err) return res.status(500).json({ error: 'DB error' });
 
       // After successfully unfriending, we also want to remove any existing friend requests between the two users to clean up the database
@@ -263,8 +294,19 @@ router.post('/unfriend', auth, (req, res) => {
         
         // Emit socket notification if io available
         try {
+
+
+          // Emit a real-time notification 
+          // to the unfriended user using sockets, 
+          // if the socket.io instance is 
+          // available in the app context. 
+          // This allows the unfriended user to 
+          // receive an immediate alert that 
+          // they have been unfriended.
           const io = req.app.get('io');
           io && io.to(`user:${friendId}`).emit('notification:new', { type: 'unfriended', byUserId: req.user.id });
+        
+        //catch error
         } catch (e) {}
         res.json({ message: 'Unfriended successfully' });
       });

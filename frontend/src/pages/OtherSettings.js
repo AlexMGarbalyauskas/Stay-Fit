@@ -1,5 +1,7 @@
-// This page is for other settings that don't fit into the main 
-// settings categories, such as account deletion and data export.
+// This page is for other settings that don't fit 
+// into the main 
+// settings categories, such as 
+// account deletion and data export.
 
 
 

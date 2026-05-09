@@ -286,6 +286,11 @@ export default function OnboardingTutorial() {
   const returnTo = params.get('return');
 
 
+
+
+
+
+
   //block 2 
   // Memoized user data from localStorage to determine onboarding status
   const user = useMemo(() => {
@@ -378,6 +383,10 @@ export default function OnboardingTutorial() {
 
 
 
+
+  //use effect to check onboarding status and handle 
+  // auto-redirects based on URL parameters 
+  // and user data.  
   // use effect 1
   useEffect(() => {
 
@@ -400,6 +409,12 @@ export default function OnboardingTutorial() {
 
 
 
+
+
+
+
+
+
   //block 4
   // Marks the onboarding tutorial as complete for the user and clears pending status
   const markComplete = () => {
@@ -413,6 +428,10 @@ export default function OnboardingTutorial() {
     localStorage.removeItem('onboarding_pending');
   };
   //block 4 end
+
+
+
+
 
 
 
@@ -440,6 +459,9 @@ export default function OnboardingTutorial() {
 
 
 
+
+
+
   //block 6
   // Handles navigation to the next tutorial step or exits if on the last step
   const handleNext = () => {
@@ -452,6 +474,10 @@ export default function OnboardingTutorial() {
     handleExit();
   };
   //block 6 end
+
+
+
+
 
 
 
@@ -476,6 +502,7 @@ export default function OnboardingTutorial() {
 
 
 
+
   //block 8
   // Handles opening the current tutorial step's page in a new tab and shows a notice
   const handleOpenPage = () => {
@@ -488,6 +515,9 @@ export default function OnboardingTutorial() {
 
 
 
+
+
+  
   //main render 
   // with conditional styling based on theme and 
   // dynamic content based on tutorial step and language

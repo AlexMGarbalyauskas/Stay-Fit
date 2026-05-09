@@ -1,3 +1,19 @@
+//purpose: This file defines the routes for Google
+// OAuth authentication, including both login and 
+// registration flows. It uses Passport.js for 
+// handling the OAuth process and includes 
+// custom logic to manage new user registration, 
+// email verification, and redirection to the 
+// frontend with appropriate information. 
+// The code is structured into blocks for better 
+// readability and maintainability, 
+// with detailed comments explaining the 
+// purpose of each section.
+
+
+
+
+
 //const 
 const express = require('express');
 const passport = require('passport');
