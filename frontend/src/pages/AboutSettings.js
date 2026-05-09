@@ -83,4 +83,5 @@ export default function AboutSettings() {
       <Navbar />
     </div>
   );
+  //end of component
 }

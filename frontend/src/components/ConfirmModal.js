@@ -4,7 +4,7 @@
 // The modal is styled with Tailwind CSS classes for a clean and modern look.
 
 
-//import 
+//import
 import React from 'react';
 
 

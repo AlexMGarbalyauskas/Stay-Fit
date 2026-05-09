@@ -83,6 +83,15 @@ export default function VerifyEmail() {
 
 
 
+//block 1 used for verifying the code entered by the user, and block 2 is
+// for resending the verification code if the user requests it. 
+// Both functions include error handling to provide feedback to 
+// the user in case of issues during the verification or resending process.
+
+
+
+
+
 
 //block 1 
   // This function is called when the user submits the verification form.

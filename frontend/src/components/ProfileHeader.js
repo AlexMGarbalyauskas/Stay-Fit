@@ -21,8 +21,10 @@ export default function ProfileHeader({ onFindFriendsClick, onCalendarClick }) {
   // Handler for calendar button click, 
   // navigates to calendar page or calls provided callback
   const handleCalendar = () => {
+
     if (onCalendarClick) {
       onCalendarClick();
+      
     } else {
       navigate('/calendar');
     }

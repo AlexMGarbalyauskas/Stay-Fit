@@ -61,19 +61,29 @@ import { log, error as logError } from './utils/logger';
 
 
 
+
+
 // Main application component that sets up routing, authentication state,
 function App() {
+
   // Tracks updates that should refresh the friends list page.
   const [refreshFriends, setRefreshFriends] = useState(0);
 
+
+
+
   // Reads auth state from localStorage on first render.
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
+
     try {
       return !!localStorage.getItem('token') && !!JSON.parse(localStorage.getItem('user'));
     } catch {
       return false;
     }
   });
+
+
+
 
   // Controls the initial splash loader visibility.
   const [booting, setBooting] = useState(true);
@@ -84,6 +94,10 @@ function App() {
   // Forces dependent pages to re-fetch friendship-related data.
   const triggerFriendRefresh = () => setRefreshFriends(prev => prev + 1);
 
+
+
+
+
   // Initialize theme on app load
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -93,6 +107,10 @@ function App() {
       document.documentElement.classList.remove('dark');
     }
   }, []);
+
+
+
+
 
   // Listen to storage changes (multi-tab logout/login)
   useEffect(() => {
@@ -107,12 +125,19 @@ function App() {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
+
+
+
+
   // Clears auth state and encryption keys on logout.
   const handleLogout = () => {
     localStorage.clear();
     clearEncryption(); // Clear encryption keys
     setIsAuthenticated(false);
   };
+
+
+
 
   // Simulate boot delay to show splash screen on app load.
   useEffect(() => {
