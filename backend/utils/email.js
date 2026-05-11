@@ -102,8 +102,10 @@ function pushEmailDiagnostic(entry) {
 
 //block 2 
 function getEmailDiagnostics(limit = 20) {
+
   const safeLimit = Math.max(1, Math.min(Number(limit) || 20, EMAIL_DIAGNOSTICS_MAX));
   return emailDiagnostics.slice(0, safeLimit);
+  
 }
 //block 2 end
 
@@ -174,6 +176,10 @@ function withTimeout(promise, timeoutMs, label) {
 
 
 
+
+
+
+
 //block 5
 // SMTP transporter (fallback for local/dev)
 const transporter = hasSmtpCredentials
@@ -201,6 +207,19 @@ const transporter = hasSmtpCredentials
 
 
 
+
+
+
+
+
+//used for sending the verification email to the user during registration,
+// it constructs the email content, 
+// determines which email provider(s) are available based on environment variables, 
+// and attempts to send the email 
+// using the preferred provider first, 
+// falling back to others if the send fails. 
+// It also includes detailed logging 
+// and diagnostics for each send attempt to help identify issues with email delivery.
 //block 6
 async function sendVerificationEmail(email, username, verificationCode) {
 
@@ -356,6 +375,7 @@ async function sendVerificationEmail(email, username, verificationCode) {
         // Note: Resend's send method may not throw on all errors, 
         // so we check the response for success indicators
       } else if (provider === 'sendgrid') {
+        
         if (!sendGridApiKey) throw new Error('SendGrid provider selected but SENDGRID_API_KEY is not configured.');
         console.log(`Sending email via SendGrid to ${email} from ${fromAddress}`);
 

@@ -33,7 +33,9 @@ const EMAIL_WAIT_TIMEOUT_MS = Number(process.env.EMAIL_WAIT_TIMEOUT_MS || 8000);
 
 
 
-
+//block 1 used for defining a list of allowed frontend origins for security,
+// ensuring that only requests from these origins will be 
+// accepted in the state parameter during the OAuth flow
 //block 1 
 // List of allowed frontend origins for security - 
 // only these will be accepted in the state parameter
@@ -53,6 +55,9 @@ const allowedFrontendOrigins = [
 
 
 
+
+//block 2 used for handling the user's question submission,
+// It sends the question to the backend API and updates the UI based on the response
 //block 2 
 //Helper function to get default frontend URL based on environment
 function getDefaultFrontendUrl() {
@@ -68,6 +73,13 @@ function getDefaultFrontendUrl() {
 
 
 
+
+
+
+
+//used for sanitizing and validating frontend URLs from the state parameter,
+// ensuring that only allowed origins are accepted to
+//  prevent open redirect vulnerabilities.
 //block 3
 // Helper function to sanitize and validate frontend URLs from state
 function sanitizeFrontendOrigin(frontend) {
@@ -89,6 +101,17 @@ function sanitizeFrontendOrigin(frontend) {
 
 
 
+
+
+
+
+
+
+//used for building the state parameter for Google OAuth, 
+// encoding the flow mode (login or register) and the frontend URL 
+// for redirection after authentication. 
+// This state is then parsed in the callback 
+// route to determine how to handle the authenticated user.
 //block 4
 // Helper function to build state parameter for Google OAuth
 function buildGoogleState(mode, frontend) {
@@ -102,6 +125,22 @@ function buildGoogleState(mode, frontend) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+//used for parsing the state parameter from the Google OAuth callback,
+// determining the flow mode (login or register) and the frontend URL for redirection. 
+// This allows the callback route to handle both login 
+// and registration flows appropriately based on the state information.
 //block 5
 // Helper function to parse state parameter from Google OAuth callback
 function parseGoogleState(state) {
@@ -134,6 +173,19 @@ function parseGoogleState(state) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+//used for generating a random verification code,
+// which is stored in the database and sent to the user's 
+// email for verification during registration or login with unverified email.
 //block 6
 // Helper function to generate verification code
 function generateVerificationCode() {
@@ -148,6 +200,14 @@ function generateVerificationCode() {
 
 
 
+
+
+
+
+
+
+//used for sending a verification email with a 
+// timeout to prevent hanging if the email service is slow or unresponsive.
 //block 7 
 // Helper function to send verification email with a timeout
 async function sendVerificationEmailWithDeadline(email, username, verificationCode, flow) {
@@ -182,6 +242,15 @@ async function sendVerificationEmailWithDeadline(email, username, verificationCo
 
 
 
+
+
+
+
+
+
+
+
+
 //block 8
 // LOGIN with Google
 // The frontend can specify a "frontend" query parameter to indicate where the user should be redirected after authentication
@@ -200,6 +269,13 @@ router.get(
 
 
 
+
+
+
+//used for handling Google OAuth registration by
+// redirecting to the backend endpoint. The frontend 
+// can specify a "frontend" query parameter to 
+// indicate where the user should be redirected after authentication
 //block 9
 // REGISTER with Google
 // The frontend can specify a "frontend" query parameter to indicate where the user should be redirected after authentication
@@ -237,9 +313,10 @@ router.get(
     
     // Check if this is a new user
     if (req.user.isNewUser) {
+
       if (!isRegister) {
         // Login route - reject new users
-        console.log('❌ New user tried to login instead of register:', req.user.email);
+        console.log('New user tried to login instead of register:', req.user.email);
         
         const frontendUrl =
           frontendFromState || getDefaultFrontendUrl();
@@ -252,7 +329,7 @@ router.get(
       }
 
       // Register route - create new user
-      console.log('✅ Creating new user:', req.user.email);
+      console.log('Creating new user:', req.user.email);
       
       const dummyPassword = 'google_' + Date.now();
       const username = req.user.username;
@@ -326,7 +403,7 @@ router.get(
     }
 
     // Existing user
-    console.log('🔍 Google OAuth callback for user:', { 
+    console.log('Google OAuth callback for user:', { 
       id: req.user.id, 
       email: req.user.email, 
       email_verified: req.user.email_verified 
@@ -334,7 +411,7 @@ router.get(
 
     // Check if email is verified
     if (!req.user.email_verified) {
-      console.log('⚠️  Email not verified, sending verification email...');
+      console.log('Email not verified, sending verification email...');
       
       // Generate a new verification code and store it in the database
       const verificationCode = generateVerificationCode();
@@ -347,6 +424,7 @@ router.get(
         'INSERT INTO email_verification_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
         [req.user.id, verificationCode, expiresAt.toISOString()],
         async (err) => {
+          
           if (err) {
             console.error('Error storing verification code:', err);
             return res.status(500).send('Error creating verification code');
@@ -384,7 +462,7 @@ router.get(
     }
 
     // Email already verified, log in
-    console.log('✅ Email already verified, logging in user...');
+    console.log('Email already verified, logging in user...');
     
     // Generate JWT token for the user
     const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';

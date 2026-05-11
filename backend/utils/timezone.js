@@ -18,6 +18,13 @@
 
 
 
+
+
+//used for mapping location keywords to timezone identifiers,
+// and for providing functions to get timezone information 
+// based on user input. This allows the app to 
+// automatically determine the user's timezone for 
+// scheduling workouts and notifications correctly.
 //block 1
 // Mapping of location keywords to timezone identifiers
 const timezoneMap = {
@@ -153,7 +160,8 @@ const timezoneMap = {
 
 
 
-
+//used for getting the timezone based on a location string,
+// and for getting a human-readable display name for a timezone.
 //block 2
 // Additional mappings can be added as needed
 /**
@@ -190,6 +198,11 @@ function getTimezoneFromLocation(location) {
 
 
 
+
+
+
+//used for getting the timezone based on a location string,
+// and for getting a human-readable display name for a timezone.
 //block 3
 /**
  * Get human-readable timezone display name

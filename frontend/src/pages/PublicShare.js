@@ -40,6 +40,7 @@ export default function PublicShare() {
   //block 1: QR code download handler
   // Download QR code as PNG by converting SVG to canvas and triggering download
   const handleDownloadQR = () => {
+    
     const svg = document.getElementById('qr-code-svg');
     const svgData = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement('canvas');
