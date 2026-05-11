@@ -39,6 +39,9 @@ export default function AIHelper() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+
+  
+  //used for handling the user's question submission,
   const handleAsk = async () => {
     const cleaned = prompt.trim();
 
@@ -67,7 +70,7 @@ export default function AIHelper() {
       setLoading(false);
     }
   };
-
+//end of handleAsk function
 
 
 

@@ -94,7 +94,7 @@ export default function Profile() {
 
 
 
-
+//used for fetching the user's profile information,
   //block 2
   // Fetch profile info
   const fetchProfile = async () => {
@@ -121,13 +121,16 @@ export default function Profile() {
 
 
 
-
+//used for fetching the user's posts from the 
+// API and updating the state with the retrieved posts.
 // Block 3
   // Fetch user's posts
   const fetchMyPosts = async () => {
+
     try {
       const res = await getMyPosts();
       setPosts(res.data.posts || []);
+    
     } catch (e) {
       console.error(e);
     }
@@ -153,9 +156,11 @@ export default function Profile() {
   // Block 4
   // Fetch saved posts
   const fetchSaved = async () => {
+
     try {
       const res = await getSavedPosts();
       setSavedPosts(res.data.posts || []);
+    
     } catch (e) {
       console.error(e);
     }
@@ -178,17 +183,20 @@ export default function Profile() {
 
 
 
-
+//used for navigation to login/register from auth guard
 // Block 5
   // Save bio
   const handleSaveBio = async () => {
+
     try {
       const res = await axios.put(`${API_URL}/api/me`, { bio: bioInput }, authHeaders);
       const updatedUser = res.data?.user || { ...user, bio: bioInput };
       setUser(updatedUser);
       syncLocalUser(updatedUser);
       setBioEditing(false);
+
     } catch (err) {
+
       console.error(err);
       alert('Failed to save bio');
     }
@@ -212,16 +220,18 @@ export default function Profile() {
 
 
 
-
+//used for navigation to login/register from auth guard
 // Block 6
   // Save location
   const handleSaveLocation = async () => {
+
     try {
       const res = await axios.put(`${API_URL}/api/me`, { location: locationInput }, authHeaders);
       const updatedUser = res.data?.user || { ...user, location: locationInput };
       setUser(updatedUser);
       syncLocalUser(updatedUser);
       setLocationEditing(false);
+    
     } catch (err) {
       console.error(err);
       alert('Failed to save location');
@@ -244,16 +254,19 @@ export default function Profile() {
 
 
 
-
+//block 7 is used for handling nickname changes,
+//  allowing users to edit and save their nickname.
 // Block 7
   // Save nickname
   const handleSaveNickname = async () => {
+
     try {
       const res = await axios.put(`${API_URL}/api/me`, { nickname: nicknameInput }, authHeaders);
       const updatedUser = res.data?.user || { ...user, nickname: nicknameInput };
       setUser(updatedUser);
       syncLocalUser(updatedUser);
       setNicknameEditing(false);
+    
     } catch (err) {
       console.error(err);
       alert('Failed to save nickname');
@@ -277,10 +290,15 @@ export default function Profile() {
 
 
 
-
+//block 8 used for handling profile picture changes, 
+// #allowing users to select a new image file 
+// and upload it as their profile picture. 
+// It includes validation for the selected file 
+// and updates the user's profile upon successful upload.
 // Block 8
   // Handle profile picture upload
   const handleProfilePictureChange = (e) => {
+
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
@@ -303,10 +321,13 @@ export default function Profile() {
 
 
 
-
+//block 9 is used for uploading the selected 
+// profile picture to the server, validating the file, 
+// and updating the user's profile with the new picture.
 // Block 9
   // Upload profile picture
   const handleUploadProfilePicture = async () => {
+
     if (!selectedFile) return;
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -318,12 +339,14 @@ export default function Profile() {
           Authorization: `Bearer ${token}`,
         },
       });
+
       const updatedUser = res.data?.user || { ...user, profile_picture: res.data.profile_picture };
       setUser(updatedUser);
       syncLocalUser(updatedUser);
       setSelectedFile(null);
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
+    
     } catch (err) {
       console.error(err);
       alert('Failed to upload profile picture');
@@ -346,7 +369,8 @@ export default function Profile() {
 
 
 
-
+//use effect 1 is used to fetch the user's profile information, 
+// their posts,
 //use effect 1
   // Initial data fetch
   useEffect(() => {
@@ -359,8 +383,15 @@ export default function Profile() {
 
 
 
+
 //used for navigation to login/register from auth guard
   const navigate = useNavigate();
+
+
+
+
+
+
 
 
 
@@ -418,7 +449,8 @@ export default function Profile() {
 
 
 
-
+//block 11 used to render a loading state while 
+// the user's profile information is being fetched.
   //block 11
   // Loading state render
   if (!user) {
@@ -445,7 +477,10 @@ export default function Profile() {
 
 
 
-
+//used for rendering the main profile 
+// page with all the user's information, 
+// posts, and editing capabilities once the 
+// user is authenticated and data is loaded.
   //main render
   return (
     <>

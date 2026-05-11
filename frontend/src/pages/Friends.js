@@ -45,6 +45,7 @@ export default function Friends({ refreshTrigger }) {
   const [confirmTarget, setConfirmTarget] = useState(null);
 
   const fetchFriends = async () => {
+
     if (!isAuthenticated) return;
     setLoading(true);
 
@@ -60,8 +61,17 @@ export default function Friends({ refreshTrigger }) {
     }
   };
 
+
+
+
+  //use effect for fetching friends data when the component mounts,
   useEffect(() => { fetchFriends(); }, [refreshTrigger, isAuthenticated]);
 
+
+
+//used for opening the confirmation modal 
+// when the user clicks the unfriend button, 
+// setting the target friend to be unfriended.
   const openUnfriendModal = (friend) => {
     setConfirmTarget(friend);
     setConfirmOpen(true);
@@ -76,6 +86,12 @@ export default function Friends({ refreshTrigger }) {
     closeUnfriendModal();
   };
 
+
+  
+
+
+
+//this used for rendering the page when the user is not authenticated,
   // Auth guard render
   if (!isAuthenticated) {
     return (

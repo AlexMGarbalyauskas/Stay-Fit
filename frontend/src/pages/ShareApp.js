@@ -62,6 +62,7 @@ export default function ShareApp() {
   //use effect 1 
 // Set the app URL on component mount
   useEffect(() => {
+
     // Use deployed URL
     const url = 'https://stay-fit-2.onrender.com/';
     setAppUrl(url);
@@ -97,6 +98,7 @@ export default function ShareApp() {
     //block 1 
     //image onload event to draw the SVG onto the canvas and trigger download
     img.onload = () => {
+
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
@@ -130,16 +132,20 @@ export default function ShareApp() {
 //block 2
   //handle share link
   const handleShare = async () => {
+
     if (navigator.share) {
+      
       try {
         await navigator.share({
           title: 'StayFit App',
           text: 'Check out the StayFit app! Scan this QR code or visit:',
           url: appUrl
         });
+
       } catch (err) {
         console.log('Share cancelled or failed');
       }
+
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(appUrl);

@@ -160,6 +160,14 @@ export default function Login({ onLogin }) {
 // encryption,
 // and redirecting based on onboarding status.
 
+
+
+
+
+
+
+
+
 //block 1 
   // Handles traditional username/password login
   const handleSubmit = async (e) => {

@@ -126,7 +126,9 @@ export default function UserProfile() {
   //block 2
   // Handle sending friend request
   const handleSendRequest = async () => {
+
     try { await sendFriendRequest(id); setStatus('sent'); }
+    
     catch (err) { console.error(err); alert(t('friendRequestFailed')); }
   };
 //end of block 2
@@ -146,7 +148,9 @@ export default function UserProfile() {
 //block 3
   // Handle unfriending
   const handleUnfriend = async () => {
+
     try { await unfriend(id); setStatus('none'); }
+    
     catch (err) { console.error(err); alert(t('unfriendFailed')); }
   };
 //end of block 3
