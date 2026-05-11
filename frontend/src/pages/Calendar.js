@@ -67,10 +67,19 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+//used for playing notification sounds in the app, 
+// like workout reminders, messages, etc.
   //use effect 1
   // Fetch user's posts to track posting dates
   useEffect(() => {
+
     const fetchPostDates = async () => {
+
+      //try to fetch user's posts and extract posting dates for streak tracking
       try {
         const response = await axios.get(`${API_URL}/api/posts/mine/export`, authHeaders);
         const posts = response.data.posts || [];
@@ -94,14 +103,29 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+//used for handling workout reminder notifications in the app,
 //use effect 2
   // Load saved plans from localStorage
   useEffect(() => {
+
     try {
+
       const stored = localStorage.getItem('workout-plans');
+      
+      //if plans exist in localStorage, parse and set them in state,
       if (stored) {
         const parsed = JSON.parse(stored);
         setPlans(parsed);
+
+
+        //if the currently selected day has a plan,
+        //  populate the form with that plan's details
         if (parsed[selected.key]) {
           setWorkout(parsed[selected.key].workout || 'Full Body');
           setNote(parsed[selected.key].note || '');
@@ -109,6 +133,9 @@ export default function CalendarPage() {
           setSelectedBuddies(parsed[selected.key].buddies || []);
         }
       }
+
+
+      //catch any errors that occur during loading and parsing of plans, and log them
     } catch (e) {
       console.error('Failed to load plans', e);
     }
@@ -118,6 +145,13 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+//use effect 3 used for starting the workout 
+// reminder service when the component mounts,
 //use effect 3
   // Start workout reminder service
   useEffect(() => {
@@ -130,9 +164,18 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+//use effect 4 used for populating the workout plan form when a 
+// user selects a day on the calendar.
 //use effect 4
   // When selection changes, populate form
   useEffect(() => {
+
     const plan = plans[selected.key];
     setWorkout(plan?.workout || 'Full Body');
     setNote(plan?.note || '');
@@ -145,13 +188,23 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+//block 1 used for loading the user's friends from the backend API,
 //block 1 
   // Load friends for buddy selection
   const loadFriends = async () => {
+   
     try {
       const response = await axios.get(`${API_URL}/api/friends`, authHeaders);
       setAvailableBuddies(response.data.friends || []);
+
     } catch (error) {
+
       console.error('Failed to load friends:', error);
     }
   };
@@ -161,8 +214,17 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+
+//used for saving a workout plan, which involves persisting the plan locally,
 //block 2
   const savePlan = async () => {
+
     const planData = { 
       workout, 
       note, 
@@ -182,11 +244,16 @@ export default function CalendarPage() {
     // Send workout invites to buddies and capture scheduleId for cancellation
     if (selectedBuddies.length > 0) {
       const scheduleId = await sendWorkoutInvites();
+
+      //if a scheduleId is returned, update the plan with this 
+      // ID so can reference it for cancellations later
       if (scheduleId) {
+
         setPlans(prev => {
           const updated = { ...prev, [selected.key]: { ...planData, scheduleId } };
           localStorage.setItem('workout-plans', JSON.stringify(updated));
           window.dispatchEvent(new CustomEvent('workout-plans-changed', { detail: { date: selected.key } }));
+         
           return updated;
         });
       }
@@ -202,8 +269,12 @@ export default function CalendarPage() {
 
 
 
+
+
+//used for sending workout invites to selected buddies by calling the backend API,
 //block 3
   const sendWorkoutInvites = async () => {
+
     try {
       const res = await axios.post(`${API_URL}/api/workout-schedules`, {
         date: selected.key,
@@ -211,7 +282,9 @@ export default function CalendarPage() {
         time: reminderTime,
         buddies: selectedBuddies.map(b => b.id)
       }, authHeaders);
+
       return res?.data?.scheduleId;
+    
     } catch (error) {
       console.error('Failed to send workout invites:', error);
       return null;
@@ -222,8 +295,19 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+
+//used for cancelling a workout plan, 
+// which involves removing the plan locally and informing the backend
+//  to cancel any scheduled notifications for buddies.
 //block 4
   const cancelPlan = async () => {
+
     if (!window.confirm(t('cancelPlanConfirm'))) {
       return;
     }
@@ -233,8 +317,11 @@ export default function CalendarPage() {
     // Inform backend and buddies if a scheduleId exists
     if (currentPlan?.scheduleId) {
       try {
+
         await axios.delete(`${API_URL}/api/workout-schedules/${currentPlan.scheduleId}`, authHeaders);
+      
       } catch (err) {
+
         if (err?.response?.status !== 404) {
           console.error('Failed to cancel workout on server:', err);
         }
@@ -262,6 +349,15 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+
+
+
 //block 5
 // Additional handlers for posting workout, 
 // skipping, camera, and buddy modal
@@ -275,6 +371,11 @@ export default function CalendarPage() {
 
 
 
+
+
+//used for handling the skip workout action, 
+// which is currently just a placeholder as 
+// the actual logic is handled in the context prompt dismissal.
 //block 6
   const handleSkipWorkout = () => {
     // Handled by context dismissPrompt
@@ -289,7 +390,7 @@ export default function CalendarPage() {
 
 
 
-
+//used for closing the camera interface when the user is done,
 //block 7
   const handleCloseCamera = () => {
     setShowCamera(false);
@@ -303,7 +404,8 @@ export default function CalendarPage() {
 
 
 
-
+//used for opening the buddy selection modal, 
+// which allows users to choose friends to invite for a workout session,
 //block 8
   const openBuddyModal = async () => {
     await loadFriends();
@@ -317,14 +419,18 @@ export default function CalendarPage() {
 
 
 
-
+//used for toggling the selection of a workout buddy in the modal,
 //block 9
   const toggleBuddy = (friend) => {
+
     setSelectedBuddies(prev => {
       const exists = prev.find(b => b.id === friend.id);
+     
       if (exists) {
         return prev.filter(b => b.id !== friend.id);
+
       } else {
+
         return [...prev, friend];
       }
     });
@@ -338,6 +444,10 @@ export default function CalendarPage() {
 
 
 
+
+
+
+//used for memoizing workout options and month/day labels for localization,
 //block 10
 // Memoized workout options and month/day labels for localization
   const workoutOptions = useMemo(() => ([
@@ -362,6 +472,9 @@ export default function CalendarPage() {
 
 
 
+
+
+// Memoized workout options and month/day labels for localization
 //block 11
 // Memoized month and day labels for localization
   const months = useMemo(() => [
@@ -379,7 +492,9 @@ export default function CalendarPage() {
 
 
 
-
+//used for memoizing month and day labels for localization, which ensures 
+// that the calendar displays correctly in different 
+// languages based on user preferences.
 //block 12
   const dayLabels = useMemo(() => [
     t('daySunShort'), t('dayMonShort'), t('dayTueShort'), t('dayWedShort'),
@@ -398,20 +513,36 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
 //block 13
 // Helper function to generate calendar weeks for a given month and year
   const weeksForMonth = (y, m) => {
+
     const firstDay = new Date(y, m, 1).getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     const cells = [];
+
     for (let i = 0; i < firstDay; i++) cells.push(null);
+
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
     while (cells.length % 7 !== 0) cells.push(null);
     const weeks = [];
+
     for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+    
     return weeks;
   };
 //block 13 end
+
+
+
+
+
 
 
 
@@ -432,9 +563,13 @@ export default function CalendarPage() {
 
 
 
+
+
+
 //block 15
 // Check if a given date has a workout plan
   const hasPlan = (y, m, d) => {
+
     if (!d) return false;
     return !!plans[dateKey(y, m, d)];
   };
@@ -443,9 +578,21 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 //block 16
 // Check if a given date has a post (for streak tracking)
   const hasPost = (y, m, d) => {
+
     if (!d) return false;
     return postDates.has(dateKey(y, m, d));
   };
@@ -456,9 +603,21 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+
+
+//used for handling the selection of a day on the calendar, 
+// which updates the selected state and populates 
+// the form with any existing plan data for that day.
 //block 17
 // Handler for when a user selects a day on the calendar
   const handleSelectDay = (y, m, d) => {
+    
     if (!d) return;
     const key = dateKey(y, m, d);
     setSelected({ key, y, m, d });
@@ -472,6 +631,14 @@ export default function CalendarPage() {
 
 
 
+
+
+
+
+
+
+//used for changing the displayed year, 
+// with bounds checking to prevent navigating beyond the allowed range of years.
 //blcok 18
 // Function to change the displayed year, with bounds checking
   const changeYear = (delta) => {
@@ -485,6 +652,15 @@ export default function CalendarPage() {
     }
   };
 //  block 18 end
+
+
+
+
+
+
+
+
+
 
 
 

@@ -102,6 +102,8 @@ export default function Post() {
   // Canvas fireworks animation - triggers when celebrate state is true
   // Creates animated particles that explode outward from center of screen
   useEffect(() => {
+
+    // If not celebrating or canvas ref is not set, do nothing
     if (!celebrate || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
@@ -131,6 +133,7 @@ export default function Post() {
       listFire.push(fire);
     }
 
+    // Function to generate random color for fireworks
     const randColor = () => {
       const r = Math.floor(Math.random() * 256);
       const g = Math.floor(Math.random() * 256);
@@ -138,11 +141,15 @@ export default function Post() {
       return `rgb(${r}, ${g}, ${b})`;
     };
 
+    // Update particle positions and handle explosion logic
     const update = () => {
+
       for (let i = 0; i < listFire.length; i++) {
         const fire = listFire[i];
+
         if (fire.y <= fire.far) {
           const color = randColor();
+
           for (let j = 0; j < fireNumber * 8; j++) {
             const firework = {
               x: fire.x,
@@ -168,6 +175,7 @@ export default function Post() {
         fire.vx += fire.ax;
       }
 
+      // Update fireworks
       for (let i = listFirework.length - 1; i >= 0; i--) {
         const firework = listFirework[i];
         if (firework) {
@@ -185,6 +193,7 @@ export default function Post() {
       }
     };
 
+    //draw particles on canvas with fading trails
     const draw = () => {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.globalAlpha = 0.1;
@@ -213,6 +222,7 @@ export default function Post() {
       }
     };
 
+    // Animation loop
     let animationId;
     const loop = () => {
       update();
@@ -229,6 +239,8 @@ export default function Post() {
 
     window.addEventListener('resize', handleResize);
 
+
+    //return cleanup to stop animation
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
@@ -268,6 +280,7 @@ export default function Post() {
       cameraVideoRef.current.muted = true;
       cameraVideoRef.current.playsInline = true;
       cameraVideoRef.current.setAttribute('autoplay', 'true');
+
       if (cameraVideoRef.current.readyState >= 2 && cameraVideoRef.current.paused) {
         cameraVideoRef.current.play().catch((e) => console.warn('Attach play failed', e));
       }
@@ -308,8 +321,10 @@ export default function Post() {
 //block 1
   // Handle file selection from device - validates file type against selected media kind
   const handleFileChange = (e) => {
+
     setError(null);
     const f = e.target.files && e.target.files[0];
+
     if (!f) return;
     if (mediaKind === 'video' && !f.type.startsWith('video/')) return setError('Please select a video file');
     if (mediaKind === 'image' && !f.type.startsWith('image/')) return setError('Please select an image file');
@@ -330,11 +345,17 @@ export default function Post() {
 //block 2
   // Get video duration from metadata and validate length (5-60 seconds)
   const onLoadedMetadata = () => {
+
+    //if not video or no ref, return early
     if (!videoRef.current) return;
     const d = Math.round(videoRef.current.duration);
     setLocal(prev => ({ ...prev, duration: d }));
+
+    //if duration is out of bounds, set error message
     if (mediaKind === 'video') {
+
       if (d < 5 || d > 60) setError('Video must be between 5 and 60 seconds');
+      
       else setError(null);
     }
   };
@@ -351,16 +372,28 @@ export default function Post() {
   // Start camera stream - requests user permissions and initializes video preview
   // Audio included when mediaKind is 'video' for recording
   const startCamera = async () => {
+
     setError(null);
+
+    //try to access camera with appropriate 
+    // constraints based on media kind 
+    // (video or photo) and handle stream setup
     try {
+
       const constraints = {
         video: { facingMode: 'user' },
         audio: mediaKind === 'video'
       };
+
       console.log('Camera requested with constraints', constraints);
       const s = await navigator.mediaDevices.getUserMedia(constraints);
       console.log('Camera stream acquired', s.getVideoTracks().map(t => ({ label: t.label, readyState: t.readyState })), s.getAudioTracks().map(t => ({ label: t.label, readyState: t.readyState })));
       streamRef.current = s;
+
+
+      //if video ref is ready, attach stream 
+      // immediately for smoother UX 
+      // some browsers require this to start the stream
       if (cameraVideoRef.current) {
         cameraVideoRef.current.srcObject = s;
         cameraVideoRef.current.muted = true;
@@ -368,22 +401,35 @@ export default function Post() {
         cameraVideoRef.current.setAttribute('autoplay', 'true');
         const waitForReady = () => new Promise((resolve) => {
           cameraVideoRef.current.onloadedmetadata = () => resolve();
+
           if (cameraVideoRef.current.readyState >= 2) resolve();
         });
+
         await waitForReady();
         console.log('Camera video metadata ready', {
           readyState: cameraVideoRef.current.readyState,
           videoWidth: cameraVideoRef.current.videoWidth,
           videoHeight: cameraVideoRef.current.videoHeight
         });
+
         try { await cameraVideoRef.current.play(); console.log('Camera video play called'); } catch (e) { console.warn('Camera play failed', e); }
         setTimeout(() => {
+
+          //if video is paused after metadata ready, 
+          // try playing again - 
+          // some browsers require user interaction 
+          // or have quirks with autoplay
           if (cameraVideoRef.current && cameraVideoRef.current.paused) {
+            
             try { cameraVideoRef.current.play(); console.log('Camera video play retry'); } catch (e) { console.warn('Camera play retry failed', e); }
           }
+
         }, 150);
+
         if (cameraDebugTimerRef.current) clearTimeout(cameraDebugTimerRef.current);
         cameraDebugTimerRef.current = setTimeout(() => {
+
+          //if video still not ready, log stats for debugging
           if (cameraVideoRef.current) {
             console.log('Camera debug after 1s', {
               readyState: cameraVideoRef.current.readyState,
@@ -391,6 +437,8 @@ export default function Post() {
               videoHeight: cameraVideoRef.current.videoHeight,
               paused: cameraVideoRef.current.paused
             });
+
+            //set camera stats for debugging purposes
             setCameraStats({
               readyState: cameraVideoRef.current.readyState,
               videoWidth: cameraVideoRef.current.videoWidth,
@@ -400,10 +448,12 @@ export default function Post() {
           }
         }, 1000);
       }
+
       recordedChunksRef.current = [];
       setIsRecording(false);
       setLocal(null);
       setCameraOverlay(true);
+
     } catch (err) {
       console.error('Camera error', err);
       setError('Could not access camera. Check permissions.');
@@ -425,15 +475,20 @@ export default function Post() {
 //block 4
   // Stop and cleanup camera stream - releases all tracks and clears references
   const stopStream = () => {
+
     try {
+
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
         streamRef.current = null;
       }
+
       if (cameraVideoRef.current) cameraVideoRef.current.srcObject = null;
       if (cameraDebugTimerRef.current) clearTimeout(cameraDebugTimerRef.current);
       if (attachTimerRef.current) clearTimeout(attachTimerRef.current);
+      
       setCameraStats(null);
+    
     } catch (e) {}
   };
 //end block 4
@@ -454,7 +509,9 @@ export default function Post() {
   // Start video recording with 3-second countdown before actual recording begins
   // Records up to 60 seconds with duration timer and auto-stops at limit
   const startRecording = () => {
+    
     if (!streamRef.current) return setError('Camera not started');
+    
     try {
       // Start countdown animation
       let count = 3;
@@ -462,8 +519,10 @@ export default function Post() {
       
       const countdownInterval = setInterval(() => {
         count -= 1;
+
         if (count > 0) {
           setCountdown(count);
+
         } else {
           clearInterval(countdownInterval);
           setCountdown(null);
@@ -482,6 +541,7 @@ export default function Post() {
             setIsRecording(false);
             setRecordingDuration(0);
           };
+
           mr.start();
           setIsRecording(true);
           setRecordingDuration(0);
@@ -499,6 +559,7 @@ export default function Post() {
           recordTimerRef.current = durationInterval;
         }
       }, 1000);
+
     } catch (err) {
       console.error('Record error', err);
       setError('Could not start recording.');
@@ -522,14 +583,19 @@ export default function Post() {
 //block 6
   // Stop video recording - stops MediaRecorder and creates blob for file storage
   const stopRecording = () => {
+
     try { clearInterval(recordTimerRef.current); } catch (e) {}
+
     try {
+      
       if (recorderRef.current && recorderRef.current.state !== 'inactive') {
         recorderRef.current.stop();
+      
       } else {
         stopStream();
         setCameraOverlay(false);
       }
+    
     } catch (e) {}
     setIsRecording(false);
     setRecordingDuration(0);
@@ -553,6 +619,7 @@ export default function Post() {
 //block 7
   // Capture photo from camera stream - draws to canvas with applied filters and converts to PNG
   const capturePhoto = () => {
+
     if (!cameraVideoRef.current) return setError('Camera not started');
     const video = cameraVideoRef.current;
     console.log('Capture attempt', {
@@ -561,11 +628,14 @@ export default function Post() {
       videoHeight: video.videoHeight,
       paused: video.paused
     });
+
     if (video.readyState < 2) return setError('Camera is loading, try again in a moment');
     if (!video.videoWidth || !video.videoHeight) return setError('Camera not ready yet. Wait a second and try again.');
+   
     // wait for next frame to avoid blank canvas
     try {
       const rafPromise = new Promise((resolve) => requestAnimationFrame(() => resolve()))
+      
       return rafPromise.then(() => {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
@@ -574,6 +644,7 @@ export default function Post() {
         ctx.filter = appliedFilter;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         canvas.toBlob((blob) => {
+
           const file = new File([blob], `photo_${Date.now()}.png`, { type: 'image/png' });
           const url = URL.createObjectURL(file);
           setLocal({ file, url, duration: null });
@@ -581,6 +652,7 @@ export default function Post() {
           setCameraOverlay(false);
         });
       });
+
     } catch (e) {
       console.error('Capture failed', e);
       setError('Capture failed. Try again.');
@@ -610,7 +682,9 @@ export default function Post() {
 //block 8
   // Stop camera overlay and cleanup - closes full-screen camera UI and stops stream
   const handleStop = async () => {
+
     if (mediaKind === 'video') stopRecording();
+    
     else stopStream();
     setCameraOverlay(false);
     setIsRecording(false);
@@ -663,20 +737,32 @@ export default function Post() {
 
 
 //block 10
-  // Main upload handler - validates media and form data, uploads post to API, triggers celebration
-  // Validates video duration, title requirement, and handles upload errors gracefully
+  // Main upload handler - 
+  // validates media and form data, uploads post to API, 
+  // triggers celebration
+  // Validates video duration, 
+  // title requirement, and handles upload errors gracefully
   const handleUpload = async () => {
+
+    //if no media selected, set error message
     if (!local || !local.file) return setError('No media selected');
+    
+    //if title is required and not provided, set error message
     if (!title.trim()) return setError('Title is required');
     console.log('Uploading file:', local.file.name, 'Type:', local.file.type, 'Size:', local.file.size);
     
     if (mediaKind === 'video') {
+
       // try to get duration if possible
       if (!local.duration) {
         // create temp video element to measure
         const tempVideo = document.createElement('video');
         const url = local.url;
         tempVideo.src = url;
+
+
+        //try to read video metadata to get duration, 
+        // with timeout and error handling
         try {
           await new Promise((resolve, reject) => {
             tempVideo.onloadedmetadata = () => resolve();
@@ -686,13 +772,20 @@ export default function Post() {
           const d = Math.round(tempVideo.duration);
           console.log('Video duration:', d);
           setLocal(prev => ({ ...prev, duration: d }));
+          
+          
           if (d < 5 || d > 60) return setError('Video duration must be between 5 and 60 seconds');
+        
+        
         } catch (e) {
           console.error('Failed to read video duration', e);
           return setError('Failed to read video duration; try re-recording or uploading a different file');
         }
+
       } else {
+
         console.log('Duration already set:', local.duration);
+        
         if (local.duration < 5 || local.duration > 60) return setError('Video duration must be between 5 and 60 seconds');
       }
     }
@@ -710,13 +803,20 @@ export default function Post() {
       lastModified: local.file.lastModified
     });
 
+
+    //try to upload post and handle response
     try {
       const res = await createPost(formData);
       console.log('Upload success:', res.data);
       setUploading(false);
       setCelebrate(true);
+
       await new Promise(resolve => setTimeout(resolve, 4500));
       navigate('/home');
+
+
+      //catch and log any errors during upload, 
+      // including response data for debugging
     } catch (err) {
       console.error('Upload error:', err);
       console.error('Error response:', err?.response?.data);
@@ -747,6 +847,7 @@ export default function Post() {
 //block 11
   // Auth guard - after all hooks
   if (!isAuthenticated) {
+
     return (
       <>
         <Header disableNotifications />

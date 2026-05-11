@@ -52,6 +52,9 @@ export default function Home({ onLogout, isAuthenticated }) {
   //use effect 1 
   // Fetch user data and posts on mount, and set up event listeners for updates
   useEffect(() => {
+
+    //if not authenticated, clear user and posts state and
+    //  return early to show welcome screen
     if (!isAuthenticated) {
       setUser(null);
       setPosts([]);
@@ -74,10 +77,14 @@ export default function Home({ onLogout, isAuthenticated }) {
       .catch(err => {
         logError('getMe error:', err);
         logError('Error response:', err.response);
+
         if (err?.response?.status === 404) {
           alert('Session invalid or user not found. Please log in again.');
         }
         localStorage.clear();
+
+        //if onLogout callback provided, 
+        // call it to update parent state, then navigate to login page
         if (onLogout) onLogout();
         navigate('/login');
       });
@@ -88,11 +95,13 @@ export default function Home({ onLogout, isAuthenticated }) {
     // Listen for comment updates from other pages
     const handler = (e) => {
       const { postId, commentsCount } = e.detail || {};
+
       if (!postId) return;
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: commentsCount } : p));
     };
     const deleteHandler = (e) => {
       const { postId } = e.detail || {};
+
       if (!postId) return;
       setPosts(prev => prev.filter(p => p.id !== postId));
     };
@@ -107,6 +116,7 @@ export default function Home({ onLogout, isAuthenticated }) {
 
     // Listen for feed refresh events (e.g., new post created)
     window.addEventListener('feed:refresh', refreshHandler);
+
     return () => {
       window.removeEventListener('post:commentsUpdated', handler);
       window.removeEventListener('post:deleted', deleteHandler);
@@ -118,6 +128,10 @@ export default function Home({ onLogout, isAuthenticated }) {
 
 
 
+  
+
+
+
 
 
 
@@ -125,6 +139,7 @@ export default function Home({ onLogout, isAuthenticated }) {
   //use effect 2
   // Countdown timer for today's workout
   useEffect(() => {
+
     const pad = (n) => String(n).padStart(2, '0');
     const dateKey = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
     
@@ -135,11 +150,16 @@ export default function Home({ onLogout, isAuthenticated }) {
       
       // Load workout plans from localStorage and find today's workout
       try {
+
         const stored = localStorage.getItem('workout-plans');
+
+        //if plans exist, parse and check for today's workout
         if (stored) {
           const plans = JSON.parse(stored);
           const todayPlan = plans[todayKey];
           
+          //if there's a workout today with a set time, 
+          // calculate countdown and set state
           if (todayPlan && todayPlan.time) {
             setTodayWorkout(todayPlan);
             const now = new Date();
@@ -154,17 +174,21 @@ export default function Home({ onLogout, isAuthenticated }) {
               const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
               const secs = Math.floor((diff % (1000 * 60)) / 1000);
               setCountdown(`${pad(hours)}:${pad(mins)}:${pad(secs)}`);
+            
             } else if (diff > -60000 && diff <= 0) {
               setCountdown('NOW!');
+
             } else {
               setCountdown('');
               setTodayWorkout(null);
             }
+
           } else {
             setCountdown('');
             setTodayWorkout(null);
           }
         }
+
       } catch (e) {
         logError('Failed to load workout plans', e);
       }
@@ -184,11 +208,13 @@ export default function Home({ onLogout, isAuthenticated }) {
   //block 1 
   // Function to fetch posts for the feed
   const fetchPosts = async () => {
+
     try {
       const res = await getPosts();
       const fetched = res.data.posts || [];
       // API now includes likes_count, comments_count, saves_count, liked, saved
       setPosts(fetched);
+
     } catch (err) {
       logError('Failed to load posts', err);
     }
