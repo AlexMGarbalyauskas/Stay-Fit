@@ -263,6 +263,7 @@ export default function Post() {
   // Camera stream attachment effect - retries attaching video stream to ensure smooth preview
   // Handles cases where camera preview may initially be blank due to timing issues
   useEffect(() => {
+    
     if (!cameraOverlay || !streamRef.current) return;
     attachAttemptsRef.current = 0;
 
@@ -285,6 +286,8 @@ export default function Post() {
         cameraVideoRef.current.play().catch((e) => console.warn('Attach play failed', e));
       }
 
+      //if camera video not ready after attach, 
+      // retry up to 6 times with delay
       if (cameraVideoRef.current) {
         setCameraStats({
           readyState: cameraVideoRef.current.readyState,
@@ -476,6 +479,9 @@ export default function Post() {
   // Stop and cleanup camera stream - releases all tracks and clears references
   const stopStream = () => {
 
+    //try to stop all tracks of the 
+    // stream and clear video source 
+    // to release camera resources
     try {
 
       if (streamRef.current) {
@@ -621,6 +627,7 @@ export default function Post() {
   const capturePhoto = () => {
 
     if (!cameraVideoRef.current) return setError('Camera not started');
+    
     const video = cameraVideoRef.current;
     console.log('Capture attempt', {
       readyState: video.readyState,
@@ -637,9 +644,11 @@ export default function Post() {
       const rafPromise = new Promise((resolve) => requestAnimationFrame(() => resolve()))
       
       return rafPromise.then(() => {
+        
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
+
         const ctx = canvas.getContext('2d');
         ctx.filter = appliedFilter;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -653,6 +662,8 @@ export default function Post() {
         });
       });
 
+      // If we wanted to use async/await instead of 
+      // then, we could do:
     } catch (e) {
       console.error('Capture failed', e);
       setError('Capture failed. Try again.');
@@ -710,6 +721,7 @@ export default function Post() {
 //block 9
   // Discard current media selection - clears local file, stream, and errors
   const discardMedia = () => {
+
     stopStream();
     setLocal(null);
     setError(null);
@@ -818,6 +830,7 @@ export default function Post() {
       //catch and log any errors during upload, 
       // including response data for debugging
     } catch (err) {
+
       console.error('Upload error:', err);
       console.error('Error response:', err?.response?.data);
       setError(err?.response?.data?.error || 'Upload failed');
@@ -1105,6 +1118,9 @@ export default function Post() {
           className="fixed inset-0 bg-black z-50 flex flex-col overflow-y-auto"
           style={{ overscrollBehaviorY: 'contain', WebkitOverflowScrolling: 'touch' }}
         >
+
+
+
           {/* Camera Feed Container - Full remaining height */}
           <div className="flex flex-col items-center justify-center px-2 py-1 md:px-4">
             <div className="relative bg-black w-full max-w-4xl aspect-[3/4] max-h-[40vh] flex items-center justify-center overflow-hidden rounded-2xl shadow-2xl border border-gray-800">
@@ -1117,6 +1133,8 @@ export default function Post() {
                 controls={false}
                 style={{ filter: appliedFilter }}
               />
+
+
               {/* Status Badge */}
               <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium border border-white/20">
                 {isRecording ? (
@@ -1132,12 +1150,14 @@ export default function Post() {
                 )}
               </div>
 
+
               {/* Timer Display */}
               {isRecording && (
                 <div className="absolute top-4 right-4 bg-red-600/90 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm font-mono font-bold border border-red-400/50 shadow-lg">
                   {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, '0')}
                 </div>
               )}
+
 
               {/* Loading States */}
               {!streamRef.current && (
@@ -1160,6 +1180,7 @@ export default function Post() {
                   </div>
                 </div>
               )}
+
 
               {/* Countdown Animation */}
               {countdown !== null && (
@@ -1209,7 +1230,7 @@ export default function Post() {
                       : 'text-white/60 hover:text-white'
                   }`}
                 >
-                  📷 Photo
+                  Photo
                 </button>
                 <button
                   onClick={() => setMediaKind('video')}
@@ -1219,7 +1240,7 @@ export default function Post() {
                       : 'text-white/60 hover:text-white'
                   }`}
                 >
-                  🎥 Video
+                  Video
                 </button>
               </div>
             </div>

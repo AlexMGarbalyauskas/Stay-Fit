@@ -436,7 +436,7 @@ function App() {
               </>
             ) : (
               <>
-                <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Workout Time! 🏋️</h2>
+                <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Workout Time!</h2>
                 <p className={`text-lg mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>It's time for your <span className="font-bold text-blue-400">{todayWorkout.workout}</span> workout!</p>
                 <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Ready to post your workout video?</p>
                 
@@ -451,7 +451,7 @@ function App() {
                     onClick={handlePostWorkout}
                     className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition shadow-lg"
                   >
-                    Yes, Post! 📸
+                    Yes, Post!
                   </button>
                 </div>
               </>
