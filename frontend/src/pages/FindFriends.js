@@ -59,6 +59,7 @@ export default function FindFriends({ onFriendUpdate }) {
 
 
   // Fetch users
+  //used for testing to export the component - moved from useEffect to a standalone function
   const fetchUsers = () => {
     if (!isAuthenticated) return;
     getUsers()
@@ -104,6 +105,7 @@ export default function FindFriends({ onFriendUpdate }) {
   //use effect 1 
   // Fetch current user (me)
   useEffect(() => {
+
     if (!isAuthenticated) return;
     getMe()
       .then(res => {
@@ -118,6 +120,7 @@ export default function FindFriends({ onFriendUpdate }) {
         };
         setMe(normalized);
       })
+
       .catch(() => setMe(null));
   }, []);
 //end of use effect 1
@@ -178,7 +181,19 @@ export default function FindFriends({ onFriendUpdate }) {
 
 //use effect 4
   // Fetch and filter users when search is performed
+  //this allows for more efficient searching by only fetching users when needed, 
+
+  // and then filtering client-side for responsiveness. 
+  // It also ensures that we don't fetch the entire user 
+  // list on initial load, which can be expensive if 
+  // there are many users. 
+  // 
+  //The effect runs whenever the 
+  // search term, location filter, users list, or 
+  // authentication status changes, ensuring that the 
+  // displayed results are always up to date with the user's input and current data.
   useEffect(() => {
+
     if (!isAuthenticated) return;
     
     // Only fetch users if there's a search term or location filter
@@ -254,6 +269,7 @@ export default function FindFriends({ onFriendUpdate }) {
 
 
 //block 3
+// Handler for closing the unfriend confirmation modal
   const closeUnfriendModal = () => {
     setConfirmOpen(false);
     setConfirmTarget(null);
