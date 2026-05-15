@@ -5,6 +5,24 @@
 // subsequent middleware or route handlers.
 
 
+
+//midleware is a function that has access to the request and response objects,
+// and can modify them or perform actions before passing control to the next middleware or route handler.
+//middleware is used for tasks like authentication, logging, error handling, etc.
+
+
+
+//migrations is used for managing database schema changes over time. 
+// It allows you to define changes to the database structure in a 
+// way that can be version-controlled and applied consistently across different environments. 
+// Migrations typically include operations like creating 
+// tables, adding columns, or modifying existing structures, 
+// and they help ensure that the database schema remains 
+// in sync with the application's data model as it evolves.
+
+
+
+
 // Middleware to authenticate requests using JWT
 const jwt = require('jsonwebtoken');
 

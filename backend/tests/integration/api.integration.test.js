@@ -9,7 +9,10 @@
 
 
 //form of testing is integration testing, where we 
-// test the API endpoints
+// test the API endpoints with the actual server and database,
+// rather than mocking the entire server or database layer, 
+// allowing us to verify that the different components of the 
+// application work together as expected.
 
 //const
 const fs = require('fs');

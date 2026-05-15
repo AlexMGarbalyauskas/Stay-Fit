@@ -101,6 +101,7 @@ function pushEmailDiagnostic(entry) {
 
 
 //block 2 
+// Function to retrieve recent email diagnostics, with optional limit
 function getEmailDiagnostics(limit = 20) {
 
   const safeLimit = Math.max(1, Math.min(Number(limit) || 20, EMAIL_DIAGNOSTICS_MAX));
@@ -117,6 +118,7 @@ function getEmailDiagnostics(limit = 20) {
 
 
 //block 3
+// Function to log detailed information about email provider errors,
 function logEmailProviderError(provider, email, fromAddress, error) {
 
   // Construct a detailed error object for logging
@@ -159,6 +161,7 @@ function logEmailProviderError(provider, email, fromAddress, error) {
 
 
 //block 4
+// Utility function to wrap a promise with a timeout, rejecting if the operation takes too long
 function withTimeout(promise, timeoutMs, label) {
 
   // Create a timeout promise that rejects after the specified time

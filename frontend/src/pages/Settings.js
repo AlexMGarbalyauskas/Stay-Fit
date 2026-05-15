@@ -12,7 +12,10 @@
 
 
 
-//imports
+//imports used for this component
+//importing necessary libraries, components, icons, 
+// and utilities for the Settings page functionality and UI done so that we can 
+// manage user settings, handle API interactions, and provide a localized experience.
 import { useState, useEffect } from 'react';
 import { User, Share2, LogOut, ArrowLeft, Bell, Lock, Globe, Star, Moon, Sun, Check, X, Wrench, Info, Languages, BarChart3, BookOpen, Bot, Volume2, Download } from 'lucide-react';
 import axios from 'axios';
@@ -61,13 +64,20 @@ export default function Settings() {
   const iconClass = isDark ? 'text-gray-200' : 'text-black';
   //const end
   
+
+
+
   // Helper function for privacy labels
   const privacyLabel = (value) => {
+
     if (value === 'Public') return t('public');
     if (value === 'Friends Only') return t('friendsOnly');
     if (value === 'Private') return t('private');
     return value;
   };
+
+
+
 
   // Localized label for app tutorial 
   // falls back to translation key if language not supported
@@ -77,6 +87,9 @@ export default function Settings() {
     fr: 'Tutoriel de l\'app',
     it: 'Tutorial dell\'app'
   })[language] || t('appTutorial');
+
+
+
 
   // Common timezones list for timezone selection
   const commonTimezones = [
@@ -125,6 +138,9 @@ export default function Settings() {
 
 
 
+
+
+
   //use effect 2
   // Handle PWA install prompts and app installation events
   useEffect(() => {
@@ -155,7 +171,15 @@ export default function Settings() {
 
 
 
+
+
+
   //use effect 3
+  //used for updating the current time display based on 
+  // user's selected timezone. It sets up an interval to 
+  // update the time every second and formats it according to 
+  // the selected timezone using Intl.DateTimeFormat. 
+  // If the timezone is invalid, it shows an error message instead of the time.
   // Update current time display every second based on user's selected timezone
   useEffect(() => {
     const updateTime = () => {
@@ -186,6 +210,9 @@ export default function Settings() {
 
 
 
+
+
+
   //block 1: theme and language handlers
   // Toggle between light and dark theme - updates localStorage and DOM
   const handleThemeToggle = () => {
@@ -199,16 +226,23 @@ export default function Settings() {
     }
   };
 
+  // Handle language change - updates global language context
   const handleLanguageChange = (newLanguage) => {
     setGlobalLanguage(newLanguage);
   };
 
+  // Toggle sound effects preference - updates local state and utility function
   const handleSoundsToggle = () => {
     const nextValue = !soundsEnabled;
     setSoundsEnabled(nextValue);
     setSoundEnabled(nextValue);
   };
   //block 1 end
+
+
+
+
+
 
 
 
@@ -226,12 +260,14 @@ export default function Settings() {
     window.location.href = '/';
   };
 
+  // Copy current page URL to clipboard and show notification
   const handleShareAccount = () => {
     navigator.clipboard.writeText(window.location.href);
     setShowShareNotification(true);
     setTimeout(() => setShowShareNotification(false), 3000);
   };
 
+  // Open rating webpage in new tab
   const handleRateApp = () => {
     window.open('https://alexmgarbalyauskas.github.io/Rating-Webpage-/', '_blank');
   };
@@ -240,23 +276,34 @@ export default function Settings() {
 
 
 
+
+
+
+
   //block 3: PWA install handler
   // Handle PWA installation prompt - detects platform (iOS vs Android/Web) and shows appropriate message
   const handleInstallApp = async () => {
+
+    //if browser supports deferred install prompt, show it
     if (deferredInstallPrompt) {
       deferredInstallPrompt.prompt();
       const choiceResult = await deferredInstallPrompt.userChoice;
+      
+      //if user accepted installation, show success notification
       if (choiceResult.outcome === 'accepted') {
         setInstallNotificationText(t('appInstalledSuccess'));
         setShowInstallNotification(true);
         setTimeout(() => setShowInstallNotification(false), 3000);
       }
+
       setDeferredInstallPrompt(null);
       setCanInstallPwa(false);
       return;
     }
 
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    // If on iOS, show instructions to install from Safari
     if (isIOS) {
       setInstallNotificationText(t('installAppIosHint'));
       setShowInstallNotification(true);
@@ -273,6 +320,13 @@ export default function Settings() {
 
 
 
+
+
+
+
+
+
+
   //block 4: privacy change handlers
   // Set pending privacy change and show confirmation modal
   const handlePrivacyChange = (newPrivacy) => {
@@ -282,12 +336,14 @@ export default function Settings() {
 
   // Confirm privacy change - updates user data via API
   const confirmPrivacyChange = async () => {
+
     try {
       const response = await updateMe({ privacy: pendingPrivacy });
       setPrivacy(pendingPrivacy);
       setUser(response.data.user);
       setShowConfirmModal(false);
       setPendingPrivacy(null);
+
     } catch (error) {
       console.error('Error updating privacy:', error);
       alert(t('failedToUpdatePrivacy'));
@@ -299,6 +355,13 @@ export default function Settings() {
     setPendingPrivacy(null);
   };
   //block 4 end
+
+
+
+
+
+
+
 
 
 
@@ -316,18 +379,21 @@ export default function Settings() {
 
   // Confirm timezone change - updates user data via API
   const confirmTimezoneChange = async () => {
+
     try {
       const response = await updateMe({ timezone: pendingTimezone });
       setTimezone(pendingTimezone);
       setUser(response.data.user);
       setShowTimezoneModal(false);
       setPendingTimezone(null);
+    
     } catch (error) {
       console.error('Error updating timezone:', error);
       alert(t('failedToUpdateTimezone'));
     }
   };
 
+  // Cancel timezone change and close modal
   const cancelTimezoneChange = () => {
     setShowTimezoneModal(false);
     setPendingTimezone(null);
