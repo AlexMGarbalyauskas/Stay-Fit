@@ -162,7 +162,7 @@ router.post('/register', async (req, res) => {
             // Send the verification email and log the result
             const emailSent = await sendVerificationEmailWithDeadline(email, username, verificationCode, 'register');
             if (!emailSent) {
-              console.error('❌ Verification email failed to send during register:', {
+              console.error('Verification email failed to send during register:', {
                 userId,
                 email,
                 username,

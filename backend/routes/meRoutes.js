@@ -27,6 +27,9 @@ const router = express.Router();
 const uploadDir = path.join(__dirname, '..', 'uploads', 'profile_pics');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+
+
+
 // Multer storage configuration
 const storage = multer.diskStorage({
   destination: uploadDir,
@@ -158,12 +161,15 @@ router.put('/password', auth, async (req, res) => {
 
   // Validate input
   const { currentPassword, newPassword } = req.body || {};
+
   if (!currentPassword || !newPassword) {
+
     return res.status(400).json({ error: 'Current and new password are required' });
   }
 
   // Validate new password strength (example: minimum 6 characters)
   if (newPassword.length < 6) {
+
     return res.status(400).json({ error: 'New password must be at least 6 characters' });
   }
 
@@ -173,6 +179,7 @@ router.put('/password', auth, async (req, res) => {
     
     // Get password hash for current user
     db.get('SELECT password_hash FROM users WHERE id = ?', [userId], (err, row) => {
+
       if (err) return reject(err);
       resolve(row);
     });
@@ -183,6 +190,7 @@ router.put('/password', auth, async (req, res) => {
 
   // Compare current password with hash
   const ok = await bcrypt.compare(currentPassword, userRow.password_hash).catch(() => false);
+
   if (!ok) return res.status(401).json({ error: 'Invalid current password' });
 
   // Hash new password and update in DB
@@ -190,6 +198,7 @@ router.put('/password', auth, async (req, res) => {
   
   // Update password hash in database
   db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, userId], function (err) {
+
     if (err) return res.status(500).json({ error: 'Failed to update password' });
     res.json({ message: 'Password updated' });
   });
@@ -263,9 +272,12 @@ router.post('/update', auth, (req, res) => {
   const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
 
 
+
   // Execute update
   db.run(sql, params, function (err) {
+
     if (err) return res.status(500).json({ error: 'DB error' });
+
 
     // Fetch updated user data
     db.get(
@@ -294,9 +306,11 @@ router.post('/profile-picture', auth, upload.single('file'), (req, res) => {
   // Validate that a file was uploaded  
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
+
   // Save file path to database
   const imagePath = `/uploads/profile_pics/${req.file.filename}`;
   
+
   // Update user's profile_picture field in the database
   db.run(
     'UPDATE users SET profile_picture = ? WHERE id = ?',
@@ -308,6 +322,7 @@ router.post('/profile-picture', auth, upload.single('file'), (req, res) => {
 
       // Fetch updated user data
       db.get(
+
         'SELECT id, username, email, bio, location, profile_picture, nickname, privacy, timezone FROM users WHERE id = ?',
         [req.user.id],
         (err, row) => {
@@ -336,6 +351,7 @@ router.delete('/delete', auth, async (req, res) => {
 
   // Validate input
   const { password } = req.body || {};
+
   if (!password) return res.status(400).json({ error: 'Password is required' });
 
 
@@ -373,14 +389,17 @@ router.delete('/delete', auth, async (req, res) => {
 
   // Delete comment likes on user's comments and posts
   await run('DELETE FROM comment_likes WHERE user_id = ?', [userId]);
+
   if (postIds.length) {
 
     // First, find all comments on the user's posts to delete their likes
     const placeholders = postIds.map(() => '?').join(',');
     const commentsOnPosts = await all(`SELECT id FROM comments WHERE post_id IN (${placeholders})`, postIds);
     const commentIds = commentsOnPosts.map(c => c.id);
+
     if (commentIds.length) {
       const ph = commentIds.map(() => '?').join(',');
+
       await run(`DELETE FROM comment_likes WHERE comment_id IN (${ph})`, commentIds);
       await run(`DELETE FROM comments WHERE id IN (${ph})`, commentIds);
     }
@@ -390,6 +409,7 @@ router.delete('/delete', auth, async (req, res) => {
   await run('DELETE FROM comments WHERE user_id = ?', [userId]);
   await run('DELETE FROM likes WHERE user_id = ?', [userId]);
   await run('DELETE FROM saves WHERE user_id = ?', [userId]);
+
   if (postIds.length) {
     const placeholders = postIds.map(() => '?').join(',');
     await run(`DELETE FROM likes WHERE post_id IN (${placeholders})`, postIds);

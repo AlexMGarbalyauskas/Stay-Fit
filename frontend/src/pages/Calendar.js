@@ -90,6 +90,8 @@ export default function CalendarPage() {
         setPostDates(dates);
 
         setCurrentStreak(calculateCurrentStreak(dates));
+
+        //catch and log any errors that occur during fetching or processing of posts
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       }
@@ -155,6 +157,7 @@ export default function CalendarPage() {
 //use effect 3
   // Start workout reminder service
   useEffect(() => {
+
     const cleanup = startReminderService(() => plans);
     return cleanup;
   }, [plans]);
@@ -238,6 +241,7 @@ export default function CalendarPage() {
       const next = { ...prev, [selected.key]: planData };
       localStorage.setItem('workout-plans', JSON.stringify(next));
       window.dispatchEvent(new CustomEvent('workout-plans-changed', { detail: { date: selected.key } }));
+      
       return next;
     });
 
@@ -426,6 +430,8 @@ export default function CalendarPage() {
     setSelectedBuddies(prev => {
       const exists = prev.find(b => b.id === friend.id);
      
+
+      //if the friend is already selected, remove them from the list;
       if (exists) {
         return prev.filter(b => b.id !== friend.id);
 

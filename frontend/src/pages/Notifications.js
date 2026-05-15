@@ -104,7 +104,8 @@ export default function Notifications({ onFriendUpdate }) {
 
 
   //block 1: notification fetch handlers
-  // Fetch friend requests from API
+  // Fetch friend requests from API retrieved from backend and set to state, with loading and error handling
+  //used for 'requests' tab to show incoming friend requests with accept/reject options
   const fetchRequests = async () => {
     if (!isAuthenticated) return [];
     setLoading(true);
@@ -117,6 +118,8 @@ export default function Notifications({ onFriendUpdate }) {
     } finally { setLoading(false); }
   };
 
+
+  //used for 'unfriended' tab to show users who have unfriended the current user, with option to mark as read
   // Fetch notifications by type with optional transform function
   const fetchNotifications = async (type, transform) => {
     if (!isAuthenticated) return [];
@@ -548,10 +551,16 @@ export default function Notifications({ onFriendUpdate }) {
 
   // Render workout invites with accept/decline options and show if invite is outdated or canceled
   const renderWorkoutInvites = () => {
+
+
     // Check if workout time has passed
     const isWorkoutOutdated = (date, time) => {
+
+      //if no date or time provided, consider it not outdated 
+      // (to avoid false positives on invites without proper data)
       if (!date || !time) return false;
       const workoutDateTime = new Date(`${date}T${time}`);
+      
       return workoutDateTime < new Date();
     };
 

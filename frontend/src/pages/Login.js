@@ -160,14 +160,6 @@ export default function Login({ onLogin }) {
 // encryption,
 // and redirecting based on onboarding status.
 
-
-
-
-
-
-
-
-
 //block 1 
   // Handles traditional username/password login
   const handleSubmit = async (e) => {
@@ -197,6 +189,15 @@ export default function Login({ onLogin }) {
 
 
 
+
+
+
+
+
+
+
+
+  
 
 //block 2 used for handling Google OAuth login by 
 // redirecting to the backend endpoint.
