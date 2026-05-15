@@ -20,6 +20,7 @@
 export const translations = {
 
   // English translations (en)
+  //for all the text in the app, organized by page/feature for easy reference
   en: {
     // Navigation
     home: 'Home',
