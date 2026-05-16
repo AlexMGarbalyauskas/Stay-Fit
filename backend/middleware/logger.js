@@ -6,6 +6,8 @@
 
 // Middleware to log incoming requests
 module.exports = (req, res, next) => {
+  
+  // Log the HTTP method, URL, and timestamp
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 };
