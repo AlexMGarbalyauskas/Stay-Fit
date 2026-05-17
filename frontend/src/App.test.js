@@ -1,4 +1,4 @@
-//form of testing is smoke testing, 
+//form of testing is smoke testing, system testing
 // which is a basic test to check if the main 
 // app routes render without crashing.
 
