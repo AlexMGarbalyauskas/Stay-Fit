@@ -238,6 +238,8 @@ export default function FindFriends({ onFriendUpdate }) {
     sendFriendRequest(id)
       .then(() => {
         setStatuses(prev => ({ ...prev, [id]: 'sent' }));
+
+        // Trigger a refresh of friend data in parent component
         if (onFriendUpdate) onFriendUpdate();
       });
 //block 1 end
@@ -247,6 +249,9 @@ export default function FindFriends({ onFriendUpdate }) {
   // Modal state for unfriend confirmation
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
+
+
+
 
 
 
@@ -268,6 +273,9 @@ export default function FindFriends({ onFriendUpdate }) {
 
 
 
+
+
+
 //block 3
 // Handler for closing the unfriend confirmation modal
   const closeUnfriendModal = () => {
@@ -275,6 +283,9 @@ export default function FindFriends({ onFriendUpdate }) {
     setConfirmTarget(null);
   };
   //block 3 end
+
+
+
 
 
 
@@ -304,6 +315,8 @@ export default function FindFriends({ onFriendUpdate }) {
 
 
 
+
+  
   
 
   // If not authenticated, render the AuthRequired component

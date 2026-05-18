@@ -311,6 +311,7 @@ export default function Home({ onLogout, isAuthenticated }) {
 
       <main className={`min-h-screen bg-gradient-to-br pt-16 pb-16 ${isDark ? 'from-gray-950 via-gray-900 to-gray-800 text-gray-200' : 'from-slate-50 via-white to-slate-100 text-slate-800'}`}>
         <div className="max-w-2xl mx-auto">
+         
           {/* Countdown Timer Display */}
           {countdown && todayWorkout && (
             <div className={`mt-6 rounded-xl p-4 shadow-lg cursor-pointer hover:shadow-xl transition ${isDark ? 'bg-gradient-to-r from-gray-800 to-gray-700 text-gray-100' : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'}`} onClick={() => navigate('/calendar')}>
@@ -335,9 +336,10 @@ export default function Home({ onLogout, isAuthenticated }) {
           )}
 
           {/* Welcome / quick actions */}
-          <div className={`shadow-lg rounded-lg p-6 mt-6 border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white'}`}>
+          <div className={`shadow-lg rounded-lg p-6 mt-6 ${isDark ? 'bg-gray-900 border border-gray-700' : 'bg-white'}`}>
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-full overflow-hidden flex items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                
                 {user.profile_picture ? (
                   <img src={`${API_BASE}${user.profile_picture}`} alt="avatar" className="w-full h-full object-cover" />
                 ) : (

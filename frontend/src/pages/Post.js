@@ -98,6 +98,9 @@ export default function Post() {
 // they share a post, enhancing the user 
 // experience with engaging feedback
 
+
+
+
 //use effect 1
   // Canvas fireworks animation - triggers when celebrate state is true
   // Creates animated particles that explode outward from center of screen
