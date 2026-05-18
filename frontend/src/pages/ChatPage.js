@@ -185,7 +185,11 @@ export default function ChatPage() {
 
 
 // use effect 6
-// Whenever the messages array changes (e.g., when new messages are received or sent), scroll to the bottom of the chat history to show the latest messages. This provides a better user experience by automatically keeping the most recent messages in view.
+// Whenever the messages array changes 
+// (e.g., when new messages are received or sent), 
+// scroll to the bottom of the chat history to show the latest messages. 
+// This provides a better user experience by automatically 
+// keeping the most recent messages in view.
   useEffect(() => {
 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -205,7 +209,14 @@ export default function ChatPage() {
 
 
 // use effect 7
-// Set up the WebSocket connection and event listeners for real-time chat updates. This effect runs whenever the authentication token or status changes. It initializes the socket connection, listens for incoming messages, reaction updates, message deletions, and block notifications. It also handles cleanup by disconnecting the socket and removing event listeners when the component unmounts or when dependencies change.
+// Set up the WebSocket connection and event listeners for real
+// time chat updates. This effect runs whenever 
+// the authentication token or status changes. 
+// It initializes the socket connection, 
+// listens for incoming messages, reaction 
+// updates, message deletions, and block notifications. 
+// It also handles cleanup by disconnecting 
+// the socket and removing event listeners when the component unmounts or when dependencies change.
   useEffect(() => {
 
     // If the user is not authenticated, we don't need to set up the WebSocket connection. If there was an existing connection, disconnect it to clean up resources and avoid receiving updates when not logged in.
@@ -250,10 +261,13 @@ export default function ChatPage() {
               msg.sender_id,
               msg.receiver_id
             );
+
             msg.content = decrypted;
+
             if (decrypted === '[Unable to decrypt message]' && originalContent && originalContent !== '[Encrypted]') {
               msg.content = originalContent;
             }
+
           } catch (error) {
             console.error('Failed to decrypt message:', error);
             msg.content = '[Encrypted message - unable to decrypt]';
@@ -262,16 +276,22 @@ export default function ChatPage() {
         
         setMessages(prev => {
           const exists = prev.find(m => m.id === msg.id);
+
           if (exists) {
+
             return prev.map(m => {
+
               if (m.id !== msg.id) return m;
               const merged = { ...m, ...msg };
+
               if (m.is_deleted) merged.is_deleted = m.is_deleted;
+
               return merged;
             });
           }
           return [...prev, msg];
         });
+
         // fetch reactions for new message
         api.get(`/api/messages/${msg.id}/reactions`).then(r => {
           setReactionsMap(prev => ({ ...prev, [msg.id]: r.data.reactions }));
@@ -295,6 +315,7 @@ export default function ChatPage() {
       // on who initiated the block
       if (reason === 'blocked_by_you') {
         setChatNotice(t('chatBlockedByYou'));
+      
       } else {
         setChatNotice(t('chatBlockedByUser'));
       }
@@ -323,7 +344,9 @@ export default function ChatPage() {
 
 
 // use effect 8
-  // Load the user's friends list when the component mounts and whenever the authentication status changes. Handle errors by logging them to the console.
+  // Load the user's friends list when the 
+  // component mounts and whenever the authentication status changes. 
+  // Handle errors by logging them to the console.
   useEffect(() => {
     if (!isAuthenticated) return;
     api.get('/api/friends')

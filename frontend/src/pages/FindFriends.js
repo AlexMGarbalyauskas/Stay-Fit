@@ -246,6 +246,9 @@ export default function FindFriends({ onFriendUpdate }) {
 
 
 
+
+
+
   // Modal state for unfriend confirmation
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
